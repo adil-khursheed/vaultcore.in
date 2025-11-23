@@ -21,7 +21,10 @@ export function initAuth<
     }),
     baseURL: options.baseUrl,
     plugins: [...(options.extraPlugins ?? [])],
-    trustedOrigins: ["expo://"],
+    trustedOrigins: ["exp://"],
+    emailAndPassword: {
+      enabled: true,
+    },
     socialProviders: {
       google: {
         clientId: options.googleClientId,
