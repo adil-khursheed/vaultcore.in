@@ -17,7 +17,7 @@ const baseUrl =
 
 export const auth = initAuth({
   baseUrl,
-  productionUrl: `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`,
+  productionUrl: baseUrl,
   googleClientId: env.GOOGLE_CLIENT_ID,
   googleClientSecret: env.GOOGLE_CLIENT_SECRET,
   extraPlugins: [nextCookies()],

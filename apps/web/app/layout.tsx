@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import "@repo/ui/globals.css";
 
-import { ThemeProvider } from "@repo/ui/components/index";
+import ThemeProvider from "@repo/ui/components/providers/theme-providers";
 import { TRPCClientProvider } from "@/lib/trpc/client";
 
 const fontSans = Inter({
