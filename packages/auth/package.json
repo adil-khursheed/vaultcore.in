@@ -8,7 +8,7 @@
     "./env": "./env.ts"
   },
   "scripts": {
-    "generate": "dotenv -e ../../.env -- pnpx @better-auth/cli generate --config src/auth-cli.ts --output ../database/prisma/schema.prisma",
+    "generate": "dotenv -e ../../.env -- pnpx @better-auth/cli generate --config src/auth-cli.ts --output ../database/src/auth-schema.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

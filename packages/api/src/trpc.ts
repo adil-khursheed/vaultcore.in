@@ -3,7 +3,7 @@ import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
 import type { Auth } from "@repo/auth";
-import { prisma } from "@repo/db";
+import { db } from "@repo/db/client";
 
 export const createTRPCContext = async (opts: {
   headers: Headers;
@@ -17,7 +17,7 @@ export const createTRPCContext = async (opts: {
   return {
     authApi,
     session,
-    db: prisma,
+    db,
   };
 };
 

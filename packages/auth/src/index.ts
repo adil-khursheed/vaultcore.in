@@ -1,8 +1,8 @@
 import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
-import { prisma } from "@repo/db";
+import { db } from "@repo/db/client";
 
 export function initAuth<
   TExtraPlugins extends BetterAuthPlugin[] = [],
@@ -16,8 +16,8 @@ export function initAuth<
   extraPlugins?: TExtraPlugins;
 }) {
   const config = {
-    database: prismaAdapter(prisma, {
-      provider: "postgresql",
+    database: drizzleAdapter(db, {
+      provider: "pg",
     }),
     baseURL: options.baseUrl,
     plugins: [...(options.extraPlugins ?? [])],
