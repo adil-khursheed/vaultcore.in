@@ -3,7 +3,11 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "auth:generate": "pnpm -F @repo/auth generate",
+    "db:push": "turbo -F @repo/db push",
+    "db:studio": "turbo -F @repo/db studio",
+    "dev": "turbo watch dev --continue",
+    "dev:web": "turbo watch dev -F web...",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
