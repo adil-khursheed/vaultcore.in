@@ -1,50 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
-import { useForm } from "@tanstack/react-form";
+import React, { useState } from 'react'
+import { useForm } from '@tanstack/react-form';
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from "lucide-react"
+
+import { calculatePasswordStrength } from '@/lib/utils';
 
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@repo/ui/components/input-group";
 import { Button } from "@repo/ui/components/button";
-import { authClient } from "@/lib/auth/client";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { Progress } from "@repo/ui/components/progress";
+import { cn } from '@repo/ui/lib/utils';
 
-const LoginForm = () => {
-  const [showPassword, setShowPassword] = useState(false);
+const SignUpForm = () => {
+    const [showPassword, setShowPassword] = useState(false);
 
-  const router = useRouter();
-
-  const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    onSubmit: async (data) => {
-      const { data: res, error } = await authClient.signIn.email({
-        email: data.value.email,
-        password: data.value.password,
-        callbackURL: "/dashboard"
-      });
-
-      if(error){
-        console.log(error);
-        toast.error(error.message);
-        return;
-      }
-
-      if (res && res.url) {
-        router.replace(res.url);
-      }
-    },
-  });
-
-  return <form onSubmit={(event) => {
-    event.preventDefault();
-    void form.handleSubmit();
-  }}>
-    <FieldGroup>
+    const form = useForm({
+        defaultValues: {
+            name: "",
+            email: "",
+            password: "",
+        },
+        onSubmit: async (data) => {
+            console.log(data);
+        },
+    });
+    
+  return (
+    <form onSubmit={(event) => {
+      event.preventDefault();
+      void form.handleSubmit();
+    }}>
+      <FieldGroup>
       <form.Field
         name="email"
         children={(field) => {
@@ -80,11 +67,23 @@ const LoginForm = () => {
 
       <form.Field
         name="password"
+        validators={{
+            onChange: ({ value }) => {
+                console.log(value);
+                if (!value) return 'Password is required';
+                const strength = calculatePasswordStrength(value);
+                if (strength.score < 50) {
+                  return 'Password is too weak';
+                }
+                return "Strong";
+            }
+        }}
         children={(field) => {
-          const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+        
+            const strength = calculatePasswordStrength(field.state.value);
 
           return (
-            <Field data-invalid={isInvalid}>
+            <Field>
               <FieldContent>
                 <FieldLabel htmlFor={field.name}>Master Password</FieldLabel>
               </FieldContent>
@@ -96,12 +95,11 @@ const LoginForm = () => {
                   value={field.state.value}
                   onChange={(e)=>field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
-                  aria-invalid={isInvalid}
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your master password"
                   className="h-11 rounded-full"
                 />
-                  
+
                 <InputGroupAddon>
                   <LockIcon/>
                 </InputGroupAddon>
@@ -111,15 +109,19 @@ const LoginForm = () => {
                   </InputGroupButton>
                 </InputGroupAddon>
               </InputGroup>
-              {isInvalid && <FieldError errors={field.state.meta.errors}/>}
+
+                  <Progress value={strength.score} />
+                  
+              {field.state.meta.errors && <p className={`text-[${strength.color}]`}>{field.state.meta.errors}</p>}
+
             </Field>
           )
         }}
       />
-      <Button type="submit">Login</Button>
+      <Button type="submit">Sign Up</Button>
     </FieldGroup>
+    </form>
+  )
+}
 
-  </form>;
-};
-
-export default LoginForm;
+export default SignUpForm

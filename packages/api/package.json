@@ -11,10 +11,14 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
+    "@repo/prettier-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "typescript": "^5.9.3"
   },
@@ -24,5 +28,6 @@
     "@trpc/server": "^11.7.1",
     "superjson": "^2.2.5",
     "zod": "^4.1.12"
-  }
+  },
+  "prettier": "@repo/prettier-config"
 }

@@ -11,7 +11,10 @@ export async function proxy(request: NextRequest) {
   const session = await getSession();
 
   if (session && isPublicRoute) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    if(session.user.emailVerified){
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    return NextResponse.redirect(new URL("/verify", request.url));
   }
 
   if (!session && !isPublicRoute) {

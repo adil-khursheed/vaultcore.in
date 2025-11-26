@@ -10,17 +10,16 @@ import {
   CardDescription,
 } from "@repo/ui/components/card";
 
-import GoogleButton from "../_components/google-button";
 import LoginForm from "./_components/login-form";
 
 const Page = () => {
   return (
     <section className="min-h-screen w-full relative bg-background">
       {/* Teal Glow Right */}
-      <div className="absolute inset-0 z-0 bg-background bg-[radial-gradient(circle_at_top_right,rgba(30,157,241,0.2),transparent_70%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(30,157,241,0.5),transparent_70%)] bg-no-repeat backdrop-blur-[80px]" />
+      <div className="absolute inset-0 z-0 bg-background bg-[radial-gradient(circle_at_top_right,rgba(30,157,241,0.2),transparent_70%)] bg-no-repeat backdrop-blur-[80px]" />
 
       <div className="min-h-screen w-full flex items-center justify-center relative z-10 px-3">
-        <Card className="md:max-w-xl mx-auto w-full bg-background/30 backdrop-blur-xs shadow-xl">
+        <Card className="md:max-w-lg mx-auto w-full bg-background/30 backdrop-blur-xs shadow-xl">
           <CardHeader>
             <CardTitle className="text-lg sm:text-2xl md:text-3xl">
               Welcome Back
@@ -38,8 +37,6 @@ const Page = () => {
           </CardHeader>
 
           <CardContent>
-            <GoogleButton />
-
             <Suspense
               fallback={<Loader2Icon className="animate-spin size-6" />}>
               <LoginForm />
