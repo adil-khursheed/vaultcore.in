@@ -4,13 +4,13 @@ const Page = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center py-24 text-center lg:py-32">
-        <div className="bg-primary/10 absolute inset-0 -z-10 h-full w-full mask-[radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
-        <h1 className="text-4xl max-w-4xl w-full font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
+      <section className="relative flex flex-col items-center justify-center py-24 text-center lg:py-32 bg-[url(/hero-bg.png)] bg-cover bg-bottom bg-no-repeat min-h-screen">
+        <div className="bg-primary/10 absolute inset-0 z-10 h-full w-full mask-[radial-gradient(ellipse_at_center,transparent_10%,black)]"></div>
+        <h1 className="text-4xl max-w-4xl w-full font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl text-white">
           Secure Your Digital Assets with{" "}
           <span className="text-primary">VaultCore</span>
         </h1>
-        <p className="mt-6 max-w-2xl w-full text-muted-foreground md:text-xl">
+        <p className="mt-6 max-w-2xl w-full md:text-xl text-white/60">
           The next generation of secure storage for your most valuable data.
           Encrypted, decentralized, and accessible anywhere.
         </p>

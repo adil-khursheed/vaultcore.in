@@ -4,7 +4,7 @@ import { getSession } from "./lib/auth/server";
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  const isPublicRoute = ["/", "/login", "/signup", "/verify"].includes(
+  const isPublicRoute = ["/", "/login", "/signup"].includes(
     pathname
   );
 

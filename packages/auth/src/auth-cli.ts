@@ -1,4 +1,4 @@
-import { initAuth } from "./index.js";
+import { initAuth } from "./index.ts";
 
 export const auth = initAuth({
   baseUrl: "http://localhost:3000",

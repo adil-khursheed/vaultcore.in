@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 import { db } from "@repo/db/client";
+import { hashPasswordForAuth, verifyPasswordForAuth } from "./utils/utils.ts";
 
 export function initAuth<
   TExtraPlugins extends BetterAuthPlugin[] = [],
@@ -22,8 +23,21 @@ export function initAuth<
     baseURL: options.baseUrl,
     plugins: [...(options.extraPlugins ?? [])],
     trustedOrigins: ["exp://"],
+    emailVerification: {
+      sendOnSignUp:true,
+    },
     emailAndPassword: {
       enabled: true,
+      minPasswordLength: 12,
+      maxPasswordLength: 128,
+      password: {
+        async hash(password) {
+          return hashPasswordForAuth(password);
+        },
+        async verify({ password, hash }) {
+          return verifyPasswordForAuth(password, hash);
+        },
+      },
     },
     socialProviders: {
       google: {
