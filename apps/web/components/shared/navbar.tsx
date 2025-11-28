@@ -8,8 +8,8 @@ import { Button } from "@repo/ui/components/button";
 
 const Navbar = async () => {
   return (
-    <header className="fixed top-0 inset-x-0 z-50 shadow-sm bg-white/30 backdrop-blur-lg px-3">
-      <div className="flex items-center justify-between py-2.5 max-w-[1440px] mx-auto w-full">
+    <header className="sticky top-0 inset-x-0 z-50 bg-background/30 backdrop-blur-md px-3">
+      <div className="flex items-center justify-between py-2.5 max-w-6xl mx-auto w-full">
         <div>
           <Logo />
         </div>

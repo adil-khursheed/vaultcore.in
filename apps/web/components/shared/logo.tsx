@@ -5,8 +5,8 @@ const Logo = () => {
   return (
     <Link
       href={"/"}
-      className="text-base md:text-xl font-extrabold text-primary">
-      <span>VaultCore</span>
+      className="text-lg md:text-2xl font-extrabold text-primary font-serif">
+      <span>Vault<span className="text-muted-foreground">Core</span></span>
     </Link>
   );
 };

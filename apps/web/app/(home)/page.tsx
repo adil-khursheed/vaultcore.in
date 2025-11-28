@@ -1,26 +1,54 @@
+import { Button } from "@repo/ui/components/button";
+import { cn } from "@repo/ui/lib/utils";
 import React from "react";
 
 const Page = () => {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen max-w-6xl w-full mx-auto bg-background text-foreground">
+      <div className="absolute top-0 left-0 h-full bg-linear-to-b from-transparent via-20% to-border z-10 w-px"/>
+      <div className="absolute top-0 right-0 h-full bg-linear-to-b from-transparent via-20% to-border z-10 w-px"/>
+
       {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center py-24 text-center lg:py-32 bg-[url(/hero-bg.png)] bg-cover bg-bottom bg-no-repeat min-h-screen">
-        <div className="bg-primary/10 absolute inset-0 z-10 h-full w-full mask-[radial-gradient(ellipse_at_center,transparent_10%,black)]"></div>
-        <h1 className="text-4xl max-w-4xl w-full font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl text-white">
-          Secure Your Digital Assets with{" "}
-          <span className="text-primary">VaultCore</span>
-        </h1>
-        <p className="mt-6 max-w-2xl w-full md:text-xl text-white/60">
-          The next generation of secure storage for your most valuable data.
-          Encrypted, decentralized, and accessible anywhere.
-        </p>
-        <div className="mt-8 flex gap-4">
-          <button className="rounded-md bg-primary px-8 py-3 font-medium text-primary-foreground transition-transform hover:scale-105">
-            Get Started
-          </button>
-          <button className="rounded-md border border-input bg-background px-8 py-3 font-medium hover:bg-accent hover:text-accent-foreground">
-            Learn More
-          </button>
+      <section className="relative py-12">
+        <div className="flex flex-col items-center justify-center gap-10 text-center">
+          <div>
+            <div className="rounded-full w-max flex items-center gap-2 px-4 py-2 bg-background/10 backdrop-blur-md border border-border">
+              <div className="size-2 rounded-full bg-chart-2 animate-pulse" />
+              <p className="text-sm font-medium">Now with biometric authentication</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-6 items-center px-3">
+            <h1 className="text-3xl font-semibold sm:text-5xl md:text-6xl lg:text-7xl text-foreground">
+              Secure Your Digital Life<br/><span className="text-muted-foreground">Without Compromise</span>
+            </h1>
+            <p className="max-w-2xl w-full md:text-xl text-foreground/60">
+              The next generation of secure storage for your most valuable assets.
+              Encrypted, decentralized, and accessible anywhere.
+            </p>
+          </div>
+
+          <div className="relative w-full">
+            <div className="absolute w-[200%] h-px top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-border opacity-50"></div>
+            <div className="flex items-center justify-center gap-4 relative z-10">
+              <Button size={"lg"}>
+                Get Started
+              </Button>
+              <Button variant={"outline"} size={"lg"} className="dark:bg-input dark:hover:bg-input/90">
+                Learn More
+              </Button>
+            </div>
+
+            <div
+              className={cn("absolute inset-x-0 top-[20px] h-[150px]",
+                "bg-size-[13px_13px]",
+                "bg-[radial-gradient(#e5e5e5_1.5px,transparent_1.5px)]",
+                "dark:bg-[radial-gradient(#2d2d2d_1.5px,transparent_1.5px)]",
+              )}
+            >
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background mask-t-from-5%"/>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -25,7 +25,7 @@ const ThemeToggle = () => {
       className="cursor-pointer"
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
       {resolvedTheme === "dark" ? (
-        <SunIcon className="size-4 text-amber-400" />
+        <SunIcon className="size-4 text-primary" />
       ) : (
         <Moon className="size-4 text-primary" />
       )}

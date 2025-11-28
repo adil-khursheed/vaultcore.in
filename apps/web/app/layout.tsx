@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import { Geist, Source_Serif_4, Geist_Mono } from "next/font/google";
 import "@repo/ui/globals.css";
 
 import ThemeProvider from "@repo/ui/components/providers/theme-providers";
 import { TRPCClientProvider } from "@/lib/trpc/client";
 
-const fontSans = Inter({
+const fontSans = Geist({
   variable: "--font-sans",
   subsets: ["latin"],
 });
@@ -13,7 +13,7 @@ const fontSerif = Source_Serif_4({
   variable: "--font-serif",
   subsets: ["latin"],
 });
-const fontMono = JetBrains_Mono({
+const fontMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
 });
