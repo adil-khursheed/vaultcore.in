@@ -80,11 +80,11 @@ const Pricing = () => {
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      <div className="mt-8 grid w-full max-w-4xl lg:grid-cols-3 gap-4">
+      <div className="mt-8 grid w-full max-w-4xl lg:grid-cols-3 gap-4 px-2">
         {plans.map((plan) => (
           <Card
             className={cn(
-              "relative w-full text-left hover:scale-105 hover:transition-all hover:duration-300 hover:shadow-2xl scale-100",
+              "relative w-full text-left lg:hover:scale-105 lg:hover:transition-all lg:hover:duration-300 lg:hover:shadow-2xl scale-100",
               plan.popular && "ring-2 ring-primary"
             )}
             key={plan.id}
