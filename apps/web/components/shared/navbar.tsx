@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 
 import Logo from "./logo";
@@ -12,6 +12,8 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Menu } from "lucide-react";
 
 const Navbar = () => {
+  const [open, setOpen] = useState(false);
+
   const isMobile = useIsMobile();
 
   return (
@@ -52,7 +54,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <ThemeToggle />
             
-            <Sheet>
+            <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <Button variant={"ghost"}>
                   <Menu />
@@ -70,24 +72,41 @@ const Navbar = () => {
                 </SheetHeader>
                   
                 <nav className="flex flex-col items-start flex-1">
-                  <Button asChild variant={"ghost"}>
+                  <Button 
+                    asChild 
+                    variant={"ghost"} 
+                    className="w-full justify-start" 
+                    onClick={() => setOpen(false)}
+                  >
                     <Link href={"/pricing/personal"}>
                       <span>Pricing</span>
                     </Link>
                   </Button>
-                  <Button asChild variant={"ghost"}>
+                  <Button 
+                    asChild 
+                    variant={"ghost"} 
+                    className="w-full justify-start" 
+                    onClick={() => setOpen(false)}
+                  >
                     <Link href={"/downloads"}>
                       <span>Downloads</span>
                     </Link>
                   </Button>
 
                   <SheetFooter className="mt-auto w-full">
-                    <Button asChild variant={"outline"}>
+                    <Button 
+                      asChild 
+                      variant={"outline"} 
+                      onClick={() => setOpen(false)}
+                    >
                       <Link href={"/login"}>
                         <span>Login</span>
                       </Link>
                     </Button>
-                    <Button asChild>
+                    <Button 
+                      asChild 
+                      onClick={() => setOpen(false)}
+                    >
                       <Link href={"/pricing/personal"}>
                         <span>Get Started Free</span>
                       </Link>

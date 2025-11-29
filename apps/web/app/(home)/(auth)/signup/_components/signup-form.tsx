@@ -3,17 +3,17 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation';
 import { useForm } from '@tanstack/react-form';
-import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon, MailIcon, UserIcon } from "lucide-react"
+import { toast } from 'sonner';
+import {z} from 'zod/v4';
+import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon, MailIcon, UserIcon } from "lucide-react";
 
 import { calculatePasswordStrength } from '@/lib/utils';
+import { authClient } from '@/lib/auth/client';
 
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@repo/ui/components/field";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@repo/ui/components/input-group";
 import { Button } from "@repo/ui/components/button";
 import { Progress } from "@repo/ui/components/progress";
-import { authClient } from '@/lib/auth/client';
-import { toast } from 'sonner';
-import {z} from 'zod/v4';
 
 export const SignUpSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters long"),
@@ -36,21 +36,27 @@ const SignUpForm = () => {
         onSubmit:SignUpSchema
       },
       onSubmit: async (data) => {
-        const { data: res, error } = await authClient.signUp.email({
-          email: data.value.email,
-          password: data.value.password,
-          name: data.value.name,
-          callbackURL: "/verify",
-        });
-        if (error) {
-          console.log(error);
-          toast.error(error.message);
-          return;
-        }
-
-        if(res && res.user){
-          toast.success("User created successfully");
-          router.replace("/verify");
+        try {
+          const { data: res, error } = await authClient.signUp.email({
+            email: data.value.email,
+            password: data.value.password,
+            name: data.value.name,
+            callbackURL: "/verify",
+          });
+          
+          if (error) {
+            console.log(error);
+            toast.error(error.message);
+            return;
+          }
+  
+          if(res && res.user){
+            toast.success("User created successfully");
+            router.replace("/verify");
+          }
+        } catch (err) {
+          console.log(err);
+          toast.error("Something went wrong");
         }
       },
     });

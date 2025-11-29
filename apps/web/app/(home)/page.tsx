@@ -1,7 +1,8 @@
+import React from "react";
+import Link from "next/link";
+import {IconFingerprint } from "@tabler/icons-react";
 import { Button } from "@repo/ui/components/button";
 import { cn } from "@repo/ui/lib/utils";
-import Link from "next/link";
-import React from "react";
 
 const Page = () => {
   return (
@@ -14,8 +15,8 @@ const Page = () => {
         <div className="flex flex-col items-center justify-center gap-10 text-center">
           <div>
             <div className="rounded-full w-max flex items-center gap-2 px-4 py-2 bg-background/10 backdrop-blur-md border border-border">
-              <div className="size-2 rounded-full bg-chart-2 animate-pulse" />
-              <p className="text-sm font-medium">Now with biometric authentication</p>
+              <IconFingerprint className="size-4 text-chart-2"/>
+              <p className="text-sm font-medium">Ultimate Credential Protection</p>
             </div>
           </div>
 
