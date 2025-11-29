@@ -15,7 +15,7 @@ const CategoryTab = ({ category }: { category: string }) => {
     const router = useRouter();
 
     return (
-        <div>
+        <div className='relative w-full h-20 flex items-center justify-center before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:opacity-50 before:h-px before:w-[200%] before:bg-border before:z-10 after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:opacity-50 after:h-px after:w-[200%] after:bg-border after:z-10 bg-[repeating-linear-gradient(315deg,var(--pattern-fg)_0,var(--pattern-fg)_1px,transparent_0,transparent_50%)] bg-size-[10px_10px] bg-fixed [--pattern-fg:var(--color-border)]/50'>
             <Tabs
                 defaultValue={activeTab}
                 onValueChange={(value) => {
@@ -24,9 +24,9 @@ const CategoryTab = ({ category }: { category: string }) => {
                 }}
                 className='relative w-full items-center justify-center'
             >
-                <TabsList className='h-12 max-w-3xs w-full mx-auto'>
+                <TabsList className='h-12 max-w-xs w-full mx-auto rounded-full'>
                     {tabs.map((tab) => (
-                        <TabsTrigger key={tab.value} value={tab.value}>
+                        <TabsTrigger key={tab.value} value={tab.value} className='rounded-full'>
                             {tab.label}
                         </TabsTrigger>
                     ))}

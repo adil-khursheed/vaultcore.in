@@ -3,11 +3,11 @@ import { Loader2Icon } from "lucide-react";
 import Link from "next/link";
 import React, { Suspense } from "react";
 import SignUpForm from "./_components/signup-form";
-import SectionContainer from "../_components/section-container";
+import SectionContainer from "../../_components/section-container";
 
 const Page = () => {
   return (
-    <SectionContainer>
+    <SectionContainer className="flex">
       <div className="flex-1 flex items-center justify-center relative z-10 px-3">
         <Card className="md:max-w-lg mx-auto w-full bg-background/30 backdrop-blur-xs shadow-xl">
           <CardHeader>
