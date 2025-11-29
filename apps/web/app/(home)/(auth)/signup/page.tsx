@@ -3,10 +3,12 @@ import { Loader2Icon } from "lucide-react";
 import Link from "next/link";
 import React, { Suspense } from "react";
 import SignUpForm from "./_components/signup-form";
+import SectionContainer from "../_components/section-container";
 
 const Page = () => {
-  return  <section className="min-h-[calc(100dvh-56px)] w-screen relative bg-background flex">
-    <div className="flex-1 flex items-center justify-center relative z-10 px-3">
+  return (
+    <SectionContainer>
+      <div className="flex-1 flex items-center justify-center relative z-10 px-3">
         <Card className="md:max-w-lg mx-auto w-full bg-background/30 backdrop-blur-xs shadow-xl">
           <CardHeader>
             <CardTitle className="text-lg sm:text-2xl md:text-3xl">
@@ -32,7 +34,8 @@ const Page = () => {
           </CardContent>
         </Card>
       </div>
-    </section>
+    </SectionContainer>
+  )
 };
 
 export default Page;

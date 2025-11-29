@@ -17,7 +17,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/verify", request.url));
   }
 
-  if (!session && !isPublicRoute) {
+  if (!session && !isPublicRoute && !pathname.startsWith("/pricing")) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

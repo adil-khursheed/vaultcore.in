@@ -11,10 +11,11 @@ import {
 } from "@repo/ui/components/card";
 
 import LoginForm from "./_components/login-form";
+import SectionContainer from "../_components/section-container";
 
 const Page = () => {
   return (
-    <section className="min-h-[calc(100dvh-56px)] w-screen relative bg-background flex">
+    <SectionContainer>
       <div className="flex-1 flex items-center justify-center relative z-10 px-3">
         <Card className="md:max-w-lg mx-auto w-full bg-background/30 backdrop-blur-xs shadow-xl">
           <CardHeader>
@@ -41,7 +42,7 @@ const Page = () => {
           </CardContent>
         </Card>
       </div>
-    </section>
+    </SectionContainer>
   );
 };
 

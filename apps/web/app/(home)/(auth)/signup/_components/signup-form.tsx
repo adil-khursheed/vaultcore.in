@@ -81,7 +81,7 @@ const SignUpForm = () => {
                   onBlur={field.handleBlur}
                   aria-invalid={isInvalid}
                   placeholder="Enter your name"
-                  className="h-11 rounded-full"
+                  className="h-11"
                 />
                   
                 <InputGroupAddon>
@@ -114,7 +114,7 @@ const SignUpForm = () => {
                   onBlur={field.handleBlur}
                   aria-invalid={isInvalid}
                   placeholder="Enter your email"
-                  className="h-11 rounded-full"
+                  className="h-11"
                 />
                   
                 <InputGroupAddon>
@@ -159,7 +159,7 @@ const SignUpForm = () => {
                   onBlur={field.handleBlur}
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your master password"
-                  className="h-11 rounded-full"
+                  className="h-11"
                   aria-invalid={isInvalid}
                 />
 

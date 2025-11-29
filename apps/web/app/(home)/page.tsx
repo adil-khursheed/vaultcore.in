@@ -1,5 +1,6 @@
 import { Button } from "@repo/ui/components/button";
 import { cn } from "@repo/ui/lib/utils";
+import Link from "next/link";
 import React from "react";
 
 const Page = () => {
@@ -29,12 +30,12 @@ const Page = () => {
           </div>
 
           <div className="relative w-full">
-            <div className="absolute w-[200%] h-px top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-border opacity-50"></div>
+            <div className="absolute w-[200%] h-px top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-border opacity-50"/>
             <div className="flex items-center justify-center gap-4 relative z-10">
-              <Button size={"lg"}>
-                Get Started
+              <Button size={"xl"} asChild>
+                <Link href={"/pricing/personal"}>Get Started Free</Link>
               </Button>
-              <Button variant={"outline"} size={"lg"} className="dark:bg-input dark:hover:bg-input/90">
+              <Button variant={"outline"} size={"xl"} className="dark:bg-input dark:hover:bg-input/90">
                 Learn More
               </Button>
             </div>
