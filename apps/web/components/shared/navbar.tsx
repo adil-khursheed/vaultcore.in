@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { Menu } from "lucide-react";
 
 import Logo from "./logo";
 
@@ -9,13 +10,12 @@ import ThemeToggle from "@repo/ui/components/theme-toggle";
 import { Button } from "@repo/ui/components/button";
 import { useIsMobile } from "@repo/ui/hooks/use-mobile";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@repo/ui/components/sheet";
-import { Menu } from "lucide-react";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
 
   const isMobile = useIsMobile();
-
+  
   return (
     <header className="sticky top-0 inset-x-0 z-50 bg-background/30 backdrop-blur-md px-3">
       <div className="flex items-center justify-between py-2.5 max-w-6xl mx-auto w-full">

@@ -11,9 +11,6 @@ export function initAuth<
   baseUrl: string;
   productionUrl: string;
 
-  googleClientId: string;
-  googleClientSecret: string;
-
   extraPlugins?: TExtraPlugins;
 }) {
   const config = {
@@ -23,9 +20,6 @@ export function initAuth<
     baseURL: options.baseUrl,
     plugins: [...(options.extraPlugins ?? [])],
     trustedOrigins: ["exp://"],
-    emailVerification: {
-      sendOnSignUp:true,
-    },
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 12,
@@ -37,13 +31,6 @@ export function initAuth<
         async verify({ password, hash }) {
           return verifyPasswordForAuth(password, hash);
         },
-      },
-    },
-    socialProviders: {
-      google: {
-        clientId: options.googleClientId,
-        clientSecret: options.googleClientSecret,
-        redirectURI: `${options.productionUrl}/api/auth/callback/google`,
       },
     },
     onAPIError: {

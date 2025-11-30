@@ -6,7 +6,7 @@ export async function proxy(request: NextRequest) {
 
   const isPublicRoute = ["/", "/login", "/signup"].includes(
     pathname
-  );
+  ) || pathname.startsWith("/api/auth/");
 
   const session = await getSession();
 
