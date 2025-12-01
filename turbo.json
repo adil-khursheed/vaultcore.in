@@ -32,7 +32,9 @@
     "BETTER_AUTH_SECRET",
     "APP1_URL",
     "APP2_URL",
-    "RESEND_API_KEY"
+    "RESEND_API_KEY",
+    "POLAR_ACCESS_TOKEN",
+    "POLAR_WEBHOOK_SECRET"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

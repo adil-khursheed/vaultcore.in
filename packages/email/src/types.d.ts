@@ -1,9 +1,9 @@
-type EmailTemplateType =
+export type EmailTemplateType =
   | "emailVerification"
   | "welcomeOnboard"
   | "weeklyDigest";
 
-type EmailTemplateProps = {
+export type EmailTemplateProps = {
   type: EmailTemplateType;
   userName?: string;
   actionUrl?: string;

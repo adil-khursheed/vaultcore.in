@@ -2,14 +2,19 @@ import { Resend } from "resend";
 
 import { env } from "../env.ts";
 import { getEmailTemplateHtml } from "./email-template/template.ts";
+import { EmailTemplateProps } from "./types.js";
 
 export const resend = new Resend(env.RESEND_API_KEY);
 
-export async function sendEmail(
-  to: string,
-  subject: string,
-  props: EmailTemplateProps,
-) {
+export async function sendEmail({
+  props,
+  subject,
+  to,
+}: {
+  to: string;
+  subject: string;
+  props: EmailTemplateProps;
+}) {
   return await resend.emails.send({
     from: "onboarding@resend.dev",
     to: [to],

@@ -1,5 +1,7 @@
 import { relations } from "drizzle-orm";
 import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import z from "zod";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -91,3 +93,14 @@ export const accountRelations = relations(account, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export const VerifyNewUserEmailSchema = createInsertSchema(user, {
+  email: z.email("Invalid email address"),
+}).omit({
+  id: true,
+  name: true,
+  emailVerified: true,
+  image: true,
+  createdAt: true,
+  updatedAt: true,
+});

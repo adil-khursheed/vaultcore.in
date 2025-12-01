@@ -12,7 +12,7 @@ const SectionContainer = ({
   return (
     <section
       className={cn(
-        "bg-background relative min-h-[calc(100dvh-60px)] w-full",
+        "bg-background text-foreground border_left border_right relative mx-auto min-h-[calc(100dvh-60px)] w-full max-w-6xl",
         className,
       )}
     >

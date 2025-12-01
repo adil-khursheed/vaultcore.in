@@ -5,12 +5,11 @@ import { IconFingerprint } from "@tabler/icons-react";
 import { Button } from "@repo/ui/components/button";
 import { cn } from "@repo/ui/lib/utils";
 
+import SectionContainer from "./_components/section-container";
+
 const Page = () => {
   return (
-    <div className="bg-background text-foreground relative mx-auto min-h-screen w-full max-w-6xl">
-      <div className="to-border absolute top-0 left-0 z-10 h-full w-px bg-linear-to-b from-transparent via-20%" />
-      <div className="to-border absolute top-0 right-0 z-10 h-full w-px bg-linear-to-b from-transparent via-20%" />
-
+    <SectionContainer>
       {/* Hero Section */}
       <section className="relative py-12">
         <div className="flex flex-col items-center justify-center gap-10 text-center">
@@ -36,7 +35,7 @@ const Page = () => {
           </div>
 
           <div className="relative w-full">
-            <div className="bg-border absolute top-1/2 left-1/2 h-px w-[200%] -translate-x-1/2 -translate-y-1/2 opacity-50" />
+            <div className="bg-border absolute top-1/2 left-1/2 h-px w-screen -translate-x-1/2 -translate-y-1/2 opacity-50" />
             <div className="relative z-10 flex items-center justify-center gap-4">
               <Button size={"xl"} asChild>
                 <Link href={"/pricing/personal"}>Get Started Free</Link>
@@ -167,7 +166,7 @@ const Page = () => {
           </div>
         </div>
       </footer>
-    </div>
+    </SectionContainer>
   );
 };
 

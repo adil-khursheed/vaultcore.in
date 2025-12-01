@@ -1,3 +1,5 @@
+import { EmailTemplateProps } from "../types.js";
+
 export function getEmailTemplateHtml(props: EmailTemplateProps) {
   const { type, userName, actionUrl, verificationCode, digestContent } = props;
 

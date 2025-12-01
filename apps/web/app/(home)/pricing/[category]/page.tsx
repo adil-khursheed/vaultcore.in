@@ -8,11 +8,8 @@ const Page = async ({ params }: { params: Promise<{ category: string }> }) => {
   const { category } = await params;
 
   return (
-    <SectionContainer className="text-foreground relative mx-auto w-full max-w-6xl">
-      <div className="to-border absolute top-0 left-0 z-10 h-full w-px bg-linear-to-b from-transparent via-20%" />
-      <div className="to-border absolute top-0 right-0 z-10 h-full w-px bg-linear-to-b from-transparent via-20%" />
-
-      <section className="flex flex-col items-center justify-center gap-8 py-12">
+    <SectionContainer>
+      <div className="flex flex-col items-center justify-center gap-8 py-12">
         <h1 className="mb-0 text-center text-2xl font-medium text-balance md:text-5xl">
           Our Pricing
         </h1>
@@ -25,7 +22,7 @@ const Page = async ({ params }: { params: Promise<{ category: string }> }) => {
         <CategoryTab category={category} />
 
         <Pricing />
-      </section>
+      </div>
     </SectionContainer>
   );
 };
