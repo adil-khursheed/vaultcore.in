@@ -10,6 +10,8 @@ export function authEnv() {
         process.env.NODE_ENV === "production"
           ? z.string().min(1)
           : z.string().min(1).optional(),
+      POLAR_ACCESS_TOKEN: z.string().min(1),
+      POLAR_WEBHOOK_SECRET: z.string().min(1),
       NODE_ENV: z.enum(["development", "production"]).optional(),
     },
     runtimeEnv: process.env,
@@ -17,3 +19,5 @@ export function authEnv() {
       !!process.env.CI || process.env.npm_lifecycle_event === "lint",
   });
 }
+
+export const env = authEnv();

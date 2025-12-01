@@ -13,7 +13,6 @@ export const env = createEnv({
   },
   server: {
     DATABASE_URL: z.url(),
-    RESEND_API_KEY: z.string().min(1),
   },
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,

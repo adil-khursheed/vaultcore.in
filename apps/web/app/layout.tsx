@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Source_Serif_4, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
+
 import "@repo/ui/globals.css";
 
-import ThemeProvider from "@repo/ui/components/providers/theme-providers";
 import { TRPCClientProvider } from "@/lib/trpc/client";
+
+import ThemeProvider from "@repo/ui/components/providers/theme-providers";
 
 const fontSans = Geist({
   variable: "--font-sans",
@@ -32,7 +34,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} antialiased w-screen min-h-screen`}>
+        className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} min-h-screen w-screen antialiased`}
+      >
         <ThemeProvider>
           <TRPCClientProvider>{children}</TRPCClientProvider>
         </ThemeProvider>

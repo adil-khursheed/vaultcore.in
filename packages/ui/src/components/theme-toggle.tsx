@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
 import { Moon, SunIcon } from "lucide-react";
+import { useTheme } from "next-themes";
+
 import { Button } from "./button";
 
 const ThemeToggle = () => {
@@ -23,11 +24,12 @@ const ThemeToggle = () => {
       size={"icon"}
       variant={"ghost"}
       className="cursor-pointer"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}>
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+    >
       {resolvedTheme === "dark" ? (
-        <SunIcon className="size-4 text-primary" />
+        <SunIcon className="text-primary size-4" />
       ) : (
-        <Moon className="size-4 text-primary" />
+        <Moon className="text-primary size-4" />
       )}
 
       <span className="sr-only">Toggle Theme</span>

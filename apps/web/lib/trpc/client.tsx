@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
-import SuperJSON from "superjson";
 import type { QueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { env } from "@/env";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { createTRPCContext } from "@trpc/tanstack-react-query";
 import {
   createTRPCClient,
   httpBatchStreamLink,
   loggerLink,
 } from "@trpc/client";
+import { createTRPCContext } from "@trpc/tanstack-react-query";
+import SuperJSON from "superjson";
 
 import type { AppRouter } from "@repo/api";
 
-import { env } from "@/env";
 import { createQueryClient } from "./query-client";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
@@ -53,7 +53,7 @@ export function TRPCClientProvider({
           },
         }),
       ],
-    })
+    }),
   );
 
   return (

@@ -25,6 +25,7 @@
   "dependencies": {
     "@repo/db": "workspace:*",
     "@repo/auth": "workspace:*",
+    "@repo/email": "workspace:*",
     "@trpc/server": "^11.7.1",
     "superjson": "^2.2.5",
     "zod": "^4.1.12"

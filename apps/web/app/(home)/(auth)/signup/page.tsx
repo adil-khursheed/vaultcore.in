@@ -1,15 +1,23 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@repo/ui/components/card";
-import { Loader2Icon } from "lucide-react";
-import Link from "next/link";
 import React, { Suspense } from "react";
-import SignUpForm from "./_components/signup-form";
+import Link from "next/link";
+import { Loader2Icon } from "lucide-react";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/card";
+
 import SectionContainer from "../../_components/section-container";
+import SignUpForm from "./_components/signup-form";
 
 const Page = () => {
   return (
     <SectionContainer className="flex">
-      <div className="flex-1 flex items-center justify-center relative z-10 px-3">
-        <Card className="md:max-w-lg mx-auto w-full bg-background/30 backdrop-blur-xs shadow-xl">
+      <div className="relative z-10 flex flex-1 items-center justify-center px-3">
+        <Card className="bg-background/30 mx-auto w-full shadow-xl backdrop-blur-xs md:max-w-lg">
           <CardHeader>
             <CardTitle className="text-lg sm:text-2xl md:text-3xl">
               Create an account
@@ -28,14 +36,15 @@ const Page = () => {
 
           <CardContent>
             <Suspense
-              fallback={<Loader2Icon className="animate-spin size-6" />}>
+              fallback={<Loader2Icon className="size-6 animate-spin" />}
+            >
               <SignUpForm />
             </Suspense>
           </CardContent>
         </Card>
       </div>
     </SectionContainer>
-  )
+  );
 };
 
 export default Page;

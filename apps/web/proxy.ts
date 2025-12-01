@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { getSession } from "./lib/auth/server";
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  const isPublicRoute = ["/", "/login", "/signup"].includes(
-    pathname
-  ) || pathname.startsWith("/api/auth/");
+  const isPublicRoute =
+    ["/", "/login", "/signup"].includes(pathname) ||
+    pathname.startsWith("/api/auth/");
 
   const session = await getSession();
 
   if (session && isPublicRoute) {
-    if(session.user.emailVerified){
+    if (session.user.emailVerified) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     return NextResponse.redirect(new URL("/verify", request.url));

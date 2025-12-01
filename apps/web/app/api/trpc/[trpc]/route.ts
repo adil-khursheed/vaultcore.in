@@ -1,9 +1,8 @@
 import type { NextRequest } from "next/server";
+import { auth } from "@/lib/auth/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter, createTRPCContext } from "@repo/api";
-
-import { auth } from "@/lib/auth/server";
 
 const setCorsHeaders = (res: Response) => {
   res.headers.set("Access-Control-Allow-Origin", "*");

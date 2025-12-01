@@ -5,7 +5,7 @@ const HomeLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <Navbar />
-      <main className="px-3 w-full overflow-x-hidden">{children}</main>
+      <main className="w-full overflow-x-hidden px-3">{children}</main>
     </>
   );
 };

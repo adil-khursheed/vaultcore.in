@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useTheme, ThemeProvider as NextThemesProvider } from "next-themes";
+import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
+
 import { Toaster } from "../sonner";
 
 const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
@@ -11,7 +12,8 @@ const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
-      enableColorScheme>
+      enableColorScheme
+    >
       {children}
       <ToastProvider />
     </NextThemesProvider>

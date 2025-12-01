@@ -1,13 +1,20 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import NumberFlow from "@number-flow/react";
-import { ArrowRight, BadgeCheck } from 'lucide-react';
+import { ArrowRight, BadgeCheck } from "lucide-react";
 
-import { Tabs, TabsList, TabsTrigger } from "@repo/ui/components/tabs";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/components/card";
+import { Tabs, TabsList, TabsTrigger } from "@repo/ui/components/tabs";
 import { cn } from "@repo/ui/lib/utils";
 
 const plans = [
@@ -70,9 +77,13 @@ const Pricing = () => {
   const [frequency, setFrequency] = useState<string>("monthly");
   return (
     <>
-      <Tabs defaultValue={frequency} onValueChange={setFrequency} className='relative w-full items-center justify-center'>
-        <div className="absolute w-[200%] h-px top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-border opacity-50"/>
-        <TabsList className='relative z-10'>
+      <Tabs
+        defaultValue={frequency}
+        onValueChange={setFrequency}
+        className="relative w-full items-center justify-center"
+      >
+        <div className="bg-border absolute top-1/2 left-1/2 h-px w-[200%] -translate-x-1/2 -translate-y-1/2 opacity-50" />
+        <TabsList className="relative z-10">
           <TabsTrigger value="monthly">Monthly</TabsTrigger>
           <TabsTrigger value="yearly">
             Yearly
@@ -80,30 +91,28 @@ const Pricing = () => {
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      <div className="mt-8 grid w-full max-w-4xl lg:grid-cols-3 gap-4 px-2">
+      <div className="mt-8 grid w-full max-w-4xl gap-4 px-2 lg:grid-cols-3">
         {plans.map((plan) => (
           <Card
             className={cn(
-              "relative w-full text-left lg:hover:scale-105 lg:hover:transition-all lg:hover:duration-300 lg:hover:shadow-2xl scale-100",
-              plan.popular && "ring-2 ring-primary"
+              "relative w-full scale-100 text-left lg:hover:scale-105 lg:hover:shadow-2xl lg:hover:transition-all lg:hover:duration-300",
+              plan.popular && "ring-primary ring-2",
             )}
             key={plan.id}
           >
             {plan.popular && (
-              <Badge className="-translate-x-1/2 -translate-y-1/2 absolute top-0 left-1/2 rounded-full">
+              <Badge className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full">
                 Popular
               </Badge>
             )}
             <CardHeader>
-              <CardTitle className="font-medium text-xl">
-                {plan.name}
-              </CardTitle>
+              <CardTitle className="text-xl font-medium">{plan.name}</CardTitle>
               <CardDescription>
                 <p>{plan.description}</p>
                 {typeof plan.price[frequency as keyof typeof plan.price] ===
                 "number" ? (
                   <NumberFlow
-                    className="font-medium text-foreground"
+                    className="text-foreground font-medium"
                     format={{
                       style: "currency",
                       currency: "USD",
@@ -111,13 +120,11 @@ const Pricing = () => {
                     }}
                     suffix={`/month, billed ${frequency}.`}
                     value={
-                      plan.price[
-                        frequency as keyof typeof plan.price
-                      ] as number
+                      plan.price[frequency as keyof typeof plan.price] as number
                     }
                   />
                 ) : (
-                  <span className="font-medium text-foreground">
+                  <span className="text-foreground font-medium">
                     {plan.price[frequency as keyof typeof plan.price]}.
                   </span>
                 )}
@@ -126,7 +133,7 @@ const Pricing = () => {
             <CardContent className="grid gap-2">
               {plan.features.map((feature, index) => (
                 <div
-                  className="flex gap-2 text-muted-foreground text-sm"
+                  className="text-muted-foreground flex gap-2 text-sm"
                   key={index}
                 >
                   <BadgeCheck className="h-lh w-4 flex-none" />
@@ -147,7 +154,7 @@ const Pricing = () => {
         ))}
       </div>
     </>
-  )
-}
+  );
+};
 
-export default Pricing
+export default Pricing;

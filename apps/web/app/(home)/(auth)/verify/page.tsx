@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import LogoutButton from "@/app/(root)/_components/logout-button";
 
 const Page = () => {
@@ -6,7 +6,7 @@ const Page = () => {
     <div>
       <LogoutButton />
     </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;
