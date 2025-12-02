@@ -1,6 +1,6 @@
 import React from "react";
+import SectionContainer from "@/components/shared/section-container";
 
-import SectionContainer from "../../_components/section-container";
 import CategoryTab from "./_components/category-tab";
 import Pricing from "./_components/pricing";
 

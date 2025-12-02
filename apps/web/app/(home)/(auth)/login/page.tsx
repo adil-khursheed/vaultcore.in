@@ -1,5 +1,6 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
+import SectionContainer from "@/components/shared/section-container";
 import { Loader2Icon } from "lucide-react";
 
 import {
@@ -10,7 +11,6 @@ import {
   CardTitle,
 } from "@repo/ui/components/card";
 
-import SectionContainer from "../../_components/section-container";
 import LoginForm from "./_components/login-form";
 
 const Page = () => {

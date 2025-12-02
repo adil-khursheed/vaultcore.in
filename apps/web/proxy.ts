@@ -6,10 +6,10 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const isPublicRoute =
-    ["/", "/login"].includes(pathname) ||
+    ["/", "/login", "/verify"].includes(pathname) ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/api/auth/") ||
-    pathname.startsWith("/api/trpc/auth/");
+    pathname.startsWith("/api/trpc/auth.verifyEmail");
 
   const session = await getSession();
 

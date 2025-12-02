@@ -1,4 +1,6 @@
 import React, { Suspense } from "react";
+import BGPattern from "@/components/shared/bg-pattern";
+import SectionContainer from "@/components/shared/section-container";
 import { Loader2Icon } from "lucide-react";
 
 import {
@@ -9,7 +11,6 @@ import {
   CardTitle,
 } from "@repo/ui/components/card";
 
-import SectionContainer from "../../../_components/section-container";
 import NewAccountForm from "./_components/new-account-form";
 
 const Page = async ({ params }: { params: Promise<{ plan: string }> }) => {
@@ -18,7 +19,7 @@ const Page = async ({ params }: { params: Promise<{ plan: string }> }) => {
   return (
     <SectionContainer>
       <div className="flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center gap-10">
-        <div className="bg_pattern border_top border_bottom relative h-20 w-full" />
+        <BGPattern />
 
         <Card className="mx-auto w-full md:max-w-lg">
           <CardHeader>
@@ -39,7 +40,7 @@ const Page = async ({ params }: { params: Promise<{ plan: string }> }) => {
           </CardContent>
         </Card>
 
-        <div className="bg_pattern border_top border_bottom relative h-20 w-full" />
+        <BGPattern />
       </div>
     </SectionContainer>
   );

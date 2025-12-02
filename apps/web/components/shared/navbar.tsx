@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 
 import { Button } from "@repo/ui/components/button";
@@ -22,6 +23,8 @@ import Logo from "./logo";
 const Navbar = () => {
   const [open, setOpen] = useState(false);
 
+  const pathname = usePathname();
+
   const isMobile = useIsMobile();
 
   return (
@@ -33,93 +36,103 @@ const Navbar = () => {
 
         {!isMobile ? (
           <nav className="flex items-center">
-            <Button asChild variant={"ghost"}>
-              <Link href={"/pricing/personal"}>
-                <span>Pricing</span>
-              </Link>
-            </Button>
-            <Button asChild variant={"ghost"}>
-              <Link href={"/downloads"}>
-                <span>Downloads</span>
-              </Link>
-            </Button>
+            {!pathname.startsWith("/verify") && (
+              <>
+                <Button asChild variant={"ghost"}>
+                  <Link href={"/pricing/personal"}>
+                    <span>Pricing</span>
+                  </Link>
+                </Button>
+                <Button asChild variant={"ghost"}>
+                  <Link href={"/downloads"}>
+                    <span>Downloads</span>
+                  </Link>
+                </Button>
+              </>
+            )}
 
             <ThemeToggle />
 
-            <Button asChild variant={"ghost"}>
-              <Link href={"/login"}>
-                <span>Login</span>
-              </Link>
-            </Button>
+            {!pathname.startsWith("/verify") && (
+              <>
+                <Button asChild variant={"ghost"}>
+                  <Link href={"/login"}>
+                    <span>Login</span>
+                  </Link>
+                </Button>
 
-            <Button asChild className="ml-3">
-              <Link href={"/pricing/personal"}>
-                <span>Get Started Free</span>
-              </Link>
-            </Button>
+                <Button asChild className="ml-3">
+                  <Link href={"/pricing/personal"}>
+                    <span>Get Started Free</span>
+                  </Link>
+                </Button>
+              </>
+            )}
           </nav>
         ) : (
           <div className="flex items-center">
             <ThemeToggle />
 
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <Button variant={"ghost"}>
-                  <Menu />
-                </Button>
-              </SheetTrigger>
-
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle className="sr-only">Menu</SheetTitle>
-                  <SheetDescription className="sr-only">
-                    Mobile Menu
-                  </SheetDescription>
-
-                  <div />
-                </SheetHeader>
-
-                <nav className="flex flex-1 flex-col items-start">
-                  <Button
-                    asChild
-                    variant={"ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setOpen(false)}
-                  >
-                    <Link href={"/pricing/personal"}>
-                      <span>Pricing</span>
-                    </Link>
+            {!pathname.startsWith("/verify") && (
+              <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
+                  <Button variant={"ghost"}>
+                    <Menu />
                   </Button>
-                  <Button
-                    asChild
-                    variant={"ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setOpen(false)}
-                  >
-                    <Link href={"/downloads"}>
-                      <span>Downloads</span>
-                    </Link>
-                  </Button>
+                </SheetTrigger>
 
-                  <SheetFooter className="mt-auto w-full">
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle className="sr-only">Menu</SheetTitle>
+                    <SheetDescription className="sr-only">
+                      Mobile Menu
+                    </SheetDescription>
+
+                    <div />
+                  </SheetHeader>
+
+                  <nav className="flex flex-1 flex-col items-start">
                     <Button
                       asChild
-                      variant={"outline"}
+                      variant={"ghost"}
+                      className="w-full justify-start"
                       onClick={() => setOpen(false)}
                     >
-                      <Link href={"/login"}>
-                        <span>Login</span>
-                      </Link>
-                    </Button>
-                    <Button asChild onClick={() => setOpen(false)}>
                       <Link href={"/pricing/personal"}>
-                        <span>Get Started Free</span>
+                        <span>Pricing</span>
                       </Link>
                     </Button>
-                  </SheetFooter>
-                </nav>
-              </SheetContent>
-            </Sheet>
+                    <Button
+                      asChild
+                      variant={"ghost"}
+                      className="w-full justify-start"
+                      onClick={() => setOpen(false)}
+                    >
+                      <Link href={"/downloads"}>
+                        <span>Downloads</span>
+                      </Link>
+                    </Button>
+
+                    <SheetFooter className="mt-auto w-full">
+                      <Button
+                        asChild
+                        variant={"outline"}
+                        onClick={() => setOpen(false)}
+                      >
+                        <Link href={"/login"}>
+                          <span>Login</span>
+                        </Link>
+                      </Button>
+                      <Button asChild onClick={() => setOpen(false)}>
+                        <Link href={"/pricing/personal"}>
+                          <span>Get Started Free</span>
+                        </Link>
+                      </Button>
+                    </SheetFooter>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            )}
           </div>
         )}
       </div>

@@ -32,48 +32,41 @@ import {
 } from "@repo/ui/components/input-group";
 import { Progress } from "@repo/ui/components/progress";
 
-export const SignUpSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters long"),
-  email: z.email("Invalid email address"),
-  password: z
-    .string()
-    .min(12, "Password must be at least 12 characters long")
-    .max(128, "Password must be at most 128 characters long"),
-});
+export const SignUpSchema = z
+  .object({
+    password: z
+      .string()
+      .min(12, "Password must be at least 12 characters long")
+      .max(128, "Password must be at most 128 characters long"),
+    confirm_password: z
+      .string()
+      .min(12, "Password must be at least 12 characters long")
+      .max(128, "Password must be at most 128 characters long"),
+  })
+  .refine((data) => {
+    if (data.password === data.confirm_password) {
+      return true;
+    }
 
-const SignUpForm = () => {
+    return false;
+  }, "Passwords do not match.");
+
+const SignUpForm = ({ token }: { token?: string | string[] }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
 
   const form = useForm({
     defaultValues: {
-      name: "",
-      email: "",
       password: "",
+      confirm_password: "",
     },
     validators: {
       onSubmit: SignUpSchema,
     },
     onSubmit: async (data) => {
       try {
-        const { data: res, error } = await authClient.signUp.email({
-          email: data.value.email,
-          password: data.value.password,
-          name: data.value.name,
-          callbackURL: "/verify",
-        });
-
-        if (error) {
-          console.log(error);
-          toast.error(error.message);
-          return;
-        }
-
-        if (res && res.user) {
-          toast.success("User created successfully");
-          router.replace("/verify");
-        }
+        console.log(data);
       } catch (err) {
         console.log(err);
         toast.error("Something went wrong");
@@ -88,75 +81,7 @@ const SignUpForm = () => {
         void form.handleSubmit();
       }}
     >
-      <FieldGroup>
-        <form.Field
-          name="name"
-          children={(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
-
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldContent>
-                  <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-                </FieldContent>
-
-                <InputGroup>
-                  <InputGroupInput
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    aria-invalid={isInvalid}
-                    placeholder="Enter your name"
-                    className="h-11"
-                  />
-
-                  <InputGroupAddon>
-                    <UserIcon />
-                  </InputGroupAddon>
-                </InputGroup>
-                {isInvalid && <FieldError errors={field.state.meta.errors} />}
-              </Field>
-            );
-          }}
-        />
-
-        <form.Field
-          name="email"
-          children={(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
-
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldContent>
-                  <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                </FieldContent>
-
-                <InputGroup>
-                  <InputGroupInput
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    aria-invalid={isInvalid}
-                    placeholder="Enter your email"
-                    className="h-11"
-                  />
-
-                  <InputGroupAddon>
-                    <MailIcon />
-                  </InputGroupAddon>
-                </InputGroup>
-                {isInvalid && <FieldError errors={field.state.meta.errors} />}
-              </Field>
-            );
-          }}
-        />
-
+      <FieldGroup className="gap-4">
         <form.Field
           name="password"
           listeners={{
@@ -186,7 +111,7 @@ const SignUpForm = () => {
                   </FieldLabel>
                 </FieldContent>
 
-                <InputGroup>
+                <InputGroup className="h-11">
                   <InputGroupInput
                     id={field.name}
                     name={field.name}
@@ -195,7 +120,6 @@ const SignUpForm = () => {
                     onBlur={field.handleBlur}
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your master password"
-                    className="h-11"
                     aria-invalid={isInvalid}
                   />
 
@@ -218,6 +142,52 @@ const SignUpForm = () => {
                   data-level={strength.level}
                   indicatorStyle={{ backgroundColor: strength.color }}
                 />
+
+                {isInvalid && <FieldError errors={field.state.meta.errors} />}
+              </Field>
+            );
+          }}
+        />
+
+        <form.Field
+          name="confirm_password"
+          children={(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
+
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldContent>
+                  <FieldLabel htmlFor={field.name}>
+                    Confirm Master Password
+                  </FieldLabel>
+                </FieldContent>
+
+                <InputGroup className="h-11">
+                  <InputGroupInput
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Re-enter your master password"
+                    aria-invalid={isInvalid}
+                  />
+
+                  <InputGroupAddon>
+                    <LockIcon />
+                  </InputGroupAddon>
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      variant={"ghost"}
+                      size={"icon-sm"}
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
 
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>

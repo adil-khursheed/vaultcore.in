@@ -1,11 +1,10 @@
 import React from "react";
 import Link from "next/link";
+import SectionContainer from "@/components/shared/section-container";
 import { IconFingerprint } from "@tabler/icons-react";
 
 import { Button } from "@repo/ui/components/button";
 import { cn } from "@repo/ui/lib/utils";
-
-import SectionContainer from "./_components/section-container";
 
 const Page = () => {
   return (
