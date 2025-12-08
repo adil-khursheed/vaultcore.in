@@ -36,6 +36,8 @@ const Navbar = () => {
 
         {!isMobile ? (
           <nav className="flex items-center">
+            <ThemeToggle />
+
             {!pathname.startsWith("/verify") && (
               <>
                 <Button asChild variant={"ghost"}>
@@ -43,18 +45,13 @@ const Navbar = () => {
                     <span>Pricing</span>
                   </Link>
                 </Button>
+
                 <Button asChild variant={"ghost"}>
                   <Link href={"/downloads"}>
                     <span>Downloads</span>
                   </Link>
                 </Button>
-              </>
-            )}
 
-            <ThemeToggle />
-
-            {!pathname.startsWith("/verify") && (
-              <>
                 <Button asChild variant={"ghost"}>
                   <Link href={"/login"}>
                     <span>Login</span>

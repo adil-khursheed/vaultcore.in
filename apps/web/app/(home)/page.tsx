@@ -6,6 +6,8 @@ import { IconFingerprint } from "@tabler/icons-react";
 import { Button } from "@repo/ui/components/button";
 import { cn } from "@repo/ui/lib/utils";
 
+import AppDashboardDemo from "./_components/app-dashboard-demo";
+
 const Page = () => {
   return (
     <SectionContainer>
@@ -50,14 +52,18 @@ const Page = () => {
 
             <div
               className={cn(
-                "absolute inset-x-0 top-[20px] h-[150px]",
-                "bg-size-[13px_13px]",
+                "absolute inset-x-0 top-[22px] h-28",
+                "bg-size-[10px_10px]",
                 "bg-[radial-gradient(#e5e5e5_1.5px,transparent_1.5px)]",
                 "dark:bg-[radial-gradient(#2d2d2d_1.5px,transparent_1.5px)]",
               )}
             >
-              <div className="bg-background pointer-events-none absolute inset-0 flex items-center justify-center mask-t-from-5%" />
+              <div className="bg-background pointer-events-none absolute inset-0 flex items-center justify-center mask-t-from-10%" />
             </div>
+          </div>
+
+          <div className="border_top border_bottom bg-background relative hidden aspect-1280/832 w-full md:block">
+            <AppDashboardDemo />
           </div>
         </div>
       </section>
