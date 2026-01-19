@@ -1,18 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
-import { calculatePasswordStrength } from "@/lib/utils";
-import { useForm } from "@tanstack/react-form";
+import { useTRPC } from "@/lib/trpc/client";
 import {
-  EyeIcon,
-  EyeOffIcon,
-  Loader2Icon,
-  LockIcon,
-  MailIcon,
-  UserIcon,
-} from "lucide-react";
+  calculatePasswordStrength,
+  deriveKeys,
+  encryptVaultKey,
+  generateVaultKey,
+} from "@/lib/utils";
+import CryptoService from "@/services/crypto-service";
+import { useForm } from "@tanstack/react-form";
+import { useMutation } from "@tanstack/react-query";
+import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
@@ -51,10 +52,44 @@ export const SignUpSchema = z
     return false;
   }, "Passwords do not match.");
 
-const SignUpForm = ({ token }: { token?: string | string[] }) => {
+const SignUpForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
+  const searchParams = useSearchParams();
+
+  const token = searchParams.get("token");
+
   const router = useRouter();
+
+  const trpc = useTRPC();
+
+  const cryptoService = new CryptoService();
+
+  const verifyToken = useMutation(
+    trpc.auth.verifyEmail.mutationOptions({
+      onSuccess: (data) => {
+        sessionStorage.setItem(
+          "user-account",
+          JSON.stringify({ email: data.email, emailVerified: true }),
+        );
+        toast.success("Email verified successfully");
+      },
+      onError: () => {
+        router.replace("/");
+        toast.error("Email verification failed");
+      },
+    }),
+  );
+
+  useEffect(() => {
+    if (token) {
+      verifyToken.mutate({ token });
+    }
+  }, []);
+
+  const insertVaultKey = useMutation(
+    trpc.vault.createVaultKey.mutationOptions({})
+  )
 
   const form = useForm({
     defaultValues: {
@@ -66,7 +101,41 @@ const SignUpForm = ({ token }: { token?: string | string[] }) => {
     },
     onSubmit: async (data) => {
       try {
-        console.log(data);
+        const user_account = sessionStorage.getItem("user-account");
+        const user_email: string = JSON.parse(user_account!).email;
+
+        const { masterKey, passwordHash } = await deriveKeys(
+          data.value.password,
+          user_email,
+        );
+        const vaultKey = await generateVaultKey();
+        const encryptedVaultKey = await encryptVaultKey(vaultKey, masterKey);
+
+        await authClient.signUp.email(
+          {
+            email: user_email,
+            password: passwordHash,
+            name: user_email.split("@")[0]?.toLowerCase() ?? "",
+          },
+          {
+            onSuccess: (ctx) => {
+              cryptoService.setMasterKey(masterKey);
+              cryptoService.setVaultKey(vaultKey);
+
+              insertVaultKey.mutate({
+                userId: ctx.data.user.id,
+                key: encryptedVaultKey.encryptedKey,
+                iv: encryptedVaultKey.iv
+              });
+
+              router.replace("/dashboard");
+            },
+            onError: (ctx) => {
+              console.log(ctx.error);
+              toast.error(ctx.error.message);
+            }
+          }
+        );
       } catch (err) {
         console.log(err);
         toast.error("Something went wrong");

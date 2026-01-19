@@ -41,7 +41,7 @@ const Page = async ({
 
           <CardContent>
             <Suspense>
-              <SignUpForm token={token} />
+              <SignUpForm />
             </Suspense>
           </CardContent>
         </Card>

@@ -67,14 +67,6 @@ export function initAuth<
       enabled: true,
       minPasswordLength: 12,
       maxPasswordLength: 128,
-      password: {
-        async hash(password) {
-          return hashPasswordForAuth(password);
-        },
-        async verify({ password, hash }) {
-          return verifyPasswordForAuth(password, hash);
-        },
-      },
     },
     onAPIError: {
       onError(error, ctx) {

@@ -15,7 +15,7 @@
   "dependencies": {
     "@number-flow/react": "^0.5.10",
     "@polar-sh/better-auth": "^1.5.0",
-    "@polar-sh/sdk": "^0.41.5",
+    "@polar-sh/sdk": "^0.42.1",
     "@repo/api": "workspace:*",
     "@repo/auth": "workspace:*",
     "@repo/db": "workspace:*",

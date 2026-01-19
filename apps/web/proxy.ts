@@ -9,7 +9,7 @@ export async function proxy(request: NextRequest) {
     ["/", "/login", "/verify"].includes(pathname) ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/api/auth/") ||
-    pathname.startsWith("/api/trpc/auth.verifyEmail");
+    pathname.startsWith("/api/trpc/auth.");
 
   const session = await getSession();
 
