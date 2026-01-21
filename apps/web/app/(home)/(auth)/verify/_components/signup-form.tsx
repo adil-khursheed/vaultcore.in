@@ -10,13 +10,13 @@ import {
   encryptVaultKey,
   generateVaultKey,
 } from "@/lib/utils";
-import CryptoService from "@/services/crypto-service";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
+import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {
   Field,
@@ -63,7 +63,7 @@ const SignUpForm = () => {
 
   const trpc = useTRPC();
 
-  const cryptoService = new CryptoService();
+  const { setMasterKey, setVaultKey } = useVaultStore();
 
   const verifyToken = useMutation(
     trpc.auth.verifyEmail.mutationOptions({
@@ -88,8 +88,8 @@ const SignUpForm = () => {
   }, []);
 
   const insertVaultKey = useMutation(
-    trpc.vault.createVaultKey.mutationOptions({})
-  )
+    trpc.vault.createVaultKey.mutationOptions({}),
+  );
 
   const form = useForm({
     defaultValues: {
@@ -119,22 +119,22 @@ const SignUpForm = () => {
           },
           {
             onSuccess: (ctx) => {
-              cryptoService.setMasterKey(masterKey);
-              cryptoService.setVaultKey(vaultKey);
-
               insertVaultKey.mutate({
                 userId: ctx.data.user.id,
                 key: encryptedVaultKey.encryptedKey,
-                iv: encryptedVaultKey.iv
+                iv: encryptedVaultKey.iv,
               });
+
+              setMasterKey(masterKey);
+              setVaultKey(vaultKey);
 
               router.replace("/dashboard");
             },
             onError: (ctx) => {
               console.log(ctx.error);
               toast.error(ctx.error.message);
-            }
-          }
+            },
+          },
         );
       } catch (err) {
         console.log(err);

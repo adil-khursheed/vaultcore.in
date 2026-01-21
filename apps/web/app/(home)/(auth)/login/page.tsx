@@ -12,17 +12,20 @@ import {
 } from "@repo/ui/components/card";
 
 import LoginForm from "./_components/login-form";
+import BGPattern from "@/components/shared/bg-pattern";
 
 const Page = () => {
   return (
-    <SectionContainer className="flex">
-      <div className="relative z-10 flex flex-1 items-center justify-center px-3">
-        <Card className="bg-background/30 mx-auto w-full shadow-xl backdrop-blur-xs md:max-w-lg">
+    <SectionContainer>
+      <div className="flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center gap-10">
+        <BGPattern />
+
+        <Card className="mx-auto w-full md:max-w-lg">
           <CardHeader>
-            <CardTitle className="text-lg sm:text-2xl md:text-3xl">
+            <CardTitle className="text-xl font-semibold md:text-2xl">
               Welcome Back
             </CardTitle>
-            <CardDescription className="text-sm sm:text-base md:text-lg">
+            <CardDescription className="text-base">
               Enter your credentials to login to your account
             </CardDescription>
 
@@ -42,6 +45,8 @@ const Page = () => {
             </Suspense>
           </CardContent>
         </Card>
+
+        <BGPattern />
       </div>
     </SectionContainer>
   );

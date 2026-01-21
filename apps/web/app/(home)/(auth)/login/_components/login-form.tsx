@@ -21,11 +21,20 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@repo/ui/components/input-group";
+import { decryptVaultKey, deriveKeys, encryptVaultKey, generateVaultKey } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTRPC } from "@/lib/trpc/client";
+import { useVaultStore } from "@repo/store";
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
+
+  const queryClient = useQueryClient();
+  const trpc = useTRPC();
+
+  const { setMasterKey, setVaultKey } = useVaultStore();
 
   const form = useForm({
     defaultValues: {
@@ -33,21 +42,38 @@ const LoginForm = () => {
       password: "",
     },
     onSubmit: async (data) => {
-      const { data: res, error } = await authClient.signIn.email({
-        email: data.value.email,
-        password: data.value.password,
-        callbackURL: "/dashboard",
-      });
+      const { masterKey, passwordHash } = await deriveKeys(
+        data.value.password,
+        data.value.email,
+      );
 
-      if (error) {
-        console.log(error);
-        toast.error(error.message);
-        return;
-      }
+      await authClient.signIn.email(
+        {
+          email: data.value.email,
+          password: passwordHash,
+        },
+        {
+          onSuccess: async (ctx) => {
+            const data = await queryClient.fetchQuery(
+              trpc.vault.getVaultKey.queryOptions({ userId: ctx.data.user.id })
+            );
 
-      if (res && res.url) {
-        router.replace(res.url);
-      }
+            const decryptedVaultKey = await decryptVaultKey({
+              encryptedKey: data.vaultKeyData.key,
+              iv: data.vaultKeyData.iv
+            }, masterKey);
+
+            setMasterKey(masterKey);
+            setVaultKey(decryptedVaultKey);
+
+            router.replace("/dashboard");
+          },
+          onError: (ctx) => {
+            console.log(ctx.error.message);
+            toast.error("Error while logging in.")
+          },
+        }
+      );
     },
   });
 
@@ -71,7 +97,7 @@ const LoginForm = () => {
                   <FieldLabel htmlFor={field.name}>Email</FieldLabel>
                 </FieldContent>
 
-                <InputGroup>
+                <InputGroup className="h-11">
                   <InputGroupInput
                     id={field.name}
                     name={field.name}
@@ -80,7 +106,6 @@ const LoginForm = () => {
                     onBlur={field.handleBlur}
                     aria-invalid={isInvalid}
                     placeholder="Enter your email"
-                    className="h-11 rounded-full"
                   />
 
                   <InputGroupAddon>
@@ -105,7 +130,7 @@ const LoginForm = () => {
                   <FieldLabel htmlFor={field.name}>Master Password</FieldLabel>
                 </FieldContent>
 
-                <InputGroup>
+                <InputGroup className="h-11">
                   <InputGroupInput
                     id={field.name}
                     name={field.name}
@@ -115,7 +140,6 @@ const LoginForm = () => {
                     aria-invalid={isInvalid}
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your master password"
-                    className="h-11 rounded-full"
                   />
 
                   <InputGroupAddon>
