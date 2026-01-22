@@ -3,10 +3,20 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
+import { useTRPC } from "@/lib/trpc/client";
+import { decryptVaultKey, deriveKeys } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
-import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  EyeIcon,
+  EyeOffIcon,
+  Loader2Icon,
+  LockIcon,
+  MailIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
+import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {
   Field,
@@ -21,10 +31,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@repo/ui/components/input-group";
-import { decryptVaultKey, deriveKeys, encryptVaultKey, generateVaultKey } from "@/lib/utils";
-import { useQueryClient } from "@tanstack/react-query";
-import { useTRPC } from "@/lib/trpc/client";
-import { useVaultStore } from "@repo/store";
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -55,13 +61,16 @@ const LoginForm = () => {
         {
           onSuccess: async (ctx) => {
             const data = await queryClient.fetchQuery(
-              trpc.vault.getVaultKey.queryOptions({ userId: ctx.data.user.id })
+              trpc.vault.getVaultKey.queryOptions({ userId: ctx.data.user.id }),
             );
 
-            const decryptedVaultKey = await decryptVaultKey({
-              encryptedKey: data.vaultKeyData.key,
-              iv: data.vaultKeyData.iv
-            }, masterKey);
+            const decryptedVaultKey = await decryptVaultKey(
+              {
+                encryptedKey: data.vaultKeyData.key,
+                iv: data.vaultKeyData.iv,
+              },
+              masterKey,
+            );
 
             setMasterKey(masterKey);
             setVaultKey(decryptedVaultKey);
@@ -70,9 +79,9 @@ const LoginForm = () => {
           },
           onError: (ctx) => {
             console.log(ctx.error.message);
-            toast.error("Error while logging in.")
+            toast.error("Error while logging in.");
           },
-        }
+        },
       );
     },
   });
@@ -160,7 +169,21 @@ const LoginForm = () => {
             );
           }}
         />
-        <Button type="submit">Login</Button>
+
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+          children={([canSubmit, isSubmitting]) => {
+            return (
+              <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                {isSubmitting ? (
+                  <Loader2Icon className="animate-spin" />
+                ) : (
+                  "Login"
+                )}
+              </Button>
+            );
+          }}
+        />
       </FieldGroup>
     </form>
   );

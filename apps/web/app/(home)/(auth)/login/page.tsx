@@ -1,5 +1,6 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
+import BGPattern from "@/components/shared/bg-pattern";
 import SectionContainer from "@/components/shared/section-container";
 import { Loader2Icon } from "lucide-react";
 
@@ -12,7 +13,6 @@ import {
 } from "@repo/ui/components/card";
 
 import LoginForm from "./_components/login-form";
-import BGPattern from "@/components/shared/bg-pattern";
 
 const Page = () => {
   return (

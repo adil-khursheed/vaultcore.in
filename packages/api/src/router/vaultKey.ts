@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 
-import { vaultKey } from "@repo/db/schema";
 import { eq } from "@repo/db";
+import { vaultKey } from "@repo/db/schema";
 
 import { protectedProcedure } from "../trpc";
 
@@ -37,17 +37,19 @@ export const vaultKeyRouter = {
     }),
 
   getVaultKey: protectedProcedure
-    .input(z.object({
-      userId: z.string(),
-    }))
+    .input(
+      z.object({
+        userId: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
-        const { userId } = input;
-        if (!userId) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "UserId is required",
-          });
-        }
+      const { userId } = input;
+      if (!userId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "UserId is required",
+        });
+      }
 
       const { db } = ctx;
       const vaultKeyData = await db.query.vaultKey.findFirst({
