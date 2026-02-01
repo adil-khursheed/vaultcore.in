@@ -128,7 +128,7 @@ const SignUpForm = () => {
               setMasterKey(masterKey);
               setVaultKey(vaultKey);
 
-              router.replace("/dashboard");
+              router.replace("/all-items");
             },
             onError: (ctx) => {
               console.log(ctx.error);

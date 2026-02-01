@@ -1,37 +1,42 @@
 import React from "react";
-import VaultCore from "@/components/icons/vaultcore";
 
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-} from "@repo/ui/components/dropdown-menu";
-import {
   Sidebar,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
 } from "@repo/ui/components/sidebar";
+
+import AppSidebarFooter from "./app-sidebar-footer";
+import AppSidebarHeader from "./app-sidebar-header";
+import AppSidebarMenu from "./app-sidebar-menu";
+import AppSidebarTypesMenu from "./app-sidebar-types-menu";
 
 const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   return (
     <Sidebar {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <div className="flex items-center">
-                    <VaultCore className="size-7" />
-                    <span>VaultCore</span>
-                  </div>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+      <AppSidebarHeader />
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <AppSidebarMenu />
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Types</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <AppSidebarTypesMenu />
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <AppSidebarFooter />
+      </SidebarFooter>
     </Sidebar>
   );
 };

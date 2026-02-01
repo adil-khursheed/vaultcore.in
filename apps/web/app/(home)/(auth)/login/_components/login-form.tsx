@@ -75,7 +75,7 @@ const LoginForm = () => {
             setMasterKey(masterKey);
             setVaultKey(decryptedVaultKey);
 
-            router.replace("/dashboard");
+            router.replace("/all-items");
           },
           onError: (ctx) => {
             console.log(ctx.error.message);
