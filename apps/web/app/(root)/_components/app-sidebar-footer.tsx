@@ -1,10 +1,9 @@
-"use client";
-
+import type { User } from "better-auth";
 import React from "react";
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth/client";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth/server";
 import { IconDotsVertical, IconLogout2 } from "@tabler/icons-react";
-import { toast } from "sonner";
 
 import {
   Avatar,
@@ -24,30 +23,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@repo/ui/components/sidebar";
 
-const AppSidebarFooter = () => {
-  const { useSession, signOut } = authClient;
-  const { data } = useSession();
-
-  const { isMobile } = useSidebar();
-
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.replace("/login");
-        },
-        onError: () => {
-          toast.error("Failed to logout");
-        },
-      },
-    });
-  };
-
+const AppSidebarFooter = ({ user }: { user: User }) => {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -58,20 +36,15 @@ const AppSidebarFooter = () => {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage
-                  src={data?.user.image ?? undefined}
-                  alt={data?.user.name ?? ""}
-                />
-                <AvatarFallback className="rounded-lg">
-                  {data?.user.name.charAt(0).toUpperCase()}
+                <AvatarImage src={user.image ?? undefined} alt={user.name} />
+                <AvatarFallback className="rounded-lg capitalize">
+                  {user.name.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">
-                  {data?.user.name ?? ""}
-                </span>
+                <span className="truncate font-medium">{user.name}</span>
                 <span className="text-muted-foreground truncate text-xs">
-                  {data?.user.email ?? ""}
+                  {user.email}
                 </span>
               </div>
               <IconDotsVertical className="ml-auto size-4" />
@@ -80,27 +53,22 @@ const AppSidebarFooter = () => {
 
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            side={"top"}
             align="end"
             sideOffset={4}
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage
-                    src={data?.user.image ?? undefined}
-                    alt={data?.user.name ?? ""}
-                  />
-                  <AvatarFallback className="rounded-lg">
-                    {data?.user.name.charAt(0).toUpperCase()}
+                  <AvatarImage src={user.image ?? undefined} alt={user.name} />
+                  <AvatarFallback className="rounded-lg capitalize">
+                    {user.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">
-                    {data?.user.name ?? ""}
-                  </span>
+                  <span className="truncate font-medium">{user.name}</span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {data?.user.email ?? ""}
+                    {user.email}
                   </span>
                 </div>
               </div>
@@ -110,7 +78,13 @@ const AppSidebarFooter = () => {
 
             <DropdownMenuGroup>
               <DropdownMenuItem
-                onClick={handleLogout}
+                onClick={async () => {
+                  "use server";
+                  await auth.api.signOut({
+                    headers: await headers(),
+                  });
+                  redirect("/");
+                }}
                 className="cursor-pointer"
               >
                 <IconLogout2 />

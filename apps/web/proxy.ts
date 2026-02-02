@@ -15,9 +15,9 @@ export async function proxy(request: NextRequest) {
 
   if (session && isPublicRoute) {
     if (session.user.emailVerified) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/all-items", request.url));
     }
-    return NextResponse.redirect(new URL("/verify", request.url));
+    return NextResponse.redirect(new URL("/pricing/personal", request.url));
   }
 
   if (!session && !isPublicRoute && !pathname.startsWith("/pricing")) {

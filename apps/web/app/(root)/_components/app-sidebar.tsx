@@ -1,4 +1,6 @@
 import React from "react";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth/server";
 
 import {
   Sidebar,
@@ -14,7 +16,14 @@ import AppSidebarHeader from "./app-sidebar-header";
 import AppSidebarMenu from "./app-sidebar-menu";
 import AppSidebarTypesMenu from "./app-sidebar-types-menu";
 
-const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
+const AppSidebar = async ({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) => {
+  const session = await getSession();
+  if (!session) redirect("/login");
+
+  const user = session.user;
+
   return (
     <Sidebar {...props}>
       <AppSidebarHeader />
@@ -35,7 +44,7 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
       </SidebarContent>
 
       <SidebarFooter>
-        <AppSidebarFooter />
+        <AppSidebarFooter user={user} />
       </SidebarFooter>
     </Sidebar>
   );

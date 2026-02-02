@@ -79,7 +79,7 @@ const LoginForm = () => {
           },
           onError: (ctx) => {
             console.log(ctx.error.message);
-            toast.error("Error while logging in.");
+            toast.error(ctx.error.message);
           },
         },
       );
