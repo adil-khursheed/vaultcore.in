@@ -16,6 +16,7 @@ const LogoutButton = () => {
           });
           redirect("/");
         }}
+        variant={"link"}
       >
         Logout
       </Button>

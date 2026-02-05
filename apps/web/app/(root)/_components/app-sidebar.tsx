@@ -31,7 +31,7 @@ const AppSidebar = async ({
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <AppSidebarMenu />
+            <AppSidebarMenu user={user} />
           </SidebarGroupContent>
         </SidebarGroup>
 

@@ -2,19 +2,14 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
 import { decryptVaultKey, deriveKeys } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  EyeIcon,
-  EyeOffIcon,
-  Loader2Icon,
-  LockIcon,
-  MailIcon,
-} from "lucide-react";
+import { User } from "better-auth";
+import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
@@ -32,64 +27,54 @@ import {
   InputGroupInput,
 } from "@repo/ui/components/input-group";
 
-const LoginForm = () => {
+export const LockFormSchema = z.object({
+  password: z.string().min(1, "Please enter your master password"),
+});
+
+const LockForm = ({ user }: { user: User }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
 
+  const { setMasterKey, setVaultKey } = useVaultStore();
+
   const queryClient = useQueryClient();
   const trpc = useTRPC();
 
-  const { setMasterKey, setVaultKey } = useVaultStore();
-
   const form = useForm({
     defaultValues: {
-      email: "",
       password: "",
     },
+    validators: {
+      onSubmit: LockFormSchema,
+    },
     onSubmit: async (data) => {
-      const { masterKey, passwordHash } = await deriveKeys(
-        data.value.password,
-        data.value.email,
-      );
+      try {
+        const user_account = sessionStorage.getItem("user-account");
+        const user_email: string = JSON.parse(user_account!).email;
 
-      await authClient.signIn.email(
-        {
-          email: data.value.email,
-          password: passwordHash,
-        },
-        {
-          onSuccess: async (ctx) => {
-            const data = await queryClient.fetchQuery(
-              trpc.vault.getVaultKey.queryOptions({ userId: ctx.data.user.id }),
-            );
+        const { masterKey } = await deriveKeys(data.value.password, user_email);
 
-            const decryptedVaultKey = await decryptVaultKey(
-              {
-                encryptedKey: data.vaultKeyData.key,
-                iv: data.vaultKeyData.iv,
-              },
-              masterKey,
-            );
+        const vaultData = await queryClient.fetchQuery(
+          trpc.vault.getVaultKey.queryOptions({ userId: user.id }),
+        );
 
-            setMasterKey(masterKey);
-            setVaultKey(decryptedVaultKey);
-            sessionStorage.setItem(
-              "user-account",
-              JSON.stringify({
-                email: ctx.data.user.email,
-                emailVerified: ctx.data.user.emailVerified,
-              }),
-            );
-
-            router.replace("/all-items");
+        const decryptedVaultKey = await decryptVaultKey(
+          {
+            encryptedKey: vaultData.vaultKeyData.key,
+            iv: vaultData.vaultKeyData.iv,
           },
-          onError: (ctx) => {
-            console.log(ctx.error.message);
-            toast.error(ctx.error.message);
-          },
-        },
-      );
+          masterKey,
+        );
+
+        setMasterKey(masterKey);
+        setVaultKey(decryptedVaultKey);
+
+        router.back();
+      } catch (err) {
+        console.log(err);
+        toast.error("Something went wrong");
+      }
     },
   });
 
@@ -101,39 +86,6 @@ const LoginForm = () => {
       }}
     >
       <FieldGroup>
-        <form.Field
-          name="email"
-          children={(field) => {
-            const isInvalid =
-              field.state.meta.isTouched && !field.state.meta.isValid;
-
-            return (
-              <Field data-invalid={isInvalid}>
-                <FieldContent>
-                  <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                </FieldContent>
-
-                <InputGroup className="h-11">
-                  <InputGroupInput
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    aria-invalid={isInvalid}
-                    placeholder="Enter your email"
-                  />
-
-                  <InputGroupAddon>
-                    <MailIcon />
-                  </InputGroupAddon>
-                </InputGroup>
-                {isInvalid && <FieldError errors={field.state.meta.errors} />}
-              </Field>
-            );
-          }}
-        />
-
         <form.Field
           name="password"
           children={(field) => {
@@ -153,9 +105,9 @@ const LoginForm = () => {
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    aria-invalid={isInvalid}
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your master password"
+                    aria-invalid={isInvalid}
                   />
 
                   <InputGroupAddon>
@@ -171,6 +123,7 @@ const LoginForm = () => {
                     </InputGroupButton>
                   </InputGroupAddon>
                 </InputGroup>
+
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
             );
@@ -185,7 +138,7 @@ const LoginForm = () => {
                 {isSubmitting ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
-                  "Login"
+                  "Submit"
                 )}
               </Button>
             );
@@ -196,4 +149,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default LockForm;

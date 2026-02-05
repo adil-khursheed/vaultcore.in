@@ -20,3 +20,24 @@ export const vaultKey = pgTable(
   },
   (table) => [index("vaultKey_userId_idx").on(table.userId)],
 );
+
+export const credential = pgTable(
+  "credential",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    username: text("username").notNull(),
+    password: text("password").notNull(),
+    url: text("url"),
+    note: text("note"),
+    iv: text("iv").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("credential_userId_idx").on(table.userId)],
+);

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -8,6 +8,7 @@ import {
   IconStarFilled,
   IconTrashFilled,
 } from "@tabler/icons-react";
+import { User } from "better-auth";
 
 import {
   SidebarMenu,
@@ -33,8 +34,25 @@ const menuItems = [
   },
 ];
 
-const AppSidebarMenu = () => {
+const AppSidebarMenu = ({ user }: { user: User }) => {
   const pathname = usePathname();
+
+  useEffect(() => {
+    const user_account = sessionStorage.getItem("user-account");
+    const user_email: string | null = user_account
+      ? JSON.parse(user_account).email
+      : null;
+
+    if (user && !user_email) {
+      sessionStorage.setItem(
+        "user-account",
+        JSON.stringify({
+          email: user.email,
+          emailVerified: user.emailVerified,
+        }),
+      );
+    }
+  }, [user]);
 
   return (
     <SidebarMenu>

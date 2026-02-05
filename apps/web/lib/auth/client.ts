@@ -6,3 +6,5 @@ export const authClient: ReturnType<typeof createAuthClient> = createAuthClient(
     plugins: [polarClient()],
   },
 );
+
+export const { useSession } = authClient;
