@@ -12,9 +12,9 @@ const Page = async () => {
   if (!session) redirect("/login");
 
   return (
-    <SectionContainer>
+    <div className="h-full">
       <AllItemsList />
-    </SectionContainer>
+    </div>
   );
 };
 

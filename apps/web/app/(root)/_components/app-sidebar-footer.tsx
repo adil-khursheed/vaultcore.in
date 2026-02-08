@@ -1,8 +1,9 @@
+"use client";
+
 import type { User } from "better-auth";
 import React from "react";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth/server";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth/client";
 import { IconDotsVertical, IconLogout2 } from "@tabler/icons-react";
 
 import {
@@ -26,6 +27,8 @@ import {
 } from "@repo/ui/components/sidebar";
 
 const AppSidebarFooter = ({ user }: { user: User }) => {
+  const router = useRouter();
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -79,11 +82,14 @@ const AppSidebarFooter = ({ user }: { user: User }) => {
             <DropdownMenuGroup>
               <DropdownMenuItem
                 onClick={async () => {
-                  "use server";
-                  await auth.api.signOut({
-                    headers: await headers(),
+                  await authClient.signOut({
+                    fetchOptions: {
+                      onSuccess: () => {
+                        router.push("/");
+                        router.refresh();
+                      },
+                    },
                   });
-                  redirect("/");
                 }}
                 className="cursor-pointer"
               >
