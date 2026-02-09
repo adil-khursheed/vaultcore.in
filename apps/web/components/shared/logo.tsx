@@ -1,20 +1,22 @@
 import React from "react";
 import Link from "next/link";
 
-const Logo = () => {
+import { cn } from "@repo/ui/lib/utils";
+
+const Logo = ({ className }: { className?: string }) => {
   return (
     <Link
       href={"/"}
       className="text-primary relative font-serif text-lg font-extrabold md:text-xl"
     >
-      <LogoSvg />
+      <LogoSvg className={className} />
     </Link>
   );
 };
 
 export default Logo;
 
-function LogoSvg() {
+function LogoSvg({ className }: { className?: string }) {
   return (
     <svg
       width="100%"
@@ -27,7 +29,7 @@ function LogoSvg() {
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeMiterlimit={1.5}
-      className="h-10"
+      className={cn("h-10", className)}
     >
       <g>
         <path
