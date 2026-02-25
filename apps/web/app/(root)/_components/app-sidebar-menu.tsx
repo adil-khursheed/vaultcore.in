@@ -34,25 +34,8 @@ const menuItems = [
   },
 ];
 
-const AppSidebarMenu = ({ user }: { user: User }) => {
+const AppSidebarMenu = () => {
   const pathname = usePathname();
-
-  useEffect(() => {
-    const user_account = sessionStorage.getItem("user-account");
-    const user_email: string | null = user_account
-      ? JSON.parse(user_account).email
-      : null;
-
-    if (user && !user_email) {
-      sessionStorage.setItem(
-        "user-account",
-        JSON.stringify({
-          email: user.email,
-          emailVerified: user.emailVerified,
-        }),
-      );
-    }
-  }, [user]);
 
   return (
     <SidebarMenu>

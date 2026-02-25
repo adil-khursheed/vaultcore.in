@@ -17,122 +17,374 @@ import { cn } from "@repo/ui/lib/utils";
 // --- Skeletons ---
 
 const EncryptionSkeleton = () => {
+  const [cipher, setCipher] = React.useState("AES-256-GCM");
+  const ciphers = ["AES-256-GCM"];
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCipher(ciphers[Math.floor(Math.random() * ciphers.length)]!);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center gap-4 p-4">
-      <div className="flex w-full items-center justify-between gap-4">
-        {/* Client */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="bg-primary/20 border-primary/20 flex size-10 items-center justify-center rounded-lg border">
-            <IconLockSquareRounded className="text-primary size-6" />
+    <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden p-4">
+      {/* Animated grid background */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--primary) 1px, transparent 1px), linear-gradient(90deg, var(--primary) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
+      />
+
+      <div className="relative flex w-full items-center justify-between gap-3">
+        {/* Client Node */}
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="relative">
+            <motion.div
+              className="absolute -inset-1.5 rounded-xl opacity-50"
+              style={{ background: "var(--primary)" }}
+              animate={{ opacity: [0.1, 0.3, 0.1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <div className="border-primary/30 bg-primary/10 relative flex size-10 items-center justify-center rounded-xl border backdrop-blur-sm">
+              <IconLockSquareRounded className="text-primary size-5" />
+            </div>
           </div>
-          <div className="bg-border h-2 w-12 rounded-full" />
+          <span className="text-primary/70 text-[9px] font-medium tracking-widest uppercase">
+            Client
+          </span>
         </div>
 
         {/* Connection Line */}
-        <div className="bg-border relative h-px flex-1">
-          <motion.div
-            className="bg-primary absolute top-1/2 h-2 w-2 -translate-y-1/2 rounded-full"
-            animate={{ left: ["0%", "100%", "0%"] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        <div className="relative flex-1">
+          {/* Base line with gradient */}
+          <div
+            className="h-px w-full"
+            style={{
+              background:
+                "linear-gradient(90deg, var(--primary), var(--border), var(--primary))",
+              opacity: 0.4,
+            }}
           />
+          {/* Animated data packets */}
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="absolute top-1/2 -translate-y-1/2"
+              animate={{ left: ["-4%", "104%"] }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                delay: i * 0.6,
+                ease: "linear",
+              }}
+            >
+              <div
+                className="h-1.5 w-3 rounded-full"
+                style={{
+                  background: "var(--primary)",
+                  boxShadow: "0 0 8px var(--primary), 0 0 16px var(--primary)",
+                }}
+              />
+            </motion.div>
+          ))}
         </div>
 
-        {/* Server */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="bg-muted border-border flex size-10 items-center justify-center rounded-lg border">
-            <IconShieldLock className="text-muted-foreground size-6" />
+        {/* Server Node */}
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="relative">
+            <motion.div
+              className="absolute -inset-1.5 rounded-xl opacity-50"
+              style={{ background: "var(--ring)" }}
+              animate={{ opacity: [0.05, 0.2, 0.05] }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            <div className="border-ring/30 bg-ring/10 relative flex size-10 items-center justify-center rounded-xl border backdrop-blur-sm">
+              <IconShieldLock className="text-ring size-5" />
+            </div>
           </div>
-          <div className="bg-border h-2 w-12 rounded-full" />
+          <span className="text-muted-foreground text-[9px] font-medium tracking-widest uppercase">
+            Server
+          </span>
         </div>
       </div>
 
-      <div className="border-border w-full space-y-2 rounded-xl border border-dashed p-3">
-        <div className="flex items-center gap-2">
-          <div className="size-2 animate-pulse rounded-full bg-green-500" />
-          <div className="bg-muted-foreground/20 h-2 w-20 rounded-full" />
+      {/* Status Panel */}
+      <div className="border-border/50 bg-card/50 relative w-full overflow-hidden rounded-lg border p-2.5 backdrop-blur-sm">
+        {/* Panel scan line */}
+        <motion.div
+          className="pointer-events-none absolute left-0 h-full w-px"
+          style={{
+            background:
+              "linear-gradient(180deg, transparent, var(--primary), transparent)",
+          }}
+          animate={{ left: ["0%", "100%"] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        />
+
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            <motion.div
+              className="size-1.5 rounded-full bg-green-500"
+              animate={{ scale: [1, 1.5, 1], opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+            <span className="text-[10px] font-medium text-green-500">
+              ENCRYPTED
+            </span>
+          </div>
+          <motion.span
+            className="text-primary/60 font-mono text-[9px]"
+            key={cipher}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {cipher}
+          </motion.span>
         </div>
-        <div className="bg-muted-foreground/10 h-2 w-full rounded-full" />
-        <div className="bg-muted-foreground/10 h-2 w-3/4 rounded-full" />
+
+        <div className="mt-1.5 space-y-1">
+          <div className="flex items-center gap-1.5">
+            <div className="bg-muted h-1 flex-1 overflow-hidden rounded-full">
+              <motion.div
+                className="bg-primary/50 h-full rounded-full"
+                animate={{ width: ["0%", "100%"] }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="bg-muted h-1 w-3/4 overflow-hidden rounded-full">
+              <motion.div
+                className="bg-primary/30 h-full rounded-full"
+                animate={{ width: ["0%", "100%"] }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.5,
+                }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 const AutoFillSkeleton = () => {
+  const [activeField, setActiveField] = React.useState(0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveField((prev) => (prev + 1) % 2);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-3 p-6">
-      <div className="flex flex-col gap-1">
-        <div className="bg-muted-foreground/40 h-2 w-16 rounded-full" />
+    <div className="relative flex h-full w-full flex-col justify-center gap-3 overflow-hidden p-5">
+      {/* Animated grid background */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--primary) 1px, transparent 1px), linear-gradient(90deg, var(--primary) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
+      />
+
+      {/* Email field */}
+      <div className="relative flex flex-col gap-1">
+        <span className="text-muted-foreground/70 text-[9px] font-medium tracking-widest uppercase">
+          Email
+        </span>
         <motion.div
-          className="border-border bg-background flex h-8 w-full items-center rounded-md border px-2"
-          initial={{ borderColor: "var(--border)" }}
+          className="bg-card/50 relative flex h-8 w-full items-center overflow-hidden rounded-lg border px-2.5 backdrop-blur-sm"
           animate={{
-            borderColor: ["var(--border)", "#3b82f6", "var(--border)"],
+            borderColor: activeField === 0 ? "var(--primary)" : "var(--border)",
           }}
-          transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+          transition={{ duration: 0.3 }}
         >
-          <motion.div
-            className="bg-primary h-4 w-1"
-            animate={{ opacity: [1, 0, 1] }}
-            transition={{ duration: 0.8, repeat: Infinity }}
-          />
+          {activeField === 0 && (
+            <motion.div
+              className="absolute inset-0 opacity-10"
+              style={{ background: "var(--primary)" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.1, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+          )}
+          <motion.span
+            className="text-foreground/70 font-mono text-[10px]"
+            initial={{ width: 0 }}
+            animate={{ width: "auto" }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          >
+            user@vaultcore.in
+          </motion.span>
+          {activeField === 0 && (
+            <motion.div
+              className="bg-primary ml-px h-3.5 w-px"
+              animate={{ opacity: [1, 0, 1] }}
+              transition={{ duration: 0.8, repeat: Infinity }}
+            />
+          )}
         </motion.div>
       </div>
-      <div className="flex flex-col gap-1">
-        <div className="bg-muted-foreground/40 h-2 w-16 rounded-full" />
-        <div className="border-border bg-background flex h-8 w-full items-center gap-1 rounded-md border px-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+
+      {/* Password field */}
+      <div className="relative flex flex-col gap-1">
+        <span className="text-muted-foreground/70 text-[9px] font-medium tracking-widest uppercase">
+          Password
+        </span>
+        <motion.div
+          className="bg-card/50 relative flex h-8 w-full items-center gap-0.5 overflow-hidden rounded-lg border px-2.5 backdrop-blur-sm"
+          animate={{
+            borderColor: activeField === 1 ? "var(--primary)" : "var(--border)",
+          }}
+          transition={{ duration: 0.3 }}
+        >
+          {activeField === 1 && (
+            <motion.div
+              className="absolute inset-0 opacity-10"
+              style={{ background: "var(--primary)" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.1, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+          )}
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <motion.div
               key={i}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 1 + i * 0.1, duration: 0.2 }}
-              className="bg-foreground size-2 rounded-full"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 1.5 + i * 0.08, duration: 0.15 }}
+              className="bg-foreground/60 size-1.5 rounded-full"
             />
           ))}
-        </div>
+        </motion.div>
       </div>
+
+      {/* Submit button */}
       <motion.div
-        className="bg-primary/20 mt-1 h-8 w-24 rounded-md"
-        animate={{
-          scale: [1, 1.05, 1],
-          backgroundColor: [
-            "rgba(var(--primary), 0.2)",
-            "rgba(var(--primary), 0.4)",
-            "rgba(var(--primary), 0.2)",
-          ],
-        }}
-        transition={{ delay: 2, duration: 0.5 }}
-      />
+        className="relative mt-1 flex h-7 w-20 items-center justify-center overflow-hidden rounded-lg"
+        style={{ background: "var(--primary)" }}
+        animate={{ opacity: [0.7, 1, 0.7] }}
+        transition={{ duration: 2, repeat: Infinity, delay: 2.5 }}
+      >
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)",
+          }}
+          animate={{ left: ["-100%", "200%"] }}
+          transition={{ duration: 1.5, repeat: Infinity, delay: 3 }}
+        />
+        <span className="text-primary-foreground text-[9px] font-medium">
+          Sign In
+        </span>
+      </motion.div>
     </div>
   );
 };
 
 const VaultSkeleton = () => {
+  const items = [
+    { color: "#3b82f6", icon: "●", label: "gmail.com", type: "Login" },
+    { color: "#f59e0b", icon: "◆", label: "bank.com", type: "Finance" },
+    { color: "#22c55e", icon: "■", label: "ssh-key", type: "Secure Note" },
+  ];
+
   return (
     <div className="relative h-full w-full overflow-hidden p-4">
-      <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
+      {/* Grid background */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--primary) 1px, transparent 1px), linear-gradient(90deg, var(--primary) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
+      />
+
+      <div className="relative space-y-2">
+        {items.map((item, i) => (
           <motion.div
             key={i}
-            className="border-border bg-background/50 flex items-center gap-3 rounded-lg border p-2"
-            initial={{ opacity: 0.5, x: 0 }}
-            whileHover={{ scale: 1.02, backgroundColor: "var(--background)" }}
-            animate={{
-              opacity: [0.5, 1, 0.5],
-            }}
-            transition={{
-              opacity: { duration: 2, repeat: Infinity, delay: i * 0.5 },
-            }}
+            className="group/item border-border/50 bg-card/50 relative flex items-center gap-2.5 rounded-lg border p-2 backdrop-blur-sm"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.2, duration: 0.4 }}
           >
-            <div
-              className={`size-8 rounded-md ${i === 1 ? "bg-blue-500/20" : i === 2 ? "bg-orange-500/20" : "bg-green-500/20"}`}
+            {/* Hover glow */}
+            <motion.div
+              className="absolute inset-0 rounded-lg opacity-0"
+              style={{ background: item.color }}
+              animate={{ opacity: [0, 0.03, 0] }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                delay: i * 1,
+              }}
             />
-            <div className="flex-1 space-y-1.5">
-              <div className="bg-foreground/20 h-2 w-24 rounded-full" />
-              <div className="bg-muted-foreground/20 h-1.5 w-16 rounded-full" />
+
+            <div
+              className="relative flex size-7 items-center justify-center rounded-md text-xs"
+              style={{
+                background: `${item.color}20`,
+                color: item.color,
+              }}
+            >
+              <motion.div
+                className="absolute -inset-0.5 rounded-md"
+                style={{ background: item.color }}
+                animate={{ opacity: [0, 0.15, 0] }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  delay: i * 0.5,
+                }}
+              />
+              <span className="relative">{item.icon}</span>
             </div>
-            <div className="bg-muted-foreground/20 size-2 rounded-full" />
+
+            <div className="flex-1 space-y-1">
+              <div className="text-foreground/80 font-mono text-[10px]">
+                {item.label}
+              </div>
+              <div className="text-muted-foreground/60 text-[8px] tracking-wider uppercase">
+                {item.type}
+              </div>
+            </div>
+
+            <motion.div
+              className="size-1.5 rounded-full"
+              style={{ background: item.color }}
+              animate={{
+                scale: [1, 1.5, 1],
+                opacity: [0.4, 1, 0.4],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: i * 0.3,
+              }}
+            />
           </motion.div>
         ))}
       </div>
@@ -141,84 +393,334 @@ const VaultSkeleton = () => {
 };
 
 const GeneratorSkeleton = () => {
-  const [text, setText] = React.useState("a8F#k9!m");
+  const [text, setText] = React.useState("a8F#k9!mXp2$");
+  const [strength, setStrength] = React.useState(85);
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
 
   React.useEffect(() => {
     const interval = setInterval(() => {
       setText(
-        Array(12)
+        Array(14)
           .fill(0)
           .map(() => chars.charAt(Math.floor(Math.random() * chars.length)))
           .join(""),
       );
+      setStrength(Math.floor(Math.random() * 20) + 80);
     }, 100);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center p-6">
-      <div className="border-border bg-background w-full rounded-xl border p-4 text-center shadow-inner">
-        <span className="text-primary font-mono text-lg font-bold tracking-widest">
-          {text}
-        </span>
+    <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden p-5">
+      {/* Grid background */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--primary) 1px, transparent 1px), linear-gradient(90deg, var(--primary) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
+      />
+
+      {/* Password output */}
+      <div className="border-border/50 bg-card/50 relative w-full overflow-hidden rounded-lg border p-3 backdrop-blur-sm">
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent)",
+          }}
+          animate={{ left: ["-100%", "200%"] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+
+        <div className="flex items-center justify-between">
+          <span className="text-primary relative font-mono text-sm font-bold tracking-widest">
+            {text}
+          </span>
+          <motion.div
+            className="bg-primary/10 flex size-5 items-center justify-center rounded-md"
+            animate={{ rotate: [0, 360] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          >
+            <IconRefresh className="text-primary size-3" />
+          </motion.div>
+        </div>
       </div>
-      <div className="mt-4 flex w-full gap-2">
-        <div className="h-2 flex-1 rounded-full bg-green-500" />
-        <div className="h-2 flex-1 rounded-full bg-green-500" />
-        <div className="h-2 flex-1 rounded-full bg-green-500" />
-        <div className="h-2 flex-1 rounded-full bg-green-500/30" />
+
+      {/* Strength meter */}
+      <div className="w-full space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground text-[9px] font-medium tracking-widest uppercase">
+            Strength
+          </span>
+          <span className="font-mono text-[9px] text-green-500">
+            {strength}%
+          </span>
+        </div>
+        <div className="flex gap-1">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-muted h-1 flex-1 overflow-hidden rounded-full"
+            >
+              <motion.div
+                className="h-full rounded-full"
+                style={{
+                  background:
+                    i < 3
+                      ? "linear-gradient(90deg, #22c55e, #16a34a)"
+                      : "linear-gradient(90deg, #22c55e40, #16a34a40)",
+                }}
+                animate={{ width: ["0%", "100%"] }}
+                transition={{
+                  duration: 0.5,
+                  delay: i * 0.15,
+                  ease: "easeOut",
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div className="border-border/30 bg-card/30 flex w-full items-center justify-between rounded-lg border px-2.5 py-1.5">
+        {[
+          { label: "Length", value: "14" },
+          { label: "Entropy", value: "92b" },
+          { label: "Crack", value: "∞" },
+        ].map((stat, i) => (
+          <div key={i} className="flex flex-col items-center">
+            <span className="text-muted-foreground/60 text-[8px] tracking-wider uppercase">
+              {stat.label}
+            </span>
+            <motion.span
+              className="text-foreground/70 font-mono text-[10px] font-medium"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: i * 0.3,
+              }}
+            >
+              {stat.value}
+            </motion.span>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
 const SyncSkeleton = () => {
+  const devices = [
+    { label: "Desktop", icon: "🖥️" },
+    { label: "Mobile", icon: "📱" },
+    { label: "Tablet", icon: "📟" },
+  ];
+
   return (
-    <div className="flex h-full w-full items-center justify-center gap-8 p-4">
-      <div className="relative flex flex-col items-center">
-        <IconDevices className="text-muted-foreground size-12" />
-        <motion.div
-          className="border-background absolute -top-2 -right-2 size-3 rounded-full border-2 bg-green-500"
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 1, repeat: Infinity }}
-        />
-      </div>
-      <motion.div
-        className="via-primary h-1 flex-1 bg-linear-to-r from-transparent to-transparent"
-        animate={{ opacity: [0.3, 1, 0.3] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
+    <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden p-4">
+      {/* Grid background */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--primary) 1px, transparent 1px), linear-gradient(90deg, var(--primary) 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
       />
-      <div className="relative flex flex-col items-center">
-        <div className="border-muted-foreground/40 size-12 rounded-lg border-2 border-dashed" />
+
+      {/* Central hub */}
+      <div className="relative">
         <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
-          className="absolute inset-0 flex items-center justify-center"
-        >
-          <IconShieldLock className="text-primary size-6" />
-        </motion.div>
+          className="absolute -inset-3 rounded-full"
+          style={{ background: "var(--primary)" }}
+          animate={{ opacity: [0.05, 0.15, 0.05], scale: [1, 1.1, 1] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="border-primary/10 absolute -inset-6 rounded-full border"
+          animate={{ opacity: [0.1, 0.3, 0.1], rotate: [0, 360] }}
+          transition={{
+            opacity: { duration: 2, repeat: Infinity },
+            rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+          }}
+        />
+        <div className="border-primary/30 bg-primary/10 relative flex size-10 items-center justify-center rounded-full border backdrop-blur-sm">
+          <IconShieldLock className="text-primary size-5" />
+        </div>
+      </div>
+
+      {/* Device nodes */}
+      <div className="flex w-full items-center justify-between gap-2 px-2">
+        {devices.map((device, i) => (
+          <div key={i} className="flex flex-col items-center gap-1.5">
+            {/* Connection line to hub */}
+            <div className="relative h-4 w-px">
+              <div
+                className="h-full w-full"
+                style={{ background: "var(--border)", opacity: 0.5 }}
+              />
+              <motion.div
+                className="absolute top-0 left-1/2 size-1 -translate-x-1/2 rounded-full"
+                style={{
+                  background: "var(--primary)",
+                  boxShadow: "0 0 6px var(--primary)",
+                }}
+                animate={{ top: ["0%", "100%", "0%"] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  delay: i * 0.5,
+                  ease: "easeInOut",
+                }}
+              />
+            </div>
+
+            <motion.div
+              className="border-border/50 bg-card/50 relative flex flex-col items-center gap-1 rounded-lg border px-3 py-2 backdrop-blur-sm"
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: i * 0.7,
+              }}
+            >
+              <span className="text-base">{device.icon}</span>
+              <span className="text-muted-foreground text-[8px] font-medium tracking-widest uppercase">
+                {device.label}
+              </span>
+              <motion.div
+                className="size-1 rounded-full bg-green-500"
+                animate={{
+                  scale: [1, 1.5, 1],
+                  opacity: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  delay: i * 0.3,
+                }}
+              />
+            </motion.div>
+          </div>
+        ))}
+      </div>
+
+      {/* Sync status */}
+      <div className="flex items-center gap-1.5 rounded-full border border-green-500/20 bg-green-500/5 px-2.5 py-1 backdrop-blur-sm">
+        <motion.div
+          className="size-1.5 rounded-full bg-green-500"
+          animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        />
+        <span className="text-[9px] font-medium text-green-500">SYNCED</span>
       </div>
     </div>
   );
 };
 
 const ZeroKnowledgeSkeleton = () => {
-  return (
-    <div className="relative flex h-full w-full items-center justify-center p-4">
-      <div className="border-border bg-muted/20 relative flex size-24 items-center justify-center overflow-hidden rounded-full border">
-        <IconSpyOff className="text-muted-foreground/50 size-10" />
+  const [hash, setHash] = React.useState("7f3a..b2c1");
+  const hexChars = "0123456789abcdef";
 
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      const h1 = Array(4)
+        .fill(0)
+        .map(() => hexChars.charAt(Math.floor(Math.random() * 16)))
+        .join("");
+      const h2 = Array(4)
+        .fill(0)
+        .map(() => hexChars.charAt(Math.floor(Math.random() * 16)))
+        .join("");
+      setHash(`${h1}..${h2}`);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden p-4">
+      {/* Grid background */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, var(--primary) 1px, transparent 1px)",
+          backgroundSize: "16px 16px",
+        }}
+      />
+
+      {/* Outer pulsing ring */}
+      <div className="relative">
         <motion.div
-          className="via-primary/10 absolute inset-0 bg-linear-to-b from-transparent to-transparent"
-          animate={{ top: ["-100%", "100%"] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="border-primary/10 absolute -inset-4 rounded-full border"
+          animate={{
+            scale: [1, 1.15, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
+        <motion.div
+          className="border-primary/5 absolute -inset-8 rounded-full border"
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.1, 0.2, 0.1],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.5,
+          }}
+        />
+
+        {/* Central icon */}
+        <div className="border-border/50 bg-card/50 relative flex size-16 items-center justify-center overflow-hidden rounded-full border backdrop-blur-sm">
+          <IconSpyOff className="text-muted-foreground/60 relative size-7" />
+
+          {/* Rotating scanning line */}
+          <motion.div
+            className="absolute inset-0"
+            style={{
+              background:
+                "conic-gradient(from 0deg, transparent 0%, var(--primary) 10%, transparent 20%)",
+              opacity: 0.1,
+            }}
+            animate={{ rotate: [0, 360] }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        </div>
       </div>
-      <div className="item-center absolute top-4 right-4 flex gap-1 rounded-full border border-green-500/20 bg-green-500/10 px-2 py-1 text-xs text-green-500">
-        <span>Encrypted</span>
+
+      {/* Hash display */}
+      <motion.div
+        className="text-primary/50 font-mono text-[10px]"
+        key={hash}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        SHA-256: {hash}
+      </motion.div>
+
+      {/* Status badge */}
+      <div className="flex items-center gap-1.5 rounded-full border border-green-500/20 bg-green-500/5 px-2.5 py-1 backdrop-blur-sm">
+        <motion.div
+          className="size-1.5 rounded-full bg-green-500"
+          animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        />
+        <span className="text-[9px] font-medium text-green-500">
+          ZERO ACCESS
+        </span>
       </div>
     </div>
   );
@@ -230,7 +732,7 @@ const features = [
     description:
       "Your data is encrypted on your device before it ever reaches our servers.",
     icon: IconShieldLock,
-    className: "",
+    className: "md:col-span-2",
     skeleton: <EncryptionSkeleton />,
   },
   {
@@ -238,35 +740,35 @@ const features = [
     description:
       "Log in to your favorite sites with a single click. No more typing.",
     icon: IconKey,
-    className: "",
+    className: "md:col-span-1",
     skeleton: <AutoFillSkeleton />,
   },
   {
     title: "Secure Vault",
     description: "Store passwords, notes, cards, and identities safely.",
     icon: IconLockSquareRounded,
-    className: "",
+    className: "md:col-span-1",
     skeleton: <VaultSkeleton />,
   },
   {
     title: "Password Generator",
     description: "Create unbreakable passwords with customizable complexity.",
     icon: IconRefresh,
-    className: "",
+    className: "md:col-span-1",
     skeleton: <GeneratorSkeleton />,
   },
   {
     title: "Cross-Device Sync",
     description: "Access your vault from any device. Real-time sync.",
     icon: IconDevices,
-    className: "",
+    className: "md:col-span-1",
     skeleton: <SyncSkeleton />,
   },
   {
     title: "Zero-Knowledge",
     description: "We know nothing about your data. Complete privacy.",
     icon: IconSpyOff,
-    className: "",
+    className: "md:col-span-2",
     skeleton: <ZeroKnowledgeSkeleton />,
   },
 ];
@@ -284,9 +786,9 @@ const FeatureCard = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
-      whileHover={{ y: -5 }}
+      whileHover={{ y: -4 }}
       className={cn(
-        "group border-border bg-card relative flex flex-col justify-between overflow-hidden rounded-3xl border shadow-sm transition-all hover:shadow-xl",
+        "group border-border bg-card relative flex flex-col justify-between overflow-hidden rounded-2xl border shadow-sm transition-all hover:shadow-xl",
         feature.className,
       )}
     >
@@ -297,20 +799,34 @@ const FeatureCard = ({
         )}
       />
 
+      {/* Glow effect on hover */}
+      <div
+        className="absolute -inset-px rounded-2xl opacity-0 transition-opacity group-hover:opacity-100"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--primary), transparent, var(--ring))",
+          opacity: 0,
+          mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          maskComposite: "exclude",
+          WebkitMaskComposite: "xor",
+          padding: "1px",
+        }}
+      />
+
       {/* Skeleton / Visual Area */}
-      <div className="border-border/50 bg-muted/20 relative h-52 w-full overflow-hidden border-b">
+      <div className="border-border/30 bg-muted/10 relative h-52 w-full overflow-hidden border-b">
         <div className="absolute inset-0 flex items-center justify-center">
           {feature.skeleton}
         </div>
       </div>
 
       {/* Content Area */}
-      <div className="relative z-10 flex flex-col gap-3 p-6">
+      <div className="relative z-10 flex flex-col gap-2 p-5">
         <div className="flex items-center gap-3">
-          <div className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-xl">
-            <feature.icon className="size-5" />
+          <div className="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-lg">
+            <feature.icon className="size-4.5" />
           </div>
-          <h3 className="text-foreground text-xl font-semibold">
+          <h3 className="text-foreground text-lg font-semibold">
             {feature.title}
           </h3>
         </div>
@@ -338,7 +854,7 @@ const FeaturesSection = () => {
           </p>
         </div>
 
-        <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-3">
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
           {features.map((feature, index) => (
             <FeatureCard key={index} feature={feature} index={index} />
           ))}

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import VaultCore from "@/components/icons/vaultcore";
 import { ChevronDown } from "lucide-react";

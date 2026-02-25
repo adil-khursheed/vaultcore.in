@@ -9,11 +9,11 @@ import AppDashboardDemo from "./app-dashboard-demo";
 
 const HeroSection = () => {
   return (
-    <section className="relative">
+    <section className="relative pt-16">
       <div className="flex flex-col items-center justify-center gap-10 text-center">
         <div>
           <div className="bg-background/10 border-border flex w-max items-center gap-2 rounded-full border px-4 py-2 backdrop-blur-md">
-            <IconFingerprint className="text-chart-2 size-4" />
+            <IconFingerprint className="text-primary size-4" />
             <p className="text-sm font-medium">
               Ultimate Credential Protection
             </p>
@@ -21,10 +21,12 @@ const HeroSection = () => {
         </div>
 
         <div className="flex flex-col items-center gap-6 px-3">
-          <h1 className="text-foreground text-3xl font-semibold sm:text-5xl md:text-6xl lg:text-7xl">
+          <h1 className="text-foreground font-serif text-3xl font-semibold tracking-tight drop-shadow-md sm:text-5xl md:text-6xl lg:text-7xl">
             Secure Your Digital Life
             <br />
-            <span className="text-muted-foreground">Without Compromise</span>
+            <span className="from-primary to-primary/50 bg-linear-to-b bg-clip-text text-transparent">
+              Without Compromise
+            </span>
           </h1>
           <p className="text-foreground/60 w-full max-w-2xl md:text-xl">
             The next generation of secure storage for your most valuable assets.

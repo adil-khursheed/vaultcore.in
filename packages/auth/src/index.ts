@@ -9,11 +9,11 @@ import {
 import { Polar } from "@polar-sh/sdk";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { organization } from "better-auth/plugins";
 
 import { db } from "@repo/db/client";
 
 import { env } from "../env.ts";
-import { hashPasswordForAuth, verifyPasswordForAuth } from "./utils/utils.ts";
 
 const polarClient = new Polar({
   accessToken: env.POLAR_ACCESS_TOKEN,
@@ -34,6 +34,7 @@ export function initAuth<
     }),
     baseURL: options.baseUrl,
     plugins: [
+      organization(),
       polar({
         client: polarClient,
         createCustomerOnSignUp: true,

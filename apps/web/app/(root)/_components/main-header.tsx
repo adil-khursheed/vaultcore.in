@@ -2,6 +2,7 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
+import AddItemButton from "@/components/shared/add-item-button";
 
 import { Separator } from "@repo/ui/components/separator";
 import { SidebarTrigger } from "@repo/ui/components/sidebar";
@@ -26,7 +27,11 @@ const MainHeader = () => {
         </div>
       </div>
 
-      <ThemeToggle />
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
+
+        <AddItemButton />
+      </div>
     </header>
   );
 };

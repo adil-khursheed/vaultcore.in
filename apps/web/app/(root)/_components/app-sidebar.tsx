@@ -1,6 +1,5 @@
 import React from "react";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/server";
+import { User } from "better-auth";
 
 import {
   Sidebar,
@@ -16,14 +15,10 @@ import AppSidebarHeader from "./app-sidebar-header";
 import AppSidebarMenu from "./app-sidebar-menu";
 import AppSidebarTypesMenu from "./app-sidebar-types-menu";
 
-const AppSidebar = async ({
+const AppSidebar = ({
+  user,
   ...props
-}: React.ComponentProps<typeof Sidebar>) => {
-  const session = await getSession();
-  if (!session) redirect("/login");
-
-  const user = session.user;
-
+}: React.ComponentProps<typeof Sidebar> & { user: User }) => {
   return (
     <Sidebar {...props}>
       <AppSidebarHeader />
@@ -31,7 +26,7 @@ const AppSidebar = async ({
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <AppSidebarMenu user={user} />
+            <AppSidebarMenu />
           </SidebarGroupContent>
         </SidebarGroup>
 

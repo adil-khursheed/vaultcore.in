@@ -85,7 +85,7 @@ const LockForm = ({ user }: { user: User }) => {
         void form.handleSubmit();
       }}
     >
-      <FieldGroup>
+      <FieldGroup className="gap-4">
         <form.Field
           name="password"
           children={(field) => {
