@@ -37,7 +37,7 @@ const credentials = [
     id: 1,
     name: "Google",
     username: "adil.khursheed@gmail.com",
-    password: "G#8kx!mQ2$vL",
+    password: "************",
     url: "https://accounts.google.com",
     favicon: "https://www.google.com/s2/favicons?domain=google.com&sz=64",
     category: "Login",
@@ -49,7 +49,7 @@ const credentials = [
     id: 2,
     name: "GitHub",
     username: "adil-khursheed",
-    password: "Pr0j3ct$2025!",
+    password: "************",
     url: "https://github.com",
     favicon: "https://www.google.com/s2/favicons?domain=github.com&sz=64",
     category: "Login",
@@ -61,7 +61,7 @@ const credentials = [
     id: 3,
     name: "Netflix",
     username: "adil.stream@outlook.com",
-    password: "N3tfl!xP@ss99",
+    password: "************",
     url: "https://netflix.com",
     favicon: "https://www.google.com/s2/favicons?domain=netflix.com&sz=64",
     category: "Login",
@@ -73,7 +73,7 @@ const credentials = [
     id: 4,
     name: "Spotify",
     username: "adil.music@gmail.com",
-    password: "Sp0t!fy#Beats",
+    password: "************",
     url: "https://spotify.com",
     favicon: "https://www.google.com/s2/favicons?domain=spotify.com&sz=64",
     category: "Login",
@@ -85,7 +85,7 @@ const credentials = [
     id: 5,
     name: "AWS Console",
     username: "admin@vaultcore.in",
-    password: "Aw$C0ns0le!Prod",
+    password: "************",
     url: "https://aws.amazon.com",
     favicon: "https://www.google.com/s2/favicons?domain=aws.amazon.com&sz=64",
     category: "Login",
@@ -97,7 +97,7 @@ const credentials = [
     id: 6,
     name: "Slack",
     username: "adil@vaultcore.in",
-    password: "Sl@ckW0rk#2025",
+    password: "************",
     url: "https://slack.com",
     favicon: "https://www.google.com/s2/favicons?domain=slack.com&sz=64",
     category: "Login",
@@ -109,7 +109,7 @@ const credentials = [
     id: 7,
     name: "Vercel",
     username: "adil@vaultcore.in",
-    password: "V3rc3l!D3pl0y",
+    password: "************",
     url: "https://vercel.com",
     favicon: "https://www.google.com/s2/favicons?domain=vercel.com&sz=64",
     category: "Login",
@@ -121,7 +121,7 @@ const credentials = [
     id: 8,
     name: "Figma",
     username: "adil.design@gmail.com",
-    password: "F!gm@Des1gn#",
+    password: "************",
     url: "https://figma.com",
     favicon: "https://www.google.com/s2/favicons?domain=figma.com&sz=64",
     category: "Login",
@@ -133,7 +133,7 @@ const credentials = [
     id: 9,
     name: "Notion",
     username: "adil.khursheed@gmail.com",
-    password: "N0t!onW0rk$",
+    password: "************",
     url: "https://notion.so",
     favicon: "https://www.google.com/s2/favicons?domain=notion.so&sz=64",
     category: "Login",
@@ -308,7 +308,7 @@ const AppDashboardDemo = () => {
                         {selected.name.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
+                    <div className="text-left">
                       <h4 className="text-foreground text-sm font-semibold">
                         {selected.name}
                       </h4>

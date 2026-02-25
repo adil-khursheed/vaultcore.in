@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 
 import "@repo/ui/globals.css";
 
+import { env } from "@/env";
 import { TRPCClientProvider } from "@/lib/trpc/client";
 
 import ThemeProvider from "@repo/ui/components/providers/theme-providers";
@@ -24,6 +25,26 @@ export const metadata: Metadata = {
   title: "VaultCore",
   description:
     "VaultCore is a secure and reliable password manager and generator. Be it your any valuable credential, store it in vaultcore safely and securely without any worry.",
+  metadataBase: env.VERCEL_URL
+    ? new URL(`https://${env.VERCEL_URL}`)
+    : new URL(`http://localhost:${process.env.PORT ?? 3000}`),
+  openGraph: {
+    title: "VaultCore",
+    description:
+      "VaultCore is a secure and reliable password manager and generator. Be it your any valuable credential, store it in vaultcore safely and securely without any worry.",
+    type: "website",
+    siteName: "VaultCore",
+    url: env.VERCEL_URL
+      ? `https://${env.VERCEL_URL}`
+      : `http://localhost:${process.env.PORT ?? 3000}`,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "VaultCore",
+    description:
+      "VaultCore is a secure and reliable password manager and generator. Be it your any valuable credential, store it in vaultcore safely and securely without any worry.",
+    site: "@VaultCore",
+  },
 };
 
 export default function RootLayout({

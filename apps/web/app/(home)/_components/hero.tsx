@@ -12,7 +12,7 @@ const HeroSection = () => {
     <section className="relative pt-16">
       <div className="flex flex-col items-center justify-center gap-10 text-center">
         <div>
-          <div className="bg-background/10 border-border flex w-max items-center gap-2 rounded-full border px-4 py-2 backdrop-blur-md">
+          <div className="bg-accent border-border flex w-max items-center gap-2 rounded-full border px-4 py-2 backdrop-blur-md">
             <IconFingerprint className="text-primary size-4" />
             <p className="text-sm font-medium">
               Ultimate Credential Protection
