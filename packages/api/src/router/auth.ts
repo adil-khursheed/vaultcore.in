@@ -37,7 +37,7 @@ export const authRouter = {
         subject: "Email Verification",
         props: {
           type: "emailVerification",
-          actionUrl: `${process.env.APP1_URL}/verify?token=${emailToken}`,
+          actionUrl: `${process.env.WEB_APP_URL}/verify?token=${emailToken}`,
         },
       });
 

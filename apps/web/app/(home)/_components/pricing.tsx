@@ -61,7 +61,7 @@ const pricingPlans = [
 const PricingSection = () => {
   return (
     <SectionContainer className="min-h-auto py-24">
-      <div className="flex flex-col items-center gap-16 px-4">
+      <div className="border_bottom flex flex-col items-center gap-16 px-4">
         <div className="flex flex-col items-center gap-4 text-center">
           <h2 className="text-foreground text-3xl font-bold md:text-5xl">
             Simple, Transparent <span className="text-primary">Pricing</span>

@@ -49,71 +49,11 @@ const socialLinks = [
 
 const Footer = () => {
   return (
-    <footer className="bg-background border-border border-t">
-      <div className="mx-auto w-full max-w-6xl px-4 py-12 md:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-4 lg:gap-12">
-          {/* Links Columns */}
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-3">
-            {footerLinks.map((column) => (
-              <div key={column.title} className="flex flex-col gap-4">
-                <h3 className="text-foreground font-semibold">
-                  {column.title}
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {column.links.map((link) => (
-                    <li key={link.label}>
-                      <Link
-                        href={link.href}
-                        className="text-muted-foreground hover:text-primary text-sm transition-colors"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {/* Brand Column */}
-          <div className="flex flex-col gap-4">
-            {/* <Link href="/" className="flex items-center gap-2">
-              <IconShieldLock className="text-primary size-8" />
-              <span className="text-foreground text-2xl font-bold">
-                VaultCore
-              </span>
-            </Link>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              Secure your digital life with the world&apos;s most advanced
-              password manager. Zero-knowledge encryption, seamless sync, and
-              uncompromising security.
-            </p> */}
-
-            <Logo className="h-60" />
-          </div>
-        </div>
-
-        <div className="border-border mt-12 border-t pt-8">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <p className="text-muted-foreground text-center text-sm md:text-left">
-              &copy; {new Date().getFullYear()} VaultCore. All rights reserved.
-            </p>
-            <div className="flex gap-4">
-              {socialLinks.map((social) => (
-                <Link
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={social.label}
-                >
-                  <social.icon className="size-5" />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
+    <footer className="px-3">
+      <div className="text-foreground bg-background relative mx-auto min-h-[350px] w-full max-w-6xl overflow-hidden border-r border-l">
+        <span className="text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center font-serif text-[280px] leading-0 font-extrabold opacity-5">
+          VaultCore
+        </span>
       </div>
     </footer>
   );

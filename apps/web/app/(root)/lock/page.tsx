@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import { redirect } from "next/navigation";
-import LogoutButton from "@/app/(root)/_components/logout-button";
+import LogoutButton from "@/app/(root)/[organization_slug]/_components/logout-button";
 import BGPattern from "@/components/shared/bg-pattern";
 import SectionContainer from "@/components/shared/section-container";
 import { getSession } from "@/lib/auth/server";

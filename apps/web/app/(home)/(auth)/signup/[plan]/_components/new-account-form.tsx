@@ -83,7 +83,7 @@ const NewAccountForm = () => {
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     aria-invalid={isInvalid}
-                    placeholder="Enter your name"
+                    placeholder="Enter your email"
                     className="h-full"
                   />
 

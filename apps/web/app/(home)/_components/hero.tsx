@@ -40,13 +40,6 @@ const HeroSection = () => {
             <Button size={"xl"} asChild>
               <Link href={"/pricing/personal"}>Get Started Free</Link>
             </Button>
-            <Button
-              variant={"outline"}
-              size={"xl"}
-              className="dark:bg-input dark:hover:bg-input/90"
-            >
-              Learn More
-            </Button>
           </div>
 
           <div

@@ -118,7 +118,7 @@ const SignUpForm = () => {
             name: user_email.split("@")[0]?.toLowerCase() ?? "",
           },
           {
-            onSuccess: (ctx) => {
+            onSuccess: async (ctx) => {
               insertVaultKey.mutate({
                 userId: ctx.data.user.id,
                 key: encryptedVaultKey.encryptedKey,
@@ -128,7 +128,24 @@ const SignUpForm = () => {
               setMasterKey(masterKey);
               setVaultKey(vaultKey);
 
-              router.replace("/all-items");
+              await authClient.organization.create(
+                {
+                  name: "Personal",
+                  slug: ctx.data.user.id,
+                },
+                {
+                  onSuccess: (ctx) => {
+                    console.log("New Organization", ctx.data);
+
+                    router.replace(`/${ctx.data.organization.slug}/all-items`);
+                  },
+                  onError: (ctx) => {
+                    console.log(ctx.error);
+
+                    router.replace("/organization/create");
+                  },
+                },
+              );
             },
             onError: (ctx) => {
               console.log(ctx.error);
