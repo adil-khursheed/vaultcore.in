@@ -9,7 +9,7 @@ import {
 import { Polar } from "@polar-sh/sdk";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization } from "better-auth/plugins";
+import { organization as organizationPlugin } from "better-auth/plugins";
 
 import { db } from "@repo/db/client";
 
@@ -34,7 +34,7 @@ export function initAuth<
     }),
     baseURL: options.baseUrl,
     plugins: [
-      organization(),
+      organizationPlugin(),
       polar({
         client: polarClient,
         createCustomerOnSignUp: true,

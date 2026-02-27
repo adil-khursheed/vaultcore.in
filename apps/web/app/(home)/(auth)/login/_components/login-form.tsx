@@ -60,29 +60,44 @@ const LoginForm = () => {
         },
         {
           onSuccess: async (ctx) => {
-            const data = await queryClient.fetchQuery(
-              trpc.vault.getVaultKey.queryOptions({ userId: ctx.data.user.id }),
-            );
-
-            const decryptedVaultKey = await decryptVaultKey(
+            await authClient.organization.setActive(
               {
-                encryptedKey: data.vaultKeyData.key,
-                iv: data.vaultKeyData.iv,
+                organizationSlug: ctx.data.user.id,
               },
-              masterKey,
-            );
+              {
+                onSuccess: async (ctx) => {
+                  const data = await queryClient.fetchQuery(
+                    trpc.vault.getVaultKey.queryOptions({
+                      organizationId: ctx.data.organization.id,
+                    }),
+                  );
 
-            setMasterKey(masterKey);
-            setVaultKey(decryptedVaultKey);
-            sessionStorage.setItem(
-              "user-account",
-              JSON.stringify({
-                email: ctx.data.user.email,
-                emailVerified: ctx.data.user.emailVerified,
-              }),
-            );
+                  const decryptedVaultKey = await decryptVaultKey(
+                    {
+                      encryptedKey: data.vaultKeyData.key,
+                      iv: data.vaultKeyData.iv,
+                    },
+                    masterKey,
+                  );
 
-            router.replace("/all-items");
+                  setMasterKey(masterKey);
+                  setVaultKey(decryptedVaultKey);
+                  sessionStorage.setItem(
+                    "user-account",
+                    JSON.stringify({
+                      email: ctx.data.user.email,
+                      emailVerified: ctx.data.user.emailVerified,
+                    }),
+                  );
+
+                  router.replace(`/${ctx.data.organization.slug}/all-items`);
+                },
+                onError: (ctx) => {
+                  console.log(ctx.error.message);
+                  toast.error(ctx.error.message);
+                },
+              },
+            );
           },
           onError: (ctx) => {
             console.log(ctx.error.message);

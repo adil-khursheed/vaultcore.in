@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
 import { decryptVaultKey, deriveKeys } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
@@ -38,6 +39,8 @@ const LockForm = ({ user }: { user: User }) => {
 
   const { setMasterKey, setVaultKey } = useVaultStore();
 
+  const { data: activeOrganization } = authClient.useActiveOrganization();
+
   const queryClient = useQueryClient();
   const trpc = useTRPC();
 
@@ -56,7 +59,9 @@ const LockForm = ({ user }: { user: User }) => {
         const { masterKey } = await deriveKeys(data.value.password, user_email);
 
         const vaultData = await queryClient.fetchQuery(
-          trpc.vault.getVaultKey.queryOptions({ userId: user.id }),
+          trpc.vault.getVaultKey.queryOptions({
+            organizationId: activeOrganization?.id!,
+          }),
         );
 
         const decryptedVaultKey = await decryptVaultKey(

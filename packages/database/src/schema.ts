@@ -1,6 +1,6 @@
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-import { user } from "./auth-schema";
+import { organization } from "./auth-schema";
 
 export * from "./auth-schema";
 
@@ -10,24 +10,24 @@ export const vaultKey = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     key: text("key").notNull(),
     iv: text("iv").notNull(),
-    userId: text("user_id")
+    organizationId: text("organization_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => organization.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("vaultKey_userId_idx").on(table.userId)],
+  (table) => [index("vaultKey_organizationId_idx").on(table.organizationId)],
 );
 
 export const credential = pgTable(
   "credential",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    organizationId: text("organization_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => organization.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     username: text("username").notNull(),
     password: text("password").notNull(),
@@ -39,5 +39,5 @@ export const credential = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("credential_userId_idx").on(table.userId)],
+  (table) => [index("credential_organizationId_idx").on(table.organizationId)],
 );

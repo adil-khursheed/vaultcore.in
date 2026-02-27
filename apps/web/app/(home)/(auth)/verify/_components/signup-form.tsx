@@ -119,15 +119,6 @@ const SignUpForm = () => {
           },
           {
             onSuccess: async (ctx) => {
-              insertVaultKey.mutate({
-                userId: ctx.data.user.id,
-                key: encryptedVaultKey.encryptedKey,
-                iv: encryptedVaultKey.iv,
-              });
-
-              setMasterKey(masterKey);
-              setVaultKey(vaultKey);
-
               await authClient.organization.create(
                 {
                   name: "Personal",
@@ -137,10 +128,19 @@ const SignUpForm = () => {
                   onSuccess: (ctx) => {
                     console.log("New Organization", ctx.data);
 
+                    insertVaultKey.mutate({
+                      organizationId: ctx.data.organization.id,
+                      key: encryptedVaultKey.encryptedKey,
+                      iv: encryptedVaultKey.iv,
+                    });
+
+                    setMasterKey(masterKey);
+                    setVaultKey(vaultKey);
+
                     router.replace(`/${ctx.data.organization.slug}/all-items`);
                   },
                   onError: (ctx) => {
-                    console.log(ctx.error);
+                    console.log("Organization Error => ", ctx.error);
 
                     router.replace("/organization/create");
                   },
@@ -148,13 +148,13 @@ const SignUpForm = () => {
               );
             },
             onError: (ctx) => {
-              console.log(ctx.error);
+              console.log("Sign Up Error => ", ctx.error);
               toast.error(ctx.error.message);
             },
           },
         );
       } catch (err) {
-        console.log(err);
+        console.log("Error => ", err);
         toast.error("Something went wrong");
       }
     },

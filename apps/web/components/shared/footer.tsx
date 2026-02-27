@@ -50,7 +50,7 @@ const socialLinks = [
 const Footer = () => {
   return (
     <footer className="px-3">
-      <div className="text-foreground bg-background relative mx-auto min-h-[350px] w-full max-w-6xl overflow-hidden border-r border-l">
+      <div className="text-foreground bg-background relative mx-auto min-h-[300px] w-full max-w-6xl overflow-hidden border-r border-l">
         <span className="text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center font-serif text-[280px] leading-0 font-extrabold opacity-5">
           VaultCore
         </span>

@@ -10,14 +10,14 @@ export const vaultKeyRouter = {
   createVaultKey: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
+        organizationId: z.string(),
         key: z.string(),
         iv: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { userId, key, iv } = input;
-      if (!userId || !key || !iv) {
+      const { organizationId, key, iv } = input;
+      if (!organizationId || !key || !iv) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Missing required fields",
@@ -27,7 +27,7 @@ export const vaultKeyRouter = {
       const vaultKeyData = await db
         .insert(vaultKey)
         .values({
-          userId,
+          organizationId,
           key,
           iv,
         })
@@ -39,21 +39,21 @@ export const vaultKeyRouter = {
   getVaultKey: protectedProcedure
     .input(
       z.object({
-        userId: z.string(),
+        organizationId: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { userId } = input;
-      if (!userId) {
+      const { organizationId } = input;
+      if (!organizationId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "UserId is required",
+          message: "OrganizationId is required",
         });
       }
 
       const { db } = ctx;
       const vaultKeyData = await db.query.vaultKey.findFirst({
-        where: eq(vaultKey.userId, userId),
+        where: eq(vaultKey.organizationId, organizationId),
       });
       if (!vaultKeyData) {
         throw new TRPCError({

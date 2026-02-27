@@ -19,7 +19,7 @@ const AllItemsList = () => {
   const { isLocked } = useVaultStore();
 
   const { data: credentials, isLoading } = useQuery({
-    ...trpc.credential.getAll.queryOptions(),
+    ...trpc.credential.getAll.queryOptions({ organizationId: "" }),
     enabled: !isLocked, // Only fetch if unlocked
   });
 
