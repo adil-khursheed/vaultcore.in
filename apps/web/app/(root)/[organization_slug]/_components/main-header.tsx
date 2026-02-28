@@ -13,7 +13,7 @@ const MainHeader = () => {
   const pathname = path.split("/")[2]?.replace("-", " ");
 
   return (
-    <header className="flex h-12 w-full items-center justify-between px-3">
+    <header className="border-border flex h-12 w-full items-center justify-between border-b px-3">
       <div className="flex items-center gap-3">
         <SidebarTrigger />
 

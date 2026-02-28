@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { PlusIcon } from "lucide-react";
+import { IconPlus } from "@tabler/icons-react";
 
 import { Button } from "@repo/ui/components/button";
 import {
@@ -17,9 +17,9 @@ const AddItemButton = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>
-          <PlusIcon />
-          <span className="sr-only md:not-sr-only">Add Item</span>
+        <Button variant={"outline"} size={"sm"}>
+          <IconPlus className="size-4" />
+          <span className="sr-only md:not-sr-only">Import CSV</span>
         </Button>
       </DialogTrigger>
 
