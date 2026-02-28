@@ -10,7 +10,7 @@ import ThemeToggle from "@repo/ui/components/theme-toggle";
 
 const MainHeader = () => {
   const path = usePathname();
-  const pathname = path.split("/")[1]?.replace("-", " ");
+  const pathname = path.split("/")[2]?.replace("-", " ");
 
   return (
     <header className="flex h-12 w-full items-center justify-between px-3">

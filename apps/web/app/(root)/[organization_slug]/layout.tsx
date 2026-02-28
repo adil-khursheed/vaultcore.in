@@ -17,7 +17,7 @@ const ProtectedLayout = async ({ children }: { children: React.ReactNode }) => {
   const user = session.user;
 
   return (
-    <RedirectUnauthorizedUser user={user}>
+    <RedirectUnauthorizedUser>
       <SidebarProvider>
         <AppSidebar user={user} />
 

@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import {
-  IconShieldHalfFilled,
+  IconLockPassword,
   IconStarFilled,
-  IconTrashFilled,
+  IconTrash,
 } from "@tabler/icons-react";
-import { User } from "better-auth";
 
 import {
   SidebarMenu,
@@ -19,23 +18,24 @@ import {
 const menuItems = [
   {
     title: "All Items",
-    href: "/all-items",
-    icon: IconShieldHalfFilled,
+    href: "/:org_slug/all-items",
+    icon: IconLockPassword,
   },
   {
     title: "Favorites",
-    href: "/favorites",
+    href: "/:org_slug/favorites",
     icon: IconStarFilled,
   },
   {
     title: "Trash",
-    href: "/trash",
-    icon: IconTrashFilled,
+    href: "/:org_slug/trash",
+    icon: IconTrash,
   },
 ];
 
 const AppSidebarMenu = () => {
   const pathname = usePathname();
+  const { organization_slug } = useParams<{ organization_slug: string }>();
 
   return (
     <SidebarMenu>
@@ -43,10 +43,12 @@ const AppSidebarMenu = () => {
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton
             asChild
-            isActive={item.href === pathname}
+            isActive={
+              item.href.replace(":org_slug", organization_slug) === pathname
+            }
             tooltip={item.title}
           >
-            <Link href={item.href}>
+            <Link href={item.href.replace(":org_slug", organization_slug)}>
               {item.icon && <item.icon />}
               <span>{item.title}</span>
             </Link>

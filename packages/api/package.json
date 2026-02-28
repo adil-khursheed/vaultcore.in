@@ -27,6 +27,7 @@
     "@repo/auth": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/email": "workspace:*",
+    "@repo/jobs": "workspace:*",
     "@trpc/server": "^11.7.1",
     "jsonwebtoken": "^9.0.2",
     "superjson": "^2.2.5",

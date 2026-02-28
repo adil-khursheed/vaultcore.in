@@ -2,12 +2,12 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import {
   IconCreditCard,
-  IconIdBadge2,
+  IconId,
   IconLogin2,
-  IconNote,
+  IconNotes,
 } from "@tabler/icons-react";
 
 import {
@@ -19,28 +19,29 @@ import {
 const menuItems = [
   {
     title: "Login",
-    href: "/login",
+    href: "/:org_slug/login",
     icon: IconLogin2,
   },
   {
     title: "Card",
-    href: "/card",
+    href: "/:org_slug/card",
     icon: IconCreditCard,
   },
   {
     title: "Identity",
-    href: "/identity",
-    icon: IconIdBadge2,
+    href: "/:org_slug/identity",
+    icon: IconId,
   },
   {
     title: "Secure Notes",
-    href: "/secure-notes",
-    icon: IconNote,
+    href: "/:org_slug/secure-notes",
+    icon: IconNotes,
   },
 ];
 
 const AppSidebarTypesMenu = () => {
   const pathname = usePathname();
+  const { organization_slug } = useParams<{ organization_slug: string }>();
 
   return (
     <SidebarMenu>
@@ -48,10 +49,12 @@ const AppSidebarTypesMenu = () => {
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton
             asChild
-            isActive={item.href === pathname}
+            isActive={
+              item.href.replace(":org_slug", organization_slug) === pathname
+            }
             tooltip={item.title}
           >
-            <Link href={item.href}>
+            <Link href={item.href.replace(":org_slug", organization_slug)}>
               {item.icon && <item.icon />}
               <span>{item.title}</span>
             </Link>

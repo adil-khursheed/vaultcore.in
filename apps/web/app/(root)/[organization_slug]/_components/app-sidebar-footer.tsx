@@ -3,7 +3,6 @@
 import type { User } from "better-auth";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth/client";
 import { IconDotsVertical, IconLogout2 } from "@tabler/icons-react";
 
 import {
@@ -25,6 +24,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/ui/components/sidebar";
+
+import { logout } from "../_actions/logout";
 
 const AppSidebarFooter = ({ user }: { user: User }) => {
   const router = useRouter();
@@ -81,16 +82,7 @@ const AppSidebarFooter = ({ user }: { user: User }) => {
 
             <DropdownMenuGroup>
               <DropdownMenuItem
-                onClick={async () => {
-                  await authClient.signOut({
-                    fetchOptions: {
-                      onSuccess: () => {
-                        router.push("/");
-                        router.refresh();
-                      },
-                    },
-                  });
-                }}
+                onClick={async () => await logout()}
                 className="cursor-pointer"
               >
                 <IconLogout2 />

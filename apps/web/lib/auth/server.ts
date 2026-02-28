@@ -6,6 +6,9 @@ import { env } from "@/env";
 import { nextCookies } from "better-auth/next-js";
 
 import { initAuth } from "@repo/auth";
+import { eq } from "@repo/db";
+import { db } from "@repo/db/client";
+import { organization } from "@repo/db/schema";
 
 const baseUrl =
   env.VERCEL_ENV === "production"
@@ -23,3 +26,19 @@ export const auth = initAuth({
 export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
 );
+
+export const getActiveOrganization = cache(async () => {
+  const session = await getSession();
+
+  if (!session) return null;
+
+  if (!session.session.activeOrganizationId) return null;
+
+  const organizationData = await db.query.organization.findFirst({
+    where: eq(organization.id, session.session.activeOrganizationId),
+  });
+
+  if (!organizationData) return null;
+
+  return organizationData;
+});

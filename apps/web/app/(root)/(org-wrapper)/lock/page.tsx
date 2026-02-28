@@ -1,23 +1,23 @@
 import React, { Suspense } from "react";
-import { redirect } from "next/navigation";
+import LogoutButton from "@/app/(root)/[organization_slug]/_components/logout-button";
 import BGPattern from "@/components/shared/bg-pattern";
 import SectionContainer from "@/components/shared/section-container";
 import { getSession } from "@/lib/auth/server";
-import { Building2Icon, Loader2Icon } from "lucide-react";
+import { Loader2Icon, LockIcon } from "lucide-react";
 
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/ui/components/card";
 
-export const dynamic = "force-dynamic";
+import LockForm from "./_components/lock-form";
 
 const Page = async () => {
   const session = await getSession();
-  if (!session) redirect("/login");
 
   return (
     <SectionContainer>
@@ -26,9 +26,9 @@ const Page = async () => {
         <Card className="mx-auto w-full max-w-md">
           <CardHeader className="text-center">
             <div className="bg-primary/10 mx-auto mb-4 flex size-12 items-center justify-center rounded-full">
-              <Building2Icon className="text-primary size-6" />
+              <LockIcon className="text-primary size-6" />
             </div>
-            <CardTitle className="text-2xl">Create Organization</CardTitle>
+            <CardTitle className="text-2xl">Unlock Vault</CardTitle>
             <CardDescription>
               Enter your master password to access your credentials
             </CardDescription>
@@ -36,8 +36,17 @@ const Page = async () => {
           <CardContent>
             <Suspense
               fallback={<Loader2Icon className="size-6 animate-spin" />}
-            ></Suspense>
+            >
+              <LockForm />
+            </Suspense>
           </CardContent>
+
+          <CardFooter className="flex items-center justify-between">
+            <span className="text-muted-foreground text-xs">
+              Signed in as {session?.user?.email}
+            </span>
+            <LogoutButton />
+          </CardFooter>
         </Card>
 
         <BGPattern />

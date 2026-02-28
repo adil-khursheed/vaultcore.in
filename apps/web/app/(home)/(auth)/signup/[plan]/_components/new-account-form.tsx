@@ -30,11 +30,7 @@ const NewAccountForm = () => {
 
   const submitEmail = useMutation(
     trpc.auth.sendVerificationEmail.mutationOptions({
-      onSuccess: (data) => {
-        sessionStorage.setItem(
-          "user-account",
-          JSON.stringify({ email: data.email, emailVerified: false }),
-        );
+      onSuccess: () => {
         form.reset();
         router.replace("/signup/thank-you");
       },

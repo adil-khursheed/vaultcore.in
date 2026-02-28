@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getSession } from "./lib/auth/server";
+import { getActiveOrganization, getSession } from "./lib/auth/server";
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -8,16 +8,24 @@ export async function proxy(request: NextRequest) {
   const isPublicRoute =
     ["/", "/login", "/verify"].includes(pathname) ||
     pathname.startsWith("/signup") ||
-    pathname.startsWith("/api/auth/") ||
+    pathname.startsWith("/api/auth/sign-up") ||
+    pathname.startsWith("/api/auth/sign-in") ||
     pathname.startsWith("/api/trpc/auth.");
 
   const session = await getSession();
 
   if (session && isPublicRoute) {
-    if (session.user.emailVerified) {
-      return NextResponse.redirect(new URL("/all-items", request.url));
+    const organization = await getActiveOrganization();
+
+    if (!organization) {
+      return NextResponse.redirect(
+        new URL("/organization/create", request.url),
+      );
     }
-    return NextResponse.redirect(new URL("/pricing/personal", request.url));
+
+    return NextResponse.redirect(
+      new URL(`/${organization.slug}/all-items`, request.url),
+    );
   }
 
   if (!session && !isPublicRoute && !pathname.startsWith("/pricing")) {

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -17,10 +18,13 @@ import { Skeleton } from "@repo/ui/components/skeleton";
 const AllItemsList = () => {
   const trpc = useTRPC();
   const { isLocked } = useVaultStore();
+  const { data: session } = authClient.useSession();
 
   const { data: credentials, isLoading } = useQuery({
-    ...trpc.credential.getAll.queryOptions({ organizationId: "" }),
-    enabled: !isLocked, // Only fetch if unlocked
+    ...trpc.credential.getAll.queryOptions({
+      organizationId: session?.session.activeOrganizationId!,
+    }),
+    enabled: !isLocked && !!session?.session.activeOrganizationId, // Only fetch if unlocked
   });
 
   if (isLocked) {

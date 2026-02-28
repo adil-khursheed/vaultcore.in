@@ -1,26 +1,16 @@
+"use client";
+
 import React from "react";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth/server";
 
 import { Button } from "@repo/ui/components/button";
 
+import { logout } from "../_actions/logout";
+
 const LogoutButton = () => {
   return (
-    <form>
-      <Button
-        formAction={async () => {
-          "use server";
-          await auth.api.signOut({
-            headers: await headers(),
-          });
-          redirect("/");
-        }}
-        variant={"link"}
-      >
-        Logout
-      </Button>
-    </form>
+    <Button onClick={async () => await logout()} variant={"link"}>
+      Logout
+    </Button>
   );
 };
 

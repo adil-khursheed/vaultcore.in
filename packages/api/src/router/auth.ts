@@ -1,10 +1,12 @@
+import { randomBytes } from "node:crypto";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
-import jwt, { JwtPayload } from "jsonwebtoken";
 import { z } from "zod/v4";
 
-import { VerifyNewUserEmailSchema } from "@repo/db/schema";
-import { sendEmail } from "@repo/email";
+import { and, eq, gt } from "@repo/db";
+import { db } from "@repo/db/client";
+import { verification, VerifyNewUserEmailSchema } from "@repo/db/schema";
+import { queueJob } from "@repo/jobs";
 
 import { publicProcedure } from "../trpc";
 
@@ -20,24 +22,40 @@ export const authRouter = {
         });
       }
 
-      const jwtSecret = process.env.JWT_SECRET as string;
-      if (!jwtSecret) {
+      // Basic Rate Limiting: Check if a verification email was sent in the last 60 seconds
+      const recentVerification = await db.query.verification.findFirst({
+        where: and(
+          eq(verification.identifier, email),
+          gt(verification.createdAt, new Date(Date.now() - 60000)),
+        ),
+      });
+
+      if (recentVerification) {
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "JWT secret is required.",
+          code: "TOO_MANY_REQUESTS",
+          message:
+            "Please wait a minute before requesting another verification email.",
         });
       }
 
-      const emailToken = jwt.sign({ email }, jwtSecret, {
-        expiresIn: "1h",
+      // Generate a secure random token
+      const token = randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+
+      // Store in database
+      await db.insert(verification).values({
+        id: randomBytes(16).toString("hex"),
+        identifier: email,
+        value: token,
+        expiresAt,
       });
 
-      await sendEmail({
+      await queueJob("SEND_EMAIL", {
         to: email,
         subject: "Email Verification",
         props: {
           type: "emailVerification",
-          actionUrl: `${process.env.WEB_APP_URL}/verify?token=${emailToken}`,
+          actionUrl: `${process.env.WEB_APP_URL}/verify?token=${token}`,
         },
       });
 
@@ -48,30 +66,22 @@ export const authRouter = {
     .input(z.object({ token: z.string().min(1) }))
     .mutation(async ({ input }) => {
       const { token } = input;
-      if (!token) {
+
+      // Find and validate the token in the database
+      const record = await db.query.verification.findFirst({
+        where: and(
+          eq(verification.value, token),
+          gt(verification.expiresAt, new Date()),
+        ),
+      });
+
+      if (!record) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Token is required",
+          message: "Invalid or expired verification token.",
         });
       }
 
-      const jwtSecret = process.env.JWT_SECRET as string;
-      if (!jwtSecret) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "JWT secret is required.",
-        });
-      }
-
-      const decodedToken = jwt.verify(token, jwtSecret) as JwtPayload;
-
-      if (!decodedToken.email) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Email not found from the token",
-        });
-      }
-
-      return { email: decodedToken.email };
+      return { email: record.identifier };
     }),
 } satisfies TRPCRouterRecord;

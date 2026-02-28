@@ -7,7 +7,6 @@ import { useTRPC } from "@/lib/trpc/client";
 import { decryptVaultKey, deriveKeys } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { User } from "better-auth";
 import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -32,13 +31,14 @@ export const LockFormSchema = z.object({
   password: z.string().min(1, "Please enter your master password"),
 });
 
-const LockForm = ({ user }: { user: User }) => {
+const LockForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
 
   const { setMasterKey, setVaultKey } = useVaultStore();
 
+  const { data: session } = authClient.useSession();
   const { data: activeOrganization } = authClient.useActiveOrganization();
 
   const queryClient = useQueryClient();
@@ -53,8 +53,12 @@ const LockForm = ({ user }: { user: User }) => {
     },
     onSubmit: async (data) => {
       try {
-        const user_account = sessionStorage.getItem("user-account");
-        const user_email: string = JSON.parse(user_account!).email;
+        const user_email = session?.user.email;
+
+        if (!user_email) {
+          toast.error("User email not found");
+          return;
+        }
 
         const { masterKey } = await deriveKeys(data.value.password, user_email);
 

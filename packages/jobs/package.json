@@ -1,34 +1,31 @@
 {
-  "name": "@repo/email",
+  "name": "@repo/jobs",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
-    },
-    "./env": {
-      "types": "./env.ts",
-      "default": "./env.ts"
-    }
+    ".": "./src/index.ts",
+    "./worker": "./src/worker.ts"
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "worker": "tsx src/worker.ts"
   },
   "dependencies": {
-    "@t3-oss/env-core": "^0.13.8",
-    "resend": "^6.5.2",
-    "zod": "^4.1.12"
+    "bullmq": "^5.41.6",
+    "zod": "^4.1.12",
+    "@repo/email": "workspace:*",
+    "@repo/db": "workspace:*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/prettier-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.15.3",
+    "tsx": "^4.19.2",
     "typescript": "^5.9.3"
   },
   "prettier": "@repo/prettier-config"

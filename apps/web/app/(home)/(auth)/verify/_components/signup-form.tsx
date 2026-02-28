@@ -54,6 +54,7 @@ export const SignUpSchema = z
 
 const SignUpForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
 
@@ -68,10 +69,7 @@ const SignUpForm = () => {
   const verifyToken = useMutation(
     trpc.auth.verifyEmail.mutationOptions({
       onSuccess: (data) => {
-        sessionStorage.setItem(
-          "user-account",
-          JSON.stringify({ email: data.email, emailVerified: true }),
-        );
+        setVerifiedEmail(data.email);
         toast.success("Email verified successfully");
       },
       onError: () => {
@@ -101,35 +99,46 @@ const SignUpForm = () => {
     },
     onSubmit: async (data) => {
       try {
-        const user_account = sessionStorage.getItem("user-account");
-        const user_email: string = JSON.parse(user_account!).email;
+        if (!verifiedEmail || !token) {
+          toast.error("Please verify your email first");
+          return;
+        }
 
         const { masterKey, passwordHash } = await deriveKeys(
           data.value.password,
-          user_email,
+          verifiedEmail,
         );
         const vaultKey = await generateVaultKey();
         const encryptedVaultKey = await encryptVaultKey(vaultKey, masterKey);
 
         await authClient.signUp.email(
           {
-            email: user_email,
+            email: verifiedEmail,
             password: passwordHash,
-            name: user_email.split("@")[0]?.toLowerCase() ?? "",
+            name: verifiedEmail.split("@")[0]?.toLowerCase() ?? "",
+            // @ts-expect-error - token is handled by our server-side plugin
+            token: token,
           },
           {
             onSuccess: async (ctx) => {
+              console.log("New User", ctx.data);
+
               await authClient.organization.create(
                 {
                   name: "Personal",
                   slug: ctx.data.user.id,
                 },
                 {
-                  onSuccess: (ctx) => {
+                  onSuccess: async (ctx) => {
                     console.log("New Organization", ctx.data);
 
+                    await authClient.organization.setActive({
+                      organizationId: ctx.data.id,
+                      organizationSlug: ctx.data.slug,
+                    });
+
                     insertVaultKey.mutate({
-                      organizationId: ctx.data.organization.id,
+                      organizationId: ctx.data.id,
                       key: encryptedVaultKey.encryptedKey,
                       iv: encryptedVaultKey.iv,
                     });
@@ -137,7 +146,7 @@ const SignUpForm = () => {
                     setMasterKey(masterKey);
                     setVaultKey(vaultKey);
 
-                    router.replace(`/${ctx.data.organization.slug}/all-items`);
+                    router.replace(`/${ctx.data.slug}/all-items`);
                   },
                   onError: (ctx) => {
                     console.log("Organization Error => ", ctx.error);

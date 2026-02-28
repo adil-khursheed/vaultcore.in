@@ -68,7 +68,7 @@ const LoginForm = () => {
                 onSuccess: async (ctx) => {
                   const data = await queryClient.fetchQuery(
                     trpc.vault.getVaultKey.queryOptions({
-                      organizationId: ctx.data.organization.id,
+                      organizationId: ctx.data.id,
                     }),
                   );
 
@@ -82,15 +82,8 @@ const LoginForm = () => {
 
                   setMasterKey(masterKey);
                   setVaultKey(decryptedVaultKey);
-                  sessionStorage.setItem(
-                    "user-account",
-                    JSON.stringify({
-                      email: ctx.data.user.email,
-                      emailVerified: ctx.data.user.emailVerified,
-                    }),
-                  );
 
-                  router.replace(`/${ctx.data.organization.slug}/all-items`);
+                  router.replace(`/${ctx.data.slug}/all-items`);
                 },
                 onError: (ctx) => {
                   console.log(ctx.error.message);
