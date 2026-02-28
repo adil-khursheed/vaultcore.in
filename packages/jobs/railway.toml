@@ -1,0 +1,9 @@
+[build]
+# Build from monorepo root so all workspace packages are accessible
+dockerfilePath = "packages/jobs/Dockerfile"
+
+[deploy]
+# No port needed — this is a background worker, not a web server
+healthcheckPath = ""
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

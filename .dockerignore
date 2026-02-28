@@ -1,0 +1,23 @@
+# Dependencies (will be installed fresh in Docker)
+**/node_modules
+
+# Build outputs
+**/dist
+**/.turbo
+**/.cache
+**/.next
+
+# Version control
+.git
+.gitignore
+
+# Environment files (secrets set via Railway dashboard)
+.env
+.env.*
+
+# Documentation
+*.md
+!README.md
+
+# Apps (not needed for the jobs worker)
+apps/

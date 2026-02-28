@@ -1,0 +1,10 @@
+node_modules
+dist
+.turbo
+.cache
+.git
+.gitignore
+*.md
+!README.md
+.env
+.env.*
