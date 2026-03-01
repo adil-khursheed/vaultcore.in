@@ -45,11 +45,11 @@ export const SignUpSchema = z
       .max(128, "Password must be at most 128 characters long"),
   })
   .refine((data) => {
-    if (data.password === data.confirm_password) {
-      return true;
+    if (data.password !== data.confirm_password) {
+      return false;
     }
 
-    return false;
+    return true;
   }, "Passwords do not match.");
 
 const SignUpForm = () => {

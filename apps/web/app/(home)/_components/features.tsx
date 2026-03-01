@@ -83,7 +83,7 @@ const EncryptionSkeleton = () => {
               }}
             >
               <div
-                className="h-1.5 w-3 rounded-full"
+                className="h-1 w-3 rounded-full"
                 style={{
                   background: "var(--primary)",
                   boxShadow: "0 0 8px var(--primary), 0 0 16px var(--primary)",

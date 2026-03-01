@@ -17,9 +17,9 @@ const AddItemButton = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant={"outline"} size={"sm"}>
+        <Button>
           <IconPlus className="size-4" />
-          <span className="sr-only md:not-sr-only">Import CSV</span>
+          <span className="sr-only">Add New Vault Item</span>
         </Button>
       </DialogTrigger>
 

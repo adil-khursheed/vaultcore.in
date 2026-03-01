@@ -9,8 +9,13 @@ export function authEnv() {
         process.env.NODE_ENV === "production"
           ? z.string().min(1)
           : z.string().min(1).optional(),
+
       POLAR_ACCESS_TOKEN: z.string().min(1),
       POLAR_WEBHOOK_SECRET: z.string().min(1),
+      POLAR_FREE_PRODUCT_ID: z.string().min(1),
+      POLAR_FAMILY_PRODUCT_ID: z.string().min(1),
+      POLAR_PREMIUM_PRODUCT_ID: z.string().min(1),
+
       NODE_ENV: z.enum(["development", "production"]).optional(),
     },
     runtimeEnv: process.env,

@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 
 import { and, eq, gt } from "@repo/db";
 import { db } from "@repo/db/client";
-import { verification, VerifyNewUserEmailSchema } from "@repo/db/schema";
+import { user, verification, VerifyNewUserEmailSchema } from "@repo/db/schema";
 import { queueJob } from "@repo/jobs";
 
 import { publicProcedure } from "../trpc";
@@ -35,6 +35,17 @@ export const authRouter = {
           code: "TOO_MANY_REQUESTS",
           message:
             "Please wait a minute before requesting another verification email.",
+        });
+      }
+
+      const existingUser = await db.query.user.findFirst({
+        where: eq(user.email, email),
+      });
+
+      if (existingUser) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User with this email already exists.",
         });
       }
 

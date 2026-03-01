@@ -35,6 +35,10 @@
     "RESEND_API_KEY",
     "POLAR_ACCESS_TOKEN",
     "POLAR_WEBHOOK_SECRET",
+    "POLAR_FREE_PRODUCT_ID",
+    "POLAR_FAMILY_PRODUCT_ID",
+    "POLAR_PREMIUM_PRODUCT_ID",
+    "REDIS_URL",
     "JWT_SECRET"
   ],
   "globalPassThroughEnv": [

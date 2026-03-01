@@ -8,6 +8,8 @@ import { Separator } from "@repo/ui/components/separator";
 import { SidebarTrigger } from "@repo/ui/components/sidebar";
 import ThemeToggle from "@repo/ui/components/theme-toggle";
 
+import ImportCSV from "./import-csv";
+
 const MainHeader = () => {
   const path = usePathname();
   const pathname = path.split("/")[2]?.replace("-", " ");
@@ -30,7 +32,7 @@ const MainHeader = () => {
       <div className="flex items-center gap-3">
         <ThemeToggle />
 
-        <AddItemButton />
+        <ImportCSV />
       </div>
     </header>
   );

@@ -33,7 +33,6 @@ export const credential = pgTable(
     password: text("password").notNull(),
     url: text("url"),
     note: text("note"),
-    iv: text("iv").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => new Date())

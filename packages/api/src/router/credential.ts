@@ -44,7 +44,6 @@ export const credentialRouter = {
         password: z.string().min(1),
         url: z.string().optional(),
         note: z.string().optional(),
-        iv: z.string().min(1),
         organizationId: z.string(),
       }),
     )
@@ -62,5 +61,42 @@ export const credentialRouter = {
         .returning();
 
       return newCredential;
+    }),
+
+  // Batch create credentials
+  batchCreate: protectedProcedure
+    .input(
+      z.object({
+        organizationId: z.string(),
+        credentials: z.array(
+          z.object({
+            title: z.string().min(1),
+            username: z.string().min(1),
+            password: z.string().min(1),
+            url: z.string().optional(),
+            note: z.string().optional(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, session } = ctx;
+      if (!session || !session.user || !session.user.id) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      const { organizationId, credentials: credentialsData } = input;
+
+      const values = credentialsData.map((cred) => ({
+        ...cred,
+        organizationId,
+      }));
+
+      const newCredentials = await db
+        .insert(credential)
+        .values(values)
+        .returning();
+
+      return newCredentials;
     }),
 };

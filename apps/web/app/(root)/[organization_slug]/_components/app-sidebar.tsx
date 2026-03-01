@@ -8,6 +8,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
 } from "@repo/ui/components/sidebar";
 
 import AppSidebarFooter from "./app-sidebar-footer";
@@ -21,7 +22,13 @@ const AppSidebar = ({
 }: React.ComponentProps<typeof Sidebar> & { user: User }) => {
   return (
     <Sidebar {...props}>
-      <AppSidebarHeader />
+      <SidebarHeader className="p-0">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <AppSidebarHeader />
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>

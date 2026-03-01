@@ -15,6 +15,7 @@ import {
   MailIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
@@ -32,6 +33,11 @@ import {
   InputGroupInput,
 } from "@repo/ui/components/input-group";
 
+const LoginFormSchema = z.object({
+  email: z.email("Invalid email address").min(1, "Email is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -46,6 +52,9 @@ const LoginForm = () => {
     defaultValues: {
       email: "",
       password: "",
+    },
+    validators: {
+      onSubmit: LoginFormSchema,
     },
     onSubmit: async (data) => {
       const { masterKey, passwordHash } = await deriveKeys(
@@ -108,7 +117,7 @@ const LoginForm = () => {
         void form.handleSubmit();
       }}
     >
-      <FieldGroup>
+      <FieldGroup className="gap-4">
         <form.Field
           name="email"
           children={(field) => {
