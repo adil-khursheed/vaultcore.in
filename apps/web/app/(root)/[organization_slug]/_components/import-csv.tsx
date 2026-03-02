@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { useParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
 import { encryptString } from "@/lib/utils";
 import { IconPlus, IconUpload } from "@tabler/icons-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Papa from "papaparse";
 import { toast } from "sonner";
 
@@ -37,16 +36,22 @@ const ImportCSV = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // const { organization_slug } = useParams<{ organization_slug: string }>();
 
   const { vaultKey } = useVaultStore();
 
   const { data: activeOrganization } = authClient.useActiveOrganization();
 
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const { mutate } = useMutation(
-    trpc.credential.batchCreate.mutationOptions({}),
+    trpc.credential.batchCreate.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.credential.getCredentials.queryKey(),
+        });
+      },
+    }),
   );
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,12 +97,26 @@ const ImportCSV = () => {
                 ? await encryptString(row.note, vaultKey)
                 : undefined;
 
+              const mapCategory = (
+                cat?: string,
+              ): "login" | "card" | "identity" | "note" | "ssh_key" => {
+                const lower = cat?.toLowerCase() || "";
+                if (lower.includes("card")) return "card";
+                if (lower.includes("identity") || lower.includes("personal"))
+                  return "identity";
+                if (lower.includes("note")) return "note";
+                if (lower.includes("ssh") || lower.includes("key"))
+                  return "ssh_key";
+                return "login";
+              };
+
               return {
                 title,
                 username,
                 password,
                 url,
                 note,
+                type: mapCategory(row.category),
               };
             }),
           );

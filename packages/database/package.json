@@ -19,6 +19,14 @@
     "./auth-schema": {
       "types": "./dist/auth-schema.d.ts",
       "default": "./src/auth-schema.ts"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": "./src/types/types.d.ts"
+    },
+    "./zod-schema": {
+      "types": "./dist/types/zod-schema.d.ts",
+      "default": "./src/types/zod-schema.ts"
     }
   },
   "scripts": {

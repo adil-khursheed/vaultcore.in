@@ -1,4 +1,5 @@
 import React from "react";
+import { getSession } from "@/lib/auth/server";
 import { User } from "better-auth";
 
 import {
@@ -16,10 +17,14 @@ import AppSidebarHeader from "./app-sidebar-header";
 import AppSidebarMenu from "./app-sidebar-menu";
 import AppSidebarTypesMenu from "./app-sidebar-types-menu";
 
-const AppSidebar = ({
-  user,
+const AppSidebar = async ({
   ...props
-}: React.ComponentProps<typeof Sidebar> & { user: User }) => {
+}: React.ComponentProps<typeof Sidebar>) => {
+  const session = await getSession();
+  if (!session) return null;
+
+  const user = session.user;
+
   return (
     <Sidebar {...props}>
       <SidebarHeader className="p-0">

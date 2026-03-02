@@ -6,6 +6,7 @@ import { useParams, usePathname } from "next/navigation";
 import {
   IconCreditCard,
   IconId,
+  IconKey,
   IconLogin2,
   IconNotes,
 } from "@tabler/icons-react";
@@ -36,6 +37,11 @@ const menuItems = [
     title: "Secure Notes",
     href: "/:org_slug/secure-notes",
     icon: IconNotes,
+  },
+  {
+    title: "SSH Key",
+    href: "/:org_slug/ssh-keys",
+    icon: IconKey,
   },
 ];
 

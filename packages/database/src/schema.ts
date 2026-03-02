@@ -1,4 +1,13 @@
-import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import { organization } from "./auth-schema";
 
@@ -21,6 +30,14 @@ export const vaultKey = pgTable(
   (table) => [index("vaultKey_organizationId_idx").on(table.organizationId)],
 );
 
+export const credentialTypeEnum = pgEnum("credential_type", [
+  "login",
+  "card",
+  "identity",
+  "note",
+  "ssh_key",
+]);
+
 export const credential = pgTable(
   "credential",
   {
@@ -29,10 +46,15 @@ export const credential = pgTable(
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
-    username: text("username").notNull(),
-    password: text("password").notNull(),
+    username: text("username"),
+    password: text("password"),
     url: text("url"),
     note: text("note"),
+    type: credentialTypeEnum("type").default("login").notNull(),
+    data: jsonb("data"),
+    otp: text("otp"),
+    isFavorite: boolean("is_favorite").default(false),
+    isDeleted: boolean("is_deleted").default(false),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => new Date())
