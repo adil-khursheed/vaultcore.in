@@ -106,13 +106,13 @@ const AddItemButton = () => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="w-full px-0 sm:max-w-2xl">
+        <DialogHeader className="px-6">
           <DialogTitle>Add Item</DialogTitle>
           <DialogDescription>Add a new item to your vault.</DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[80vh] overflow-y-auto px-1 py-4">
+        <div className="max-h-[80vh] overflow-y-auto px-6 py-4">
           <ItemForm
             onSubmit={handleSubmit}
             onCancel={() => setOpen(false)}

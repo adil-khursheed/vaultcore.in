@@ -113,13 +113,13 @@ const EditCredential = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="w-full px-0 sm:max-w-2xl">
+        <DialogHeader className="px-6">
           <DialogTitle>Edit Credential</DialogTitle>
           <DialogDescription>Edit the selected credential</DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[80vh] overflow-y-auto px-1 py-4">
+        <div className="max-h-[80vh] overflow-y-auto px-6 py-4">
           <ItemForm
             initialValues={initialValues}
             onSubmit={handleSubmit}

@@ -27,7 +27,7 @@ const SearchInput = () => {
   }, 300);
 
   return (
-    <InputGroup className="max-w-lg">
+    <InputGroup>
       <InputGroupInput
         placeholder="Search..."
         onChange={(e) => {

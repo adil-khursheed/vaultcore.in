@@ -8,6 +8,7 @@ import {
   IconId,
   IconLogin2,
   IconNotes,
+  IconRefreshDot,
   IconSquareKey,
 } from "@tabler/icons-react";
 import { useForm } from "@tanstack/react-form";
@@ -16,8 +17,17 @@ import { ItemFormProps, ItemFormValues } from "@repo/db/types";
 import { ItemSchema } from "@repo/db/zod-schema";
 import { Button } from "@repo/ui/components/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@repo/ui/components/dialog";
+import {
   Field,
   FieldContent,
+  FieldDescription,
   FieldError,
   FieldLabel,
 } from "@repo/ui/components/field";
@@ -44,6 +54,8 @@ import {
 } from "@repo/ui/components/tabs";
 import { cardBrands, months } from "@repo/ui/lib/utils";
 
+import PasswordGeneratorForm from "./password-generator-form";
+
 const ItemForm = ({
   initialValues,
   onSubmit,
@@ -51,6 +63,7 @@ const ItemForm = ({
   isSubmitting = false,
   submitLabel = "Save Item",
 }: ItemFormProps) => {
+  const [togglePassword, setTogglePassword] = React.useState(false);
   const [togglePrivateKey, setTogglePrivateKey] = React.useState(false);
 
   const form = useForm({
@@ -87,45 +100,46 @@ const ItemForm = ({
         children={(field) => (
           <Tabs
             value={field.state.value}
-            onValueChange={(value) =>
-              field.handleChange(value as ItemFormValues["type"])
-            }
+            onValueChange={(value) => {
+              form.reset();
+              field.handleChange(value as ItemFormValues["type"]);
+            }}
             className="w-full"
           >
             <TabsList
-              defaultValue={initialValues?.type}
+              defaultValue={initialValues ? initialValues?.type : "login"}
               className="w-full justify-start overflow-x-auto"
             >
               <TabsTrigger
-                disabled={initialValues?.type !== "login"}
+                disabled={initialValues && initialValues?.type !== "login"}
                 value="login"
               >
                 <IconLogin2 />
                 Login
               </TabsTrigger>
               <TabsTrigger
-                disabled={initialValues?.type !== "card"}
+                disabled={initialValues && initialValues?.type !== "card"}
                 value="card"
               >
                 <IconCreditCard />
                 Card
               </TabsTrigger>
               <TabsTrigger
-                disabled={initialValues?.type !== "identity"}
+                disabled={initialValues && initialValues?.type !== "identity"}
                 value="identity"
               >
                 <IconId />
                 Identity
               </TabsTrigger>
               <TabsTrigger
-                disabled={initialValues?.type !== "note"}
+                disabled={initialValues && initialValues?.type !== "note"}
                 value="note"
               >
                 <IconNotes />
                 Note
               </TabsTrigger>
               <TabsTrigger
-                disabled={initialValues?.type !== "ssh_key"}
+                disabled={initialValues && initialValues?.type !== "ssh_key"}
                 value="ssh_key"
               >
                 <IconSquareKey />
@@ -185,26 +199,66 @@ const ItemForm = ({
                     </Field>
                   )}
                 />
-                <form.Field
-                  name="password"
-                  children={(field) => (
-                    <Field>
-                      <FieldContent>
-                        <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                      </FieldContent>
-                      <InputGroup>
-                        <InputGroupInput
-                          id={field.name}
-                          name={field.name}
-                          type="password"
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                        />
-                      </InputGroup>
-                    </Field>
-                  )}
-                />
+
+                <Dialog>
+                  <form.Field
+                    name="password"
+                    children={(field) => (
+                      <Field>
+                        <FieldContent>
+                          <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                        </FieldContent>
+                        <InputGroup>
+                          <InputGroupInput
+                            id={field.name}
+                            name={field.name}
+                            type={togglePassword ? "text" : "password"}
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                          />
+                          <InputGroupAddon align={"inline-end"}>
+                            <InputGroupButton
+                              size={"icon-sm"}
+                              onClick={() => setTogglePassword(!togglePassword)}
+                            >
+                              {togglePassword ? <IconEyeOff /> : <IconEye />}
+                            </InputGroupButton>
+                            <DialogTrigger asChild>
+                              <InputGroupButton size={"icon-sm"}>
+                                <IconRefreshDot />
+                              </InputGroupButton>
+                            </DialogTrigger>
+                          </InputGroupAddon>
+                        </InputGroup>
+
+                        <FieldDescription className="flex items-center gap-1 text-xs">
+                          Use the generator{" "}
+                          <IconRefreshDot className="size-3 sm:size-4" /> to
+                          create a strong unique password
+                        </FieldDescription>
+                      </Field>
+                    )}
+                  />
+
+                  <DialogContent className="w-full px-0 sm:max-w-xl">
+                    <DialogHeader className="px-6">
+                      <DialogTitle>Generate Password</DialogTitle>
+                      <DialogDescription>
+                        Generate a strong password for your account.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="max-h-[80vh] overflow-y-auto px-6 py-4">
+                      <PasswordGeneratorForm
+                        onUsePassword={(password) => {
+                          form.setFieldValue("password", password);
+                        }}
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
                 <form.Field
                   name="url"
                   children={(field) => (

@@ -149,6 +149,12 @@ const CredentialDetails = () => {
           }
         }
 
+        if (selectedCredential.note)
+          decrypted.note = await decryptString(
+            selectedCredential.note,
+            vaultKey,
+          );
+
         setDecryptedFields(decrypted);
       } catch (err) {
         toast.error("Failed to decrypt some fields");
@@ -419,7 +425,7 @@ function SelectedCredential({
                   Secure Note
                 </span>
                 <p className="text-sm whitespace-pre-wrap">
-                  {selectedCredential.note}
+                  {decryptedFields.note}
                 </p>
               </div>
             )}
