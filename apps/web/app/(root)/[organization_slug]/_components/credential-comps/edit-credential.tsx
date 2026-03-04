@@ -1,14 +1,15 @@
 "use client";
 
 import React from "react";
+import ItemForm from "@/components/shared/item-form";
+import { useUpdateCredential } from "@/hooks/use-update-credential";
 import { authClient } from "@/lib/auth/client";
-import { useTRPC } from "@/lib/trpc/client";
 import { encryptString } from "@/lib/utils";
-import { IconPlus } from "@tabler/icons-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { IconEdit } from "@tabler/icons-react";
 import { toast } from "sonner";
 
-import { useVaultStore } from "@repo/store";
+import { ItemFormValues } from "@repo/db/types";
+import { useCredentialStore, useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {
   Dialog,
@@ -19,30 +20,32 @@ import {
   DialogTrigger,
 } from "@repo/ui/components/dialog";
 
-import ItemForm from "./item-form";
-
-const AddItemButton = () => {
+const EditCredential = ({
+  decryptedFields,
+}: {
+  decryptedFields: Record<string, string>;
+}) => {
   const [open, setOpen] = React.useState(false);
-  const trpc = useTRPC();
-  const { vaultKey } = useVaultStore();
-  const { data: session } = authClient.useSession();
-  const queryClient = useQueryClient();
 
-  const { mutateAsync: createMutate, isPending } = useMutation(
-    trpc.credential.create.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: trpc.credential.getCredentials.pathKey(),
-        });
-        toast.success("Item added successfully");
-        setOpen(false);
-      },
-      onError: (error) => {
-        console.log(error.message);
-        toast.error(error.message);
-      },
-    }),
-  );
+  const { selectedCredential, setSelectedCredential } = useCredentialStore();
+  const { vaultKey } = useVaultStore();
+
+  const { data: session } = authClient.useSession();
+
+  // Build initialValues from selectedCredential + decryptedFields
+  const initialValues: Partial<ItemFormValues> = selectedCredential
+    ? {
+        title: selectedCredential.title,
+        type: selectedCredential.type,
+        isFavorite: selectedCredential.isFavorite ?? false,
+        note: decryptedFields.note ?? "",
+        ...decryptedFields, // spreads decrypted username, password, url, etc.
+      }
+    : {};
+
+  const { updateMutate, isPending } = useUpdateCredential({
+    setOpen,
+  });
 
   const handleSubmit = async (values: any) => {
     if (!vaultKey || !session?.session.activeOrganizationId) {
@@ -79,7 +82,8 @@ const AddItemButton = () => {
         }
       }
 
-      await createMutate({
+      await updateMutate({
+        id: selectedCredential?.id!,
         title,
         type,
         note,
@@ -100,20 +104,24 @@ const AddItemButton = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <IconPlus className="size-4" />
-          <span className="sr-only">Add New Vault Item</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground h-8 w-8"
+        >
+          <IconEdit className="size-4" />
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Item</DialogTitle>
-          <DialogDescription>Add a new item to your vault.</DialogDescription>
+          <DialogTitle>Edit Credential</DialogTitle>
+          <DialogDescription>Edit the selected credential</DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[80vh] overflow-y-auto px-1 py-4">
           <ItemForm
+            initialValues={initialValues}
             onSubmit={handleSubmit}
             onCancel={() => setOpen(false)}
             isSubmitting={isPending}
@@ -124,4 +132,4 @@ const AddItemButton = () => {
   );
 };
 
-export default AddItemButton;
+export default EditCredential;

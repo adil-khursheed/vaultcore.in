@@ -44,14 +44,8 @@ const ImportCSV = () => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const { mutate } = useMutation(
-    trpc.credential.batchCreate.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.credential.getCredentials.queryKey(),
-        });
-      },
-    }),
+  const { mutateAsync } = useMutation(
+    trpc.credential.batchCreate.mutationOptions(),
   );
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,7 +77,7 @@ const ImportCSV = () => {
             rows.map(async (row) => {
               const title = row.title || "Untitled";
               const username = await encryptString(
-                row.user_name || "",
+                row.user_name || row.user_name_2 || row.user_name_3 || "",
                 vaultKey,
               );
               const password = await encryptString(
@@ -121,9 +115,13 @@ const ImportCSV = () => {
             }),
           );
 
-          mutate({
+          await mutateAsync({
             organizationId: activeOrganization?.id!,
             credentials: encryptedCredentials,
+          });
+
+          await queryClient.invalidateQueries({
+            queryKey: trpc.credential.getCredentials.pathKey(),
           });
 
           toast.success(`Successfully imported ${rows.length} items.`);
@@ -188,7 +186,7 @@ const ImportCSV = () => {
 
           <div className="w-full text-xs text-neutral-400">
             <p className="font-semibold text-neutral-500">Required Columns:</p>
-            <p>title, url, user_name, password, note</p>
+            <p>title, url, username, password, note</p>
           </div>
         </div>
       </DialogContent>

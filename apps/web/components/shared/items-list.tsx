@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import EmptyList from "@/components/shared/empty-list";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
+import { TCredential } from "@/lib/types/types";
 import { decryptString } from "@/lib/utils";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ChevronRight, Loader2 } from "lucide-react";
@@ -17,12 +18,9 @@ import {
 } from "@repo/ui/components/avatar";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
+import { Card, CardContent, CardHeader } from "@repo/ui/components/card";
+import { SheetTrigger } from "@repo/ui/components/sheet";
+import { useSidebar } from "@repo/ui/components/sidebar";
 import { Skeleton } from "@repo/ui/components/skeleton";
 import { cn } from "@repo/ui/lib/utils";
 
@@ -30,7 +28,7 @@ const DecryptedCredential = ({
   cred,
   vaultKey,
 }: {
-  cred: any;
+  cred: TCredential;
   vaultKey: CryptoKey;
 }) => {
   const [decrypted, setDecrypted] = React.useState<{
@@ -72,49 +70,60 @@ const DecryptedCredential = ({
   }
 
   return (
-    <Button
-      variant={"outline"}
-      className={cn(
-        "h-auto w-full cursor-pointer justify-start",
-        selectedCredential?.id === cred.id &&
-          "border-primary dark:border-primary border-l-4",
-      )}
-      onClick={() => setSelectedCredential(cred)}
-    >
-      <div className="flex w-full items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-1 items-center gap-4">
-          <Avatar>
-            <AvatarImage
-              src={`https://www.google.com/s2/favicons?domain=${decrypted.url}&sz=64`}
-            />
-            <AvatarFallback>{cred.title[0]}</AvatarFallback>
-          </Avatar>
+    <SheetTrigger asChild>
+      <Button
+        variant={"outline"}
+        className={cn(
+          "h-auto w-full cursor-pointer justify-start",
+          selectedCredential?.id === cred.id &&
+            "border-primary dark:border-primary border-l-4",
+        )}
+        onClick={() => {
+          setSelectedCredential(null);
+          setSelectedCredential(cred);
+        }}
+      >
+        <div className="flex w-full items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-4">
+            <Avatar>
+              <AvatarImage
+                src={
+                  cred.type === "login" && decrypted?.url
+                    ? `https://www.google.com/s2/favicons?domain=${decrypted?.url}&sz=64`
+                    : undefined
+                }
+              />
+              <AvatarFallback className="text-sm font-medium capitalize">
+                {cred.title[0]}
+              </AvatarFallback>
+            </Avatar>
 
-          <div className="flex min-w-0 flex-col gap-y-1 text-left">
-            <div className="flex items-center gap-2">
-              <p className="truncate font-medium">{cred.title}</p>
-              <Badge variant="secondary" className="text-[10px] capitalize">
-                {cred.type.replace("_", " ")}
-              </Badge>
+            <div className="flex min-w-0 flex-col gap-y-1 text-left">
+              <div className="flex items-center gap-2">
+                <p className="truncate font-medium">{cred.title}</p>
+                <Badge variant="secondary" className="text-[10px] capitalize">
+                  {cred.type.replace("_", " ")}
+                </Badge>
+              </div>
+              {decrypted?.username && (
+                <p className="text-muted-foreground truncate text-xs">
+                  {decrypted?.username}
+                </p>
+              )}
             </div>
-            {decrypted.username && (
-              <p className="text-muted-foreground truncate text-xs">
-                {decrypted.username}
-              </p>
-            )}
           </div>
-        </div>
 
-        <ChevronRight className="size-4" />
-      </div>
-    </Button>
+          <ChevronRight className="size-4" />
+        </div>
+      </Button>
+    </SheetTrigger>
   );
 };
 
 const ItemsList = ({
   type,
   isFavorite,
-  isDeleted,
+  isDeleted = false,
 }: {
   type?: "login" | "card" | "identity" | "note" | "ssh_key";
   isFavorite?: boolean;
@@ -176,9 +185,9 @@ const ItemsList = ({
   const credentials = data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
-    <div className="flex h-full flex-col gap-3 p-3">
+    <div className="flex h-full flex-col gap-3 overflow-hidden p-3">
       {isLoading ? (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
           {[...Array(10)].map((_, i) => (
             <Skeleton
               key={i}

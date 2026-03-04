@@ -17,7 +17,7 @@ export const credentialRouter = {
           .optional(),
         search: z.string().nullish(),
         isFavorite: z.boolean().optional(),
-        isDeleted: z.boolean().optional(),
+        isDeleted: z.boolean().default(false),
         limit: z.number().min(1).max(100).default(50),
         cursor: z.uuid().nullish(),
       }),
@@ -41,9 +41,9 @@ export const credentialRouter = {
 
       const whereClause = and(
         eq(credential.organizationId, organizationId),
+        eq(credential.isDeleted, isDeleted),
         type ? eq(credential.type, type) : undefined,
-        isFavorite ? eq(credential.isFavorite, isFavorite) : undefined,
-        isDeleted ? eq(credential.isDeleted, isDeleted) : undefined,
+        isFavorite != null ? eq(credential.isFavorite, isFavorite) : undefined,
         search
           ? or(
               ilike(credential.title, `%${search}%`),
@@ -109,7 +109,7 @@ export const credentialRouter = {
   update: protectedProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
+        id: z.uuid().min(1),
         organizationId: z.string().min(1),
         title: z.string().optional(),
         username: z.string().optional(),

@@ -92,24 +92,42 @@ const ItemForm = ({
             }
             className="w-full"
           >
-            <TabsList className="w-full justify-start overflow-x-auto">
-              <TabsTrigger value="login">
+            <TabsList
+              defaultValue={initialValues?.type}
+              className="w-full justify-start overflow-x-auto"
+            >
+              <TabsTrigger
+                disabled={initialValues?.type !== "login"}
+                value="login"
+              >
                 <IconLogin2 />
                 Login
               </TabsTrigger>
-              <TabsTrigger value="card">
+              <TabsTrigger
+                disabled={initialValues?.type !== "card"}
+                value="card"
+              >
                 <IconCreditCard />
                 Card
               </TabsTrigger>
-              <TabsTrigger value="identity">
+              <TabsTrigger
+                disabled={initialValues?.type !== "identity"}
+                value="identity"
+              >
                 <IconId />
                 Identity
               </TabsTrigger>
-              <TabsTrigger value="note">
+              <TabsTrigger
+                disabled={initialValues?.type !== "note"}
+                value="note"
+              >
                 <IconNotes />
                 Note
               </TabsTrigger>
-              <TabsTrigger value="ssh_key">
+              <TabsTrigger
+                disabled={initialValues?.type !== "ssh_key"}
+                value="ssh_key"
+              >
                 <IconSquareKey />
                 SSH Key
               </TabsTrigger>
@@ -262,7 +280,13 @@ const ItemForm = ({
                       <Field className="col-span-2">
                         <FieldLabel htmlFor={field.name}>Brand</FieldLabel>
 
-                        <Select>
+                        <Select
+                          name={field.name}
+                          value={field.state.value || undefined}
+                          onValueChange={(val) =>
+                            field.handleChange(val as any)
+                          }
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select Brand" />
                           </SelectTrigger>
@@ -287,7 +311,13 @@ const ItemForm = ({
                             Expiry Month
                           </FieldLabel>
                         </FieldContent>
-                        <Select>
+                        <Select
+                          name={field.name}
+                          value={field.state.value || undefined}
+                          onValueChange={(val) =>
+                            field.handleChange(val as any)
+                          }
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select Month" />
                           </SelectTrigger>
@@ -362,7 +392,13 @@ const ItemForm = ({
                           </FieldLabel>
                         </FieldContent>
 
-                        <Select>
+                        <Select
+                          name={field.name}
+                          value={field.state.value || undefined}
+                          onValueChange={(val) =>
+                            field.handleChange(val as any)
+                          }
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select Identity Title" />
                           </SelectTrigger>

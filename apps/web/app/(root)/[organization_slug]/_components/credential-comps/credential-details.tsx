@@ -1,16 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { TCredential } from "@/lib/types/types";
 import { decryptString } from "@/lib/utils";
 import {
   IconCheck,
   IconCopy,
-  IconEdit,
   IconEye,
   IconEyeOff,
   IconLockPassword,
-  IconStar,
-  IconStarFilled,
   IconTrash,
 } from "@tabler/icons-react";
 import { Loader2 } from "lucide-react";
@@ -22,8 +20,18 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/ui/components/avatar";
-import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
+import {
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@repo/ui/components/sheet";
+import { useSidebar } from "@repo/ui/components/sidebar";
+
+import DeleteCredential from "./delete-credential";
+import EditCredential from "./edit-credential";
+import MarkFavorite from "./mark-favorite";
 
 const CopyableField = ({
   label,
@@ -87,13 +95,15 @@ const CopyableField = ({
 };
 
 const CredentialDetails = () => {
-  const { selectedCredential } = useCredentialStore();
-  const { vaultKey } = useVaultStore();
-
   const [decryptedFields, setDecryptedFields] = useState<
     Record<string, string>
   >({});
   const [isLoading, setIsLoading] = useState(false);
+
+  const { isMobile } = useSidebar();
+
+  const { selectedCredential } = useCredentialStore();
+  const { vaultKey } = useVaultStore();
 
   useEffect(() => {
     const decryptData = async () => {
@@ -152,7 +162,7 @@ const CredentialDetails = () => {
 
   if (!selectedCredential) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-y-2">
+      <div className="hidden flex-1 flex-col items-center justify-center gap-y-2 md:flex">
         <div className="bg-accent flex size-12 items-center justify-center rounded-full p-2">
           <IconLockPassword className="text-accent-foreground size-10" />
         </div>
@@ -169,16 +179,57 @@ const CredentialDetails = () => {
   }
 
   return (
+    <>
+      {isMobile ? (
+        <SheetContent>
+          <SheetHeader className="pb-0">
+            <SheetTitle>Credential Details</SheetTitle>
+            <SheetDescription className="sr-only">
+              Selected Credential
+            </SheetDescription>
+          </SheetHeader>
+          <SelectedCredential
+            decryptedFields={decryptedFields}
+            selectedCredential={selectedCredential}
+            isLoading={isLoading}
+          />
+        </SheetContent>
+      ) : (
+        <SelectedCredential
+          decryptedFields={decryptedFields}
+          selectedCredential={selectedCredential}
+          isLoading={isLoading}
+        />
+      )}
+    </>
+  );
+};
+
+export default CredentialDetails;
+
+function SelectedCredential({
+  decryptedFields,
+  selectedCredential,
+  isLoading,
+}: {
+  selectedCredential: TCredential;
+  decryptedFields: Record<string, string>;
+  isLoading: boolean;
+}) {
+  return (
     <div className="bg-background flex h-full flex-1 flex-col overflow-hidden">
       {/* Header Block */}
       <div className="flex shrink-0 items-center justify-between border-b p-4">
         <div className="flex min-w-0 items-center gap-3">
           <Avatar className="size-10 shrink-0">
-            {selectedCredential.type === "login" && decryptedFields.url ? (
-              <AvatarImage
-                src={`https://www.google.com/s2/favicons?domain=${decryptedFields.url}&sz=64`}
-              />
-            ) : null}
+            <AvatarImage
+              src={
+                selectedCredential.type === "login" && decryptedFields.url
+                  ? `https://www.google.com/s2/favicons?domain=${decryptedFields.url}&sz=64`
+                  : undefined
+              }
+            />
+
             <AvatarFallback className="bg-primary/10 text-primary">
               {selectedCredential.title.charAt(0).toUpperCase()}
             </AvatarFallback>
@@ -192,31 +243,11 @@ const CredentialDetails = () => {
 
         {/* Actions */}
         <div className="flex shrink-0 items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground h-8 w-8"
-          >
-            {selectedCredential.isFavorite ? (
-              <IconStarFilled className="size-4 text-yellow-500" />
-            ) : (
-              <IconStar className="size-4" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground h-8 w-8"
-          >
-            <IconEdit className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 w-8"
-          >
-            <IconTrash className="size-4" />
-          </Button>
+          <MarkFavorite />
+
+          <EditCredential decryptedFields={decryptedFields} />
+
+          <DeleteCredential />
         </div>
       </div>
 
@@ -397,6 +428,4 @@ const CredentialDetails = () => {
       </div>
     </div>
   );
-};
-
-export default CredentialDetails;
+}

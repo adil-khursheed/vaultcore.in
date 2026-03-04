@@ -20,27 +20,27 @@ import {
 const menuItems = [
   {
     title: "Login",
-    href: "/:org_slug/login",
+    href: "/:org_slug/type/login",
     icon: IconLogin2,
   },
   {
     title: "Card",
-    href: "/:org_slug/card",
+    href: "/:org_slug/type/card",
     icon: IconCreditCard,
   },
   {
     title: "Identity",
-    href: "/:org_slug/identity",
+    href: "/:org_slug/type/identity",
     icon: IconId,
   },
   {
     title: "Secure Notes",
-    href: "/:org_slug/secure-notes",
+    href: "/:org_slug/type/secure-note",
     icon: IconNotes,
   },
   {
     title: "SSH Key",
-    href: "/:org_slug/ssh-keys",
+    href: "/:org_slug/type/ssh-key",
     icon: IconKey,
   },
 ];

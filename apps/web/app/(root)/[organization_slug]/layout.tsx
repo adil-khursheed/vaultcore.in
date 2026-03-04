@@ -16,16 +16,16 @@ const ProtectedLayout = async ({ children }: { children: React.ReactNode }) => {
       <SidebarProvider>
         <AppSidebar />
 
-        <main className="flex w-full flex-1 flex-col items-start">
+        <main className="flex w-full flex-1 flex-col items-start overflow-hidden">
           <MainHeader />
-          <div className="flex w-full flex-1">
+          <div className="flex w-full flex-1 overflow-hidden">
             <Sheet>
               <div className="border-border flex h-full w-full flex-col border-r md:w-2/5">
-                <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+                <div className="flex shrink-0 items-center gap-2 px-3 pt-3 pb-2">
                   <SearchInput />
                   <AddItemButton />
                 </div>
-                <div className="flex-1">{children}</div>
+                <div className="min-h-0 flex-1">{children}</div>
               </div>
 
               <CredentialDetails />
