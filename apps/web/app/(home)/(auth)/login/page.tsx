@@ -31,7 +31,7 @@ const Page = () => {
 
             <p className="text-sm">
               Don't have an account?{" "}
-              <Link href="/signup" className="text-primary underline">
+              <Link href="/pricing/personal" className="text-primary underline">
                 SignUp
               </Link>
             </p>

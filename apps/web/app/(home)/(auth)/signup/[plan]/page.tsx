@@ -1,4 +1,5 @@
 import React, { Suspense } from "react";
+import Link from "next/link";
 import BGPattern from "@/components/shared/bg-pattern";
 import SectionContainer from "@/components/shared/section-container";
 import { Loader2Icon } from "lucide-react";
@@ -23,12 +24,19 @@ const Page = async ({ params }: { params: Promise<{ plan: string }> }) => {
 
         <Card className="mx-auto w-full md:max-w-lg">
           <CardHeader>
-            <CardTitle className="text-center text-xl font-semibold md:text-2xl">
+            <CardTitle className="text-xl font-semibold md:text-2xl">
               Join VaultCore
             </CardTitle>
-            <CardDescription className="text-center text-base">
+            <CardDescription className="text-base">
               Secure your {plan} account with confidence
             </CardDescription>
+
+            <p className="text-sm">
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary underline">
+                Login
+              </Link>
+            </p>
           </CardHeader>
 
           <CardContent>
