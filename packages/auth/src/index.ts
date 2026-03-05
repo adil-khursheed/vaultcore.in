@@ -300,7 +300,7 @@ export function initAuth<
       subscriptionLimitsPlugin(),
       polar({
         client: polarClient,
-        createCustomerOnSignUp: true,
+        createCustomerOnSignUp: false,
         use: [
           checkout({
             products: [

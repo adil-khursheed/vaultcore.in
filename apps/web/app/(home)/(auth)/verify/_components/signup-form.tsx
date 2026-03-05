@@ -158,6 +158,8 @@ const SignUpForm = () => {
             },
             onError: (ctx) => {
               console.log("Sign Up Error => ", ctx.error);
+              console.log("Sign Up Error Request => ", ctx.request);
+              console.log("Sign Up Error Response => ", ctx.response);
               toast.error(ctx.error.message);
             },
           },
