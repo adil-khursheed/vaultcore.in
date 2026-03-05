@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { env } from "@/env";
 import { nextCookies } from "better-auth/next-js";
 
+import type { Auth } from "@repo/auth";
 import { initAuth } from "@repo/auth";
 import { eq } from "@repo/db";
 import { db } from "@repo/db/client";
@@ -21,7 +22,7 @@ export const auth = initAuth({
   baseUrl,
   productionUrl: baseUrl,
   extraPlugins: [nextCookies()],
-});
+}) as unknown as Auth;
 
 export const getSession = cache(async () =>
   auth.api.getSession({ headers: await headers() }),
