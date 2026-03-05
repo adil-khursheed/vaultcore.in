@@ -16,7 +16,7 @@ export async function sendEmail({
   props: EmailTemplateProps;
 }) {
   return await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: env.EMAIL_FROM,
     to: [to],
     subject,
     html: getEmailTemplateHtml({ ...props }),

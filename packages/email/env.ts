@@ -5,6 +5,7 @@ export function emailEnv() {
   return createEnv({
     server: {
       RESEND_API_KEY: z.string().min(1),
+      EMAIL_FROM: z.string().min(1),
       NODE_ENV: z.enum(["development", "production"]).optional(),
     },
     runtimeEnv: process.env,
