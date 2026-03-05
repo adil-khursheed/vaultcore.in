@@ -15,20 +15,29 @@
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "email dev --dir src/email-template --port 3333",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.8",
+    "@react-email/render": "^2.0.4",
     "@t3-oss/env-core": "^0.13.8",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "resend": "^6.5.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@react-email/preview-server": "5.2.9",
     "@repo/eslint-config": "workspace:*",
     "@repo/prettier-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22.15.3",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "react-email": "^5.2.9",
     "typescript": "^5.9.3"
   },
   "prettier": "@repo/prettier-config"

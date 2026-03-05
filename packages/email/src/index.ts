@@ -1,10 +1,9 @@
 import { Resend } from "resend";
 
-import { env } from "../env.ts";
-import { getEmailTemplateHtml } from "./email-template/template.ts";
-import { EmailTemplateProps } from "./types.js";
+import type { EmailTemplateProps } from "./types";
+import { getEmailTemplateHtml } from "./template";
 
-export const resend = new Resend(env.RESEND_API_KEY);
+export const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendEmail({
   props,
@@ -16,9 +15,9 @@ export async function sendEmail({
   props: EmailTemplateProps;
 }) {
   return await resend.emails.send({
-    from: env.EMAIL_FROM,
+    from: process.env.EMAIL_FROM!,
     to: [to],
     subject,
-    html: getEmailTemplateHtml({ ...props }),
+    html: await getEmailTemplateHtml({ ...props }),
   });
 }
