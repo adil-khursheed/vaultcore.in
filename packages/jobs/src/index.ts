@@ -11,23 +11,30 @@ export const connection = {
   url: REDIS_URL,
 };
 
+let _mainQueue: Queue | undefined;
+
 /**
- * The main queue instance.
+ * Gets the main queue instance, initializing it if necessary.
  */
-export const mainQueue = new Queue("main-queue", {
-  connection: {
-    url: REDIS_URL,
-  },
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: {
-      type: "exponential",
-      delay: 1000,
-    },
-    removeOnComplete: true,
-    removeOnFail: 1000,
-  },
-});
+export function getMainQueue() {
+  if (!_mainQueue) {
+    _mainQueue = new Queue("main-queue", {
+      connection: {
+        url: REDIS_URL,
+      },
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 1000,
+        },
+        removeOnComplete: true,
+        removeOnFail: 1000,
+      },
+    });
+  }
+  return _mainQueue;
+}
 
 /**
  * Type-safe helper to add a job to the queue.
@@ -36,7 +43,7 @@ export async function queueJob<T extends JobName>(
   name: T,
   data: JobDataMap[T],
 ) {
-  return mainQueue.add(name, data);
+  return getMainQueue().add(name, data);
 }
 
 export * from "./registry";
