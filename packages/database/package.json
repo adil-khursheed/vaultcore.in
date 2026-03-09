@@ -37,7 +37,8 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "push": "pnpm with-env drizzle-kit push",
     "studio": "pnpm with-env drizzle-kit studio",
-    "with-env": "dotenv -e ../../.env --"
+    "with-env": "dotenv -e ../../.env --",
+    "seed": "pnpm with-env npx tsx src/seed.ts"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
@@ -45,6 +46,7 @@
     "@repo/typescript-config": "workspace:*",
     "@types/pg": "^8.15.6",
     "drizzle-kit": "^0.31.7",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
