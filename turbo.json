@@ -30,17 +30,28 @@
   "globalEnv": [
     "DATABASE_URL",
     "BETTER_AUTH_SECRET",
+
     "WEB_APP_URL",
     "NEXT_PUBLIC_WEB_APP_URL",
+
     "RESEND_API_KEY",
     "EMAIL_FROM",
+
     "POLAR_ACCESS_TOKEN",
     "POLAR_WEBHOOK_SECRET",
     "POLAR_FREE_PRODUCT_ID",
     "POLAR_FAMILY_PRODUCT_ID",
     "POLAR_PREMIUM_PRODUCT_ID",
+
+    "JWT_SECRET",
+
     "REDIS_URL",
-    "JWT_SECRET"
+    "REDISHOST",
+    "REDISPASSWORD",
+    "REDISUSER",
+    "REDIS_PASSWORD",
+    "REDISPORT",
+    "REDIS_PUBLIC_URL"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

@@ -2,14 +2,18 @@ import { Queue } from "bullmq";
 
 import type { JobDataMap, JobName } from "./registry";
 
-const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
-
 /**
  * Shared connection options for BullMQ.
+ * Prefers REDIS_URL, then falls back to individual variables (standard on Railway).
  */
-export const connection = {
-  url: REDIS_URL,
-};
+export const connection = process.env.REDIS_URL
+  ? { url: process.env.REDIS_URL }
+  : {
+      host: process.env.REDISHOST || "localhost",
+      port: parseInt(process.env.REDISPORT || "6379"),
+      password: process.env.REDISPASSWORD || process.env.REDIS_PASSWORD,
+      username: process.env.REDISUSER || "default",
+    };
 
 let _mainQueue: Queue | undefined;
 
@@ -19,9 +23,7 @@ let _mainQueue: Queue | undefined;
 export function getMainQueue() {
   if (!_mainQueue) {
     _mainQueue = new Queue("main-queue", {
-      connection: {
-        url: REDIS_URL,
-      },
+      connection,
       defaultJobOptions: {
         attempts: 3,
         backoff: {
