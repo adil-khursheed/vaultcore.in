@@ -47,11 +47,11 @@ const Navbar = () => {
                     </Link>
                   </Button>
 
-                  <Button asChild variant={"ghost"}>
+                  {/* <Button asChild variant={"ghost"}>
                     <Link href={"/downloads"}>
                       <span>Downloads</span>
                     </Link>
-                  </Button>
+                  </Button> */}
 
                   <Button asChild variant={"ghost"}>
                     <Link href={"/login"}>
@@ -101,7 +101,7 @@ const Navbar = () => {
                           <span>Pricing</span>
                         </Link>
                       </Button>
-                      <Button
+                      {/* <Button
                         asChild
                         variant={"ghost"}
                         className="w-full justify-start"
@@ -110,7 +110,7 @@ const Navbar = () => {
                         <Link href={"/downloads"}>
                           <span>Downloads</span>
                         </Link>
-                      </Button>
+                      </Button> */}
 
                       <SheetFooter className="mt-auto w-full">
                         <Button

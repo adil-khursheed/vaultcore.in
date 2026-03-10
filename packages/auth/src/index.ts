@@ -215,15 +215,15 @@ export function initAuth<
           checkout({
             products: [
               {
-                productId: env.POLAR_FREE_PRODUCT_ID,
+                productId: "5c1be1f9-e6e1-4855-a2f6-0559c37d236b",
                 slug: "free",
               },
               {
-                productId: env.POLAR_PREMIUM_PRODUCT_ID,
+                productId: "f7e1b1b8-225d-4c67-a6fb-9fd79e469678",
                 slug: "premium",
               },
               {
-                productId: env.POLAR_FAMILY_PRODUCT_ID,
+                productId: "67d26c7d-b383-4fd4-80de-3ec68b8553aa",
                 slug: "family",
               },
             ],
@@ -234,121 +234,122 @@ export function initAuth<
           usage(),
           webhooks({
             secret: env.POLAR_WEBHOOK_SECRET,
-            async onSubscriptionCreated(subscription: any) {
+            async onSubscriptionCreated(subscription) {
               const orgId =
-                (subscription.metadata?.referenceId as string) ||
-                (subscription.metadata?.organizationId as string);
+                (subscription.data.metadata?.referenceId as string) ||
+                (subscription.data.metadata?.organizationId as string);
               if (!orgId) return;
 
               const plan = await db.query.plans.findFirst({
-                where: eq(plans.polarProductId, subscription.productId),
+                where: eq(plans.polarProductId, subscription.data.productId),
               });
 
               if (plan) {
                 await db
                   .insert(organizationSubscriptions)
                   .values({
-                    id: subscription.id,
+                    id: subscription.data.id,
                     organizationId: orgId,
                     planId: plan.id,
-                    polarCustomerId: subscription.customerId,
-                    polarProductId: subscription.productId,
-                    status: subscription.status as any,
-                    interval: subscription.recurringInterval as any,
+                    polarCustomerId: subscription.data.customerId,
+                    polarProductId: subscription.data.productId,
+                    status: subscription.data.status as any,
+                    interval: subscription.data.recurringInterval as any,
                     currentPeriodStart: new Date(
-                      subscription.currentPeriodStart,
+                      subscription.data.currentPeriodStart,
                     ),
-                    currentPeriodEnd: subscription.currentPeriodEnd
-                      ? new Date(subscription.currentPeriodEnd)
+                    currentPeriodEnd: subscription.data.currentPeriodEnd
+                      ? new Date(subscription.data.currentPeriodEnd)
                       : null,
-                    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-                    metadata: subscription.metadata as any,
+                    cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
+                    metadata: subscription.data.metadata as any,
                   })
                   .onConflictDoUpdate({
                     target: organizationSubscriptions.id,
                     set: {
                       planId: plan.id,
-                      status: subscription.status as any,
-                      currentPeriodEnd: subscription.currentPeriodEnd
-                        ? new Date(subscription.currentPeriodEnd)
+                      status: subscription.data.status as any,
+                      currentPeriodEnd: subscription.data.currentPeriodEnd
+                        ? new Date(subscription.data.currentPeriodEnd)
                         : null,
-                      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+                      cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
                     },
                   });
               }
             },
-            async onSubscriptionUpdated(subscription: any) {
+            async onSubscriptionUpdated(subscription) {
               const plan = await db.query.plans.findFirst({
-                where: eq(plans.polarProductId, subscription.productId),
+                where: eq(plans.polarProductId, subscription.data.productId),
               });
 
               await db
                 .update(organizationSubscriptions)
                 .set({
-                  status: subscription.status as any,
+                  status: subscription.data.status as any,
                   planId: plan?.id,
-                  currentPeriodEnd: subscription.currentPeriodEnd
-                    ? new Date(subscription.currentPeriodEnd)
+                  currentPeriodEnd: subscription.data.currentPeriodEnd
+                    ? new Date(subscription.data.currentPeriodEnd)
                     : null,
-                  cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-                  canceledAt: subscription.canceledAt
-                    ? new Date(subscription.canceledAt)
+                  cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
+                  canceledAt: subscription.data.canceledAt
+                    ? new Date(subscription.data.canceledAt)
                     : null,
                 })
-                .where(eq(organizationSubscriptions.id, subscription.id));
+                .where(eq(organizationSubscriptions.id, subscription.data.id));
             },
-            async onSubscriptionCanceled(subscription: any) {
+            async onSubscriptionCanceled(subscription) {
               await db
                 .update(organizationSubscriptions)
                 .set({
                   status: "canceled",
                   cancelAtPeriodEnd: true,
-                  canceledAt: subscription.canceledAt
-                    ? new Date(subscription.canceledAt)
+                  canceledAt: subscription.data.canceledAt
+                    ? new Date(subscription.data.canceledAt)
                     : null,
                 })
-                .where(eq(organizationSubscriptions.id, subscription.id));
+                .where(eq(organizationSubscriptions.id, subscription.data.id));
             },
-            async onSubscriptionRevoked(subscription: any) {
+            async onSubscriptionRevoked(subscription) {
               await db
                 .update(organizationSubscriptions)
                 .set({
                   status: "canceled",
                 })
-                .where(eq(organizationSubscriptions.id, subscription.id));
+                .where(eq(organizationSubscriptions.id, subscription.data.id));
             },
-            async onOrderPaid(order: any) {
+            async onOrderPaid(order) {
               const orgId =
-                (order.metadata?.referenceId as string) ||
-                (order.metadata?.organizationId as string);
+                (order.data.metadata?.referenceId as string) ||
+                (order.data.metadata?.organizationId as string);
               if (!orgId) return;
 
               await db
                 .insert(payments)
                 .values({
-                  id: order.id,
+                  id: order.data.id,
                   organizationId: orgId,
-                  billingUserId: (order.metadata?.userId as string) || null,
-                  subscriptionId: order.subscriptionId,
-                  polarOrderId: order.id,
-                  polarCustomerId: order.customerId,
-                  amount: order.amount,
-                  currency: order.currency,
+                  billingUserId:
+                    (order.data.metadata?.userId as string) || null,
+                  subscriptionId: order.data.subscriptionId,
+                  polarOrderId: order.data.id,
+                  polarCustomerId: order.data.customerId,
+                  amount: order.data.totalAmount,
+                  currency: order.data.currency,
                   status: "paid",
-                  description: `Payment for ${order.product?.name}`,
-                  metadata: order.metadata as any,
-                  paidAt: new Date(order.createdAt),
+                  description: `Payment for ${order.data.product?.name}`,
+                  metadata: order.data.metadata as any,
+                  paidAt: new Date(order.data.createdAt),
                 })
                 .onConflictDoNothing();
             },
-            async onOrderRefunded(order: any) {
+            async onOrderRefunded(order) {
               await db
                 .update(payments)
                 .set({
                   status: "refunded",
-                  refundedAmount: order.amount,
+                  refundedAmount: order.data.totalAmount,
                 })
-                .where(eq(payments.id, order.id));
+                .where(eq(payments.id, order.data.id));
             },
           }),
         ],

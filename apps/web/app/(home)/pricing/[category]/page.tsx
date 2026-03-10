@@ -1,8 +1,8 @@
 import React from "react";
+import Pricing from "@/components/shared/pricing";
 import SectionContainer from "@/components/shared/section-container";
 
 import CategoryTab from "./_components/category-tab";
-import Pricing from "./_components/pricing";
 
 const Page = async ({ params }: { params: Promise<{ category: string }> }) => {
   const { category } = await params;
