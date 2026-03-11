@@ -68,21 +68,28 @@ export const credential = pgTable(
   (table) => [index("credential_organizationId_idx").on(table.organizationId)],
 );
 
-export const plans = pgTable("plans", {
-  id: text("id").primaryKey(),
-  polarProductId: text("polar_product_id"),
-  name: text("name").notNull(),
-  description: text("description"),
-  yearlyPriceUsd: integer("yearly_price_usd"), // in cents; 0 for free
-  maxOrgsPerUser: integer("max_orgs_per_user"), // null = unlimited
-  maxMembersPerOrg: integer("max_members_per_org"), // null = unlimited
-  features: jsonb("features").$type<string[]>().default([]),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
+export const plans = pgTable(
+  "plans",
+  {
+    id: text("id").primaryKey(),
+    polarProductId: text("polar_product_id"),
+    name: text("name").notNull(),
+    description: text("description"),
+    yearlyPriceUsd: integer("yearly_price_usd"), // in cents; 0 for free
+    maxOrgsPerUser: integer("max_orgs_per_user"), // null = unlimited
+    maxMembersPerOrg: integer("max_members_per_org"), // null = unlimited
+    features: jsonb("features").$type<string[]>().default([]),
+    isActive: boolean("is_active").notNull().default(true),
+    isPopular: boolean("is_popular").notNull().default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("plans_polar_product_id_uidx").on(table.polarProductId),
+  ],
+);
 
 export const organizationSubscriptions = pgTable(
   "organization_subscriptions",

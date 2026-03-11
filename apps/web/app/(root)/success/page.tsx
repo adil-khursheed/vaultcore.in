@@ -1,12 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  CheckCircle2,
-  ChevronRight,
-  LayoutDashboard,
-  Rocket,
-} from "lucide-react";
+import { CheckCircle2, ChevronRight, LayoutDashboard } from "lucide-react";
 import * as motion from "motion/react-client";
 
 import { Button } from "@repo/ui/components/button";
@@ -29,8 +24,8 @@ const SuccessPage = () => {
           <Image
             src="/images/success.png"
             alt="Checkout Success"
-            width={400}
-            height={400}
+            width={250}
+            height={250}
             className="drop-shadow-2xl"
             priority
           />
@@ -48,7 +43,7 @@ const SuccessPage = () => {
           </div>
 
           <h1 className="text-foreground text-4xl font-bold tracking-tight sm:text-6xl">
-            Congratulations for your
+            Congratulations on your
             <br />
             <span className="text-primary italic">Upgrade</span>
           </h1>

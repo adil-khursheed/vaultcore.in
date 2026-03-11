@@ -215,15 +215,15 @@ export function initAuth<
           checkout({
             products: [
               {
-                productId: "5c1be1f9-e6e1-4855-a2f6-0559c37d236b",
+                productId: env.POLAR_FREE_PRODUCT_ID,
                 slug: "free",
               },
               {
-                productId: "f7e1b1b8-225d-4c67-a6fb-9fd79e469678",
+                productId: env.POLAR_PREMIUM_PRODUCT_ID,
                 slug: "premium",
               },
               {
-                productId: "67d26c7d-b383-4fd4-80de-3ec68b8553aa",
+                productId: env.POLAR_FAMILY_PRODUCT_ID,
                 slug: "family",
               },
             ],
@@ -235,46 +235,58 @@ export function initAuth<
           webhooks({
             secret: env.POLAR_WEBHOOK_SECRET,
             async onSubscriptionCreated(subscription) {
-              const orgId =
-                (subscription.data.metadata?.referenceId as string) ||
-                (subscription.data.metadata?.organizationId as string);
-              if (!orgId) return;
+              try {
+                const orgId =
+                  (subscription.data.metadata?.referenceId as string) ||
+                  (subscription.data.metadata?.organizationId as string);
+                if (!orgId) return;
 
-              const plan = await db.query.plans.findFirst({
-                where: eq(plans.polarProductId, subscription.data.productId),
-              });
+                const plan = await db.query.plans.findFirst({
+                  where: eq(plans.polarProductId, subscription.data.productId),
+                });
 
-              if (plan) {
-                await db
-                  .insert(organizationSubscriptions)
-                  .values({
-                    id: subscription.data.id,
-                    organizationId: orgId,
-                    planId: plan.id,
-                    polarCustomerId: subscription.data.customerId,
-                    polarProductId: subscription.data.productId,
-                    status: subscription.data.status as any,
-                    interval: subscription.data.recurringInterval as any,
-                    currentPeriodStart: new Date(
-                      subscription.data.currentPeriodStart,
-                    ),
-                    currentPeriodEnd: subscription.data.currentPeriodEnd
-                      ? new Date(subscription.data.currentPeriodEnd)
-                      : null,
-                    cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
-                    metadata: subscription.data.metadata as any,
-                  })
-                  .onConflictDoUpdate({
-                    target: organizationSubscriptions.id,
-                    set: {
+                if (plan) {
+                  await db
+                    .insert(organizationSubscriptions)
+                    .values({
+                      id: subscription.data.id,
+                      organizationId: orgId,
                       planId: plan.id,
+                      polarCustomerId: subscription.data.customerId,
+                      polarProductId: subscription.data.productId,
                       status: subscription.data.status as any,
+                      interval: subscription.data.recurringInterval as any,
+                      currentPeriodStart: new Date(
+                        subscription.data.currentPeriodStart,
+                      ),
                       currentPeriodEnd: subscription.data.currentPeriodEnd
                         ? new Date(subscription.data.currentPeriodEnd)
                         : null,
                       cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
-                    },
-                  });
+                      metadata: subscription.data.metadata as any,
+                    })
+                    .onConflictDoUpdate({
+                      target: organizationSubscriptions.organizationId,
+                      set: {
+                        id: subscription.data.id,
+                        planId: plan.id,
+                        polarCustomerId: subscription.data.customerId,
+                        polarProductId: subscription.data.productId,
+                        status: subscription.data.status as any,
+                        interval: subscription.data.recurringInterval as any,
+                        currentPeriodStart: new Date(
+                          subscription.data.currentPeriodStart,
+                        ),
+                        currentPeriodEnd: subscription.data.currentPeriodEnd
+                          ? new Date(subscription.data.currentPeriodEnd)
+                          : null,
+                        cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
+                        metadata: subscription.data.metadata,
+                      },
+                    });
+                }
+              } catch (error) {
+                console.log(error);
               }
             },
             async onSubscriptionUpdated(subscription) {

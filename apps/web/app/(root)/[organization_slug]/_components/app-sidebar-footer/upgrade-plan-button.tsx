@@ -3,14 +3,12 @@
 import React, { useMemo } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
-import { plans } from "@/lib/utils/constants";
 import NumberFlow from "@number-flow/react";
 import { IconCheck } from "@tabler/icons-react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 
-import { placeholder } from "@repo/db";
 import { Button } from "@repo/ui/components/button";
 import {
   Dialog,
@@ -23,15 +21,22 @@ import {
 import { SidebarMenuItem } from "@repo/ui/components/sidebar";
 import { cn } from "@repo/ui/lib/utils";
 
-const UpgradePlanButton = () => {
-  const { data: activeOrganization } = authClient.useActiveOrganization();
-
+const UpgradePlanButton = ({ organizationId }: { organizationId: string }) => {
   const trpc = useTRPC();
 
+  const { data: plans } = useSuspenseQuery(
+    trpc.subscription.getAllPlans.queryOptions(),
+  );
+
   const { data } = useSuspenseQuery(
-    trpc.subscription.getPlan.queryOptions({
-      organizationId: activeOrganization?.id,
-    }),
+    trpc.subscription.getCurrentActivePlan.queryOptions(
+      {
+        organizationId,
+      },
+      {
+        enabled: !!organizationId,
+      },
+    ),
   );
 
   const plansToUpgrade = useMemo(
@@ -44,7 +49,7 @@ const UpgradePlanButton = () => {
     try {
       await authClient.checkout({
         slug: planId,
-        referenceId: activeOrganization?.id,
+        referenceId: organizationId,
       });
     } catch (error) {
       console.error(error);
@@ -88,43 +93,51 @@ const UpgradePlanButton = () => {
                       <h3 className="text-foreground text-2xl font-bold">
                         {plan.name}
                       </h3>
-                      <p className="text-muted-foreground mt-2 text-sm">
-                        {plan.description}
-                      </p>
+                      {plan.description && (
+                        <p className="text-muted-foreground mt-2 text-sm">
+                          {plan.description}
+                        </p>
+                      )}
                     </div>
 
                     <div className="border-border mb-8 border-b pb-8">
                       <div className="flex items-baseline gap-1">
-                        {typeof plan.price === "number" ? (
+                        {typeof plan.yearlyPriceUsd === "number" ? (
                           <NumberFlow
                             className="text-foreground font-medium"
                             format={{
                               style: "currency",
                               currency: "USD",
+                              minimumFractionDigits: Number.isInteger(
+                                plan.yearlyPriceUsd,
+                              )
+                                ? 0
+                                : 2,
                               maximumFractionDigits: 2,
                             }}
                             suffix={`/year`}
-                            value={plan.price}
+                            value={plan.yearlyPriceUsd / 100}
                           />
                         ) : (
                           <span className="text-foreground font-medium">
-                            {plan.price}.
+                            {plan.yearlyPriceUsd && plan.yearlyPriceUsd / 100}.
                           </span>
                         )}
                       </div>
                     </div>
 
                     <ul className="mb-8 flex flex-1 flex-col gap-4">
-                      {plan.features.map((feature) => (
-                        <li key={feature} className="flex items-start gap-3">
-                          <div className="bg-primary/10 text-primary flex size-5 shrink-0 items-center justify-center rounded-full">
-                            <IconCheck className="size-3" />
-                          </div>
-                          <span className="text-muted-foreground text-sm">
-                            {feature}
-                          </span>
-                        </li>
-                      ))}
+                      {plan.features &&
+                        plan.features.map((feature) => (
+                          <li key={feature} className="flex items-start gap-3">
+                            <div className="bg-primary/10 text-primary flex size-5 shrink-0 items-center justify-center rounded-full">
+                              <IconCheck className="size-3" />
+                            </div>
+                            <span className="text-muted-foreground text-sm">
+                              {feature}
+                            </span>
+                          </li>
+                        ))}
                     </ul>
 
                     <Button

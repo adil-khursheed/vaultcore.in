@@ -8,10 +8,13 @@ import { organizationSubscriptions, payments, plans } from "@repo/db/schema";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const subscriptionRouter = createTRPCRouter({
+  getAllPlans: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.db.query.plans.findMany();
+  }),
   /**
    * Get the current plan and subscription details for an organization
    */
-  getPlan: protectedProcedure
+  getCurrentActivePlan: protectedProcedure
     .input(z.object({ organizationId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
       const orgId =

@@ -1,10 +1,8 @@
-import { env } from "@/env";
-
 export const plans = [
   {
     id: "free",
     name: "Free",
-    price: "Free forever",
+    yearlyPriceUsd: 0,
     description: "Secure personal vault with bank-grade encryption.",
     features: [
       "1 organization",
@@ -14,11 +12,12 @@ export const plans = [
       "Unlimited devices & sync",
     ],
     cta: "Get started",
+    isPopular: false,
   },
   {
     id: "premium",
     name: "Premium",
-    price: 10,
+    yearlyPriceUsd: 1000,
     description: "Advanced security and collaboration for professionals.",
     features: [
       "2 organizations",
@@ -28,12 +27,12 @@ export const plans = [
       "Advanced vault items",
     ],
     cta: "Get Started",
-    popular: true,
+    isPopular: true,
   },
   {
     id: "family",
     name: "Family",
-    price: 49.99,
+    yearlyPriceUsd: 4999,
     description: "Organization-wide security for your entire household.",
     features: [
       "Unlimited organizations",
@@ -43,5 +42,6 @@ export const plans = [
       "Family security dashboard",
     ],
     cta: "Get Started",
+    isPopular: false,
   },
 ];

@@ -3,6 +3,7 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import VaultCore from "@/components/icons/vaultcore";
+import Logo from "@/components/shared/logo";
 import { authClient } from "@/lib/auth/client";
 import { IconBuilding, IconPlus } from "@tabler/icons-react";
 import { type Organization } from "better-auth/plugins";
@@ -46,12 +47,7 @@ const AppSidebarHeader = () => {
     <SidebarMenu className="gap-3">
       <SidebarMenuItem>
         <SidebarMenuButton className="hover:bg-transparent">
-          <div className="flex items-center gap-2 font-serif text-lg font-semibold">
-            <VaultCore className="size-6" />
-            <span>
-              Vault<span className="text-primary">Core</span>
-            </span>
-          </div>
+          <Logo />
         </SidebarMenuButton>
       </SidebarMenuItem>
 

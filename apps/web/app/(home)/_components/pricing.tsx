@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import Pricing from "@/components/shared/pricing";
 import SectionContainer from "@/components/shared/section-container";

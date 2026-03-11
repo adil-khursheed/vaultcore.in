@@ -30,10 +30,12 @@ const AppSidebar = async ({
   const user = session.user;
 
   prefetch(
-    trpc.subscription.getPlan.queryOptions({
+    trpc.subscription.getCurrentActivePlan.queryOptions({
       organizationId: session.session.activeOrganizationId!,
     }),
   );
+
+  prefetch(trpc.subscription.getAllPlans.queryOptions());
 
   return (
     <HydrateClient>
@@ -71,7 +73,9 @@ const AppSidebar = async ({
               }
             >
               <Suspense fallback={<Skeleton className="h-10 w-full" />}>
-                <UpgradePlanButton />
+                <UpgradePlanButton
+                  organizationId={session.session.activeOrganizationId!}
+                />
               </Suspense>
             </ErrorBoundary>
 

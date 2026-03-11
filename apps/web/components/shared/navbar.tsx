@@ -30,9 +30,9 @@ const Navbar = () => {
   return (
     <header className="bg-background/30 sticky inset-x-0 top-0 z-50 px-3 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between py-2.5">
-        <div>
+        <Link href={"/"}>
           <Logo />
-        </div>
+        </Link>
 
         {!isMobile ? (
           <nav className="flex items-center">
