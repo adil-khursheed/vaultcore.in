@@ -30,9 +30,9 @@ const Navbar = () => {
   return (
     <header className="bg-background/30 sticky inset-x-0 top-0 z-50 px-3 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between py-2.5">
-        <div>
+        <Link href={"/"}>
           <Logo />
-        </div>
+        </Link>
 
         {!isMobile ? (
           <nav className="flex items-center">
@@ -47,11 +47,11 @@ const Navbar = () => {
                     </Link>
                   </Button>
 
-                  <Button asChild variant={"ghost"}>
+                  {/* <Button asChild variant={"ghost"}>
                     <Link href={"/downloads"}>
                       <span>Downloads</span>
                     </Link>
-                  </Button>
+                  </Button> */}
 
                   <Button asChild variant={"ghost"}>
                     <Link href={"/login"}>
@@ -101,7 +101,7 @@ const Navbar = () => {
                           <span>Pricing</span>
                         </Link>
                       </Button>
-                      <Button
+                      {/* <Button
                         asChild
                         variant={"ghost"}
                         className="w-full justify-start"
@@ -110,7 +110,7 @@ const Navbar = () => {
                         <Link href={"/downloads"}>
                           <span>Downloads</span>
                         </Link>
-                      </Button>
+                      </Button> */}
 
                       <SheetFooter className="mt-auto w-full">
                         <Button

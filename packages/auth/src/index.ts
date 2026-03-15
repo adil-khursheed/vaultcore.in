@@ -17,10 +17,17 @@ import {
 import { organization as organizationPlugin } from "better-auth/plugins";
 
 import { and, eq, gt } from "@repo/db";
-import { user, verification } from "@repo/db/auth-schema";
 import { db } from "@repo/db/client";
+import {
+  organizationSubscriptions,
+  payments,
+  plans,
+  user,
+  verification,
+} from "@repo/db/schema";
 
 import { env } from "../env.ts";
+import { canAddMember, canCreateOrg } from "./utils/entitlements.ts";
 
 const vaultVerificationPlugin = () => {
   return {
@@ -102,61 +109,6 @@ const polarClient = new Polar({
   server: env.NODE_ENV === "production" ? "production" : "sandbox",
 });
 
-const PREMIUM_PRODUCT_ID = env.POLAR_PREMIUM_PRODUCT_ID;
-const FAMILY_PRODUCT_ID = env.POLAR_FAMILY_PRODUCT_ID;
-
-type SubscriptionTier = "free" | "premium" | "family";
-
-// Tier limits
-const LIMITS: Record<
-  SubscriptionTier,
-  { maxOrgs: number | null; maxMembers: number | null }
-> = {
-  free: { maxOrgs: 1, maxMembers: 2 },
-  premium: { maxOrgs: 2, maxMembers: 3 },
-  family: { maxOrgs: null, maxMembers: 10 }, // null means unlimited
-};
-
-/**
- * Get a user's active subscription tier via the Polar API.
- */
-async function getSubscriptionTier(
-  userEmail: string,
-): Promise<SubscriptionTier> {
-  try {
-    // Look up the Polar customer by email
-    const customers = await polarClient.customers.list({ email: userEmail });
-
-    const customer = customers.result.items[0];
-    if (!customer) return "free";
-
-    // Check for active subscriptions for this customer
-    const subscriptions = await polarClient.subscriptions.list({
-      customerId: customer.id,
-      active: true,
-    });
-
-    const activeSubscriptions = subscriptions.result.items;
-
-    // Check highest tier first
-    const hasFamily = activeSubscriptions.some(
-      (sub) => sub.productId === FAMILY_PRODUCT_ID,
-    );
-    if (hasFamily) return "family";
-
-    const hasPremium = activeSubscriptions.some(
-      (sub) => sub.productId === PREMIUM_PRODUCT_ID,
-    );
-    if (hasPremium) return "premium";
-
-    return "free";
-  } catch (error) {
-    console.error("Error checking subscription tier:", error);
-    // Fail-open: if we can't reach Polar, don't block the user (assume highest tier to prevent breaking app)
-    return "family";
-  }
-}
-
 const subscriptionLimitsPlugin = () => {
   return {
     id: "subscription-limits",
@@ -173,27 +125,12 @@ const subscriptionLimitsPlugin = () => {
               });
             }
 
-            const tier = await getSubscriptionTier(session.user.email);
-            const limit = LIMITS[tier].maxOrgs;
+            const canCreate = await canCreateOrg(session.user.id);
 
-            if (limit !== null) {
-              // Count how many orgs the user is already an owner of
-              const memberships = await ctx.context.adapter.findMany<{
-                role: string;
-              }>({
-                model: "member",
-                where: [
-                  { field: "userId", value: session.user.id },
-                  { field: "role", value: "owner" },
-                ],
+            if (!canCreate) {
+              throw new APIError("FORBIDDEN", {
+                message: `You have reached the maximum number of organizations for your plan. Please upgrade to create more.`,
               });
-
-              if (memberships.length >= limit) {
-                const planName = tier.charAt(0).toUpperCase() + tier.slice(1);
-                throw new APIError("FORBIDDEN", {
-                  message: `${planName} plan allows only ${limit} organization${limit > 1 ? "s" : ""}. Please upgrade to create more.`,
-                });
-              }
             }
 
             return { context: ctx };
@@ -214,7 +151,6 @@ const subscriptionLimitsPlugin = () => {
               organizationId?: string;
             };
 
-            // Use the provided org ID or fall back to the active organization
             const orgId =
               organizationId ?? session.session.activeOrganizationId;
 
@@ -224,53 +160,12 @@ const subscriptionLimitsPlugin = () => {
               });
             }
 
-            // Find the org owner to check their subscription
-            const orgOwner = await ctx.context.adapter.findOne<{
-              userId: string;
-            }>({
-              model: "member",
-              where: [
-                { field: "organizationId", value: orgId },
-                { field: "role", value: "owner" },
-              ],
-            });
+            const canAdd = await canAddMember(orgId);
 
-            if (!orgOwner) {
-              throw new APIError("BAD_REQUEST", {
-                message: "Organization owner not found.",
+            if (!canAdd) {
+              throw new APIError("FORBIDDEN", {
+                message: `This organization has reached the maximum number of members for its plan. Please upgrade to add more.`,
               });
-            }
-
-            // Look up the owner's email
-            const ownerUser = await ctx.context.adapter.findOne<{
-              email: string;
-            }>({
-              model: "user",
-              where: [{ field: "id", value: orgOwner.userId }],
-            });
-
-            if (!ownerUser) {
-              throw new APIError("BAD_REQUEST", {
-                message: "Organization owner user not found.",
-              });
-            }
-
-            const tier = await getSubscriptionTier(ownerUser.email);
-            const limit = LIMITS[tier].maxMembers;
-
-            if (limit !== null) {
-              // Count existing members in the org
-              const currentMembers = await ctx.context.adapter.findMany({
-                model: "member",
-                where: [{ field: "organizationId", value: orgId }],
-              });
-
-              if (currentMembers.length >= limit) {
-                const planName = tier.charAt(0).toUpperCase() + tier.slice(1);
-                throw new APIError("FORBIDDEN", {
-                  message: `${planName} plan allows a maximum of ${limit} members per organization. Please upgrade to add more.`,
-                });
-              }
             }
 
             return { context: ctx };
@@ -295,7 +190,22 @@ export function initAuth<
     }),
     baseURL: options.baseUrl,
     plugins: [
-      organizationPlugin(),
+      organizationPlugin({
+        organizationHooks: {
+          afterCreateOrganization: async ({ organization, member, user }) => {
+            await db
+              .insert(organizationSubscriptions)
+              .values({
+                id: `free_${organization.id}`,
+                organizationId: organization.id,
+                planId: "free",
+                status: "free",
+                billingUserId: user.id,
+              })
+              .onConflictDoNothing();
+          },
+        },
+      }),
       vaultVerificationPlugin(),
       subscriptionLimitsPlugin(),
       polar({
@@ -324,7 +234,135 @@ export function initAuth<
           usage(),
           webhooks({
             secret: env.POLAR_WEBHOOK_SECRET,
-            async onSubscriptionActive(payload) {},
+            async onSubscriptionCreated(subscription) {
+              try {
+                const orgId =
+                  (subscription.data.metadata?.referenceId as string) ||
+                  (subscription.data.metadata?.organizationId as string);
+                if (!orgId) return;
+
+                const plan = await db.query.plans.findFirst({
+                  where: eq(plans.polarProductId, subscription.data.productId),
+                });
+
+                if (plan) {
+                  await db
+                    .insert(organizationSubscriptions)
+                    .values({
+                      id: subscription.data.id,
+                      organizationId: orgId,
+                      planId: plan.id,
+                      polarCustomerId: subscription.data.customerId,
+                      polarProductId: subscription.data.productId,
+                      status: subscription.data.status as any,
+                      interval: subscription.data.recurringInterval as any,
+                      currentPeriodStart: new Date(
+                        subscription.data.currentPeriodStart,
+                      ),
+                      currentPeriodEnd: subscription.data.currentPeriodEnd
+                        ? new Date(subscription.data.currentPeriodEnd)
+                        : null,
+                      cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
+                      metadata: subscription.data.metadata as any,
+                    })
+                    .onConflictDoUpdate({
+                      target: organizationSubscriptions.organizationId,
+                      set: {
+                        id: subscription.data.id,
+                        planId: plan.id,
+                        polarCustomerId: subscription.data.customerId,
+                        polarProductId: subscription.data.productId,
+                        status: subscription.data.status as any,
+                        interval: subscription.data.recurringInterval as any,
+                        currentPeriodStart: new Date(
+                          subscription.data.currentPeriodStart,
+                        ),
+                        currentPeriodEnd: subscription.data.currentPeriodEnd
+                          ? new Date(subscription.data.currentPeriodEnd)
+                          : null,
+                        cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
+                        metadata: subscription.data.metadata,
+                      },
+                    });
+                }
+              } catch (error) {
+                console.log(error);
+              }
+            },
+            async onSubscriptionUpdated(subscription) {
+              const plan = await db.query.plans.findFirst({
+                where: eq(plans.polarProductId, subscription.data.productId),
+              });
+
+              await db
+                .update(organizationSubscriptions)
+                .set({
+                  status: subscription.data.status as any,
+                  planId: plan?.id,
+                  currentPeriodEnd: subscription.data.currentPeriodEnd
+                    ? new Date(subscription.data.currentPeriodEnd)
+                    : null,
+                  cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
+                  canceledAt: subscription.data.canceledAt
+                    ? new Date(subscription.data.canceledAt)
+                    : null,
+                })
+                .where(eq(organizationSubscriptions.id, subscription.data.id));
+            },
+            async onSubscriptionCanceled(subscription) {
+              await db
+                .update(organizationSubscriptions)
+                .set({
+                  status: "canceled",
+                  cancelAtPeriodEnd: true,
+                  canceledAt: subscription.data.canceledAt
+                    ? new Date(subscription.data.canceledAt)
+                    : null,
+                })
+                .where(eq(organizationSubscriptions.id, subscription.data.id));
+            },
+            async onSubscriptionRevoked(subscription) {
+              await db
+                .update(organizationSubscriptions)
+                .set({
+                  status: "canceled",
+                })
+                .where(eq(organizationSubscriptions.id, subscription.data.id));
+            },
+            async onOrderPaid(order) {
+              const orgId =
+                (order.data.metadata?.referenceId as string) ||
+                (order.data.metadata?.organizationId as string);
+              if (!orgId) return;
+
+              await db
+                .insert(payments)
+                .values({
+                  id: order.data.id,
+                  organizationId: orgId,
+                  billingUserId:
+                    (order.data.metadata?.userId as string) || null,
+                  subscriptionId: order.data.subscriptionId,
+                  polarOrderId: order.data.id,
+                  polarCustomerId: order.data.customerId,
+                  amount: order.data.totalAmount,
+                  currency: order.data.currency,
+                  status: "paid",
+                  description: `Payment for ${order.data.product?.name}`,
+                  metadata: order.data.metadata as any,
+                  paidAt: new Date(order.data.createdAt),
+                })
+                .onConflictDoNothing();
+            },
+            async onOrderRefunded(order) {
+              await db
+                .update(payments)
+                .set({
+                  status: "refunded",
+                  refundedAmount: order.data.totalAmount,
+                })
+                .where(eq(payments.id, order.data.id));
+            },
           }),
         ],
       }),

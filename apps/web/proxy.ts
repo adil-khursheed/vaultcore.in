@@ -10,6 +10,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/signup") ||
     pathname.startsWith("/api/auth/sign-up") ||
     pathname.startsWith("/api/auth/sign-in") ||
+    pathname.startsWith("/api/auth/polar/webhooks") ||
     pathname.startsWith("/api/trpc/auth.");
 
   const session = await getSession();

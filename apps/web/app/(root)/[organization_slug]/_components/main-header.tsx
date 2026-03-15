@@ -12,7 +12,8 @@ import ImportCSV from "./import-csv";
 
 const MainHeader = () => {
   const path = usePathname();
-  const pathname = path.split("/")[3]?.replace("-", " ");
+  const pathArray = path.split("/").filter(Boolean);
+  const pathname = pathArray[pathArray.length - 1]?.replace(/-/g, " ");
 
   return (
     <header className="border-border flex h-12 w-full items-center justify-between border-b px-3">

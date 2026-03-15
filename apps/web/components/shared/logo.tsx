@@ -1,16 +1,12 @@
 import React from "react";
-import Link from "next/link";
 
 import { cn } from "@repo/ui/lib/utils";
 
 const Logo = ({ className }: { className?: string }) => {
   return (
-    <Link
-      href={"/"}
-      className="text-primary relative font-serif text-lg font-extrabold md:text-xl"
-    >
+    <div className="text-primary relative font-serif text-lg font-extrabold md:text-xl">
       <LogoSvg className={className} />
-    </Link>
+    </div>
   );
 };
 
