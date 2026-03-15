@@ -368,7 +368,7 @@ export function initAuth<
       }),
       ...(options.extraPlugins ?? []),
     ],
-    trustedOrigins: ["exp://"],
+    trustedOrigins: ["exp://", "chrome-extension://"],
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 12,
