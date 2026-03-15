@@ -1,135 +1,104 @@
-# Turborepo starter
+# VaultCore
 
-This Turborepo starter is maintained by the Turborepo core team.
+VaultCore is a secure, open-source password manager and digital vault system. This repository is structured as a modern full-stack Turborepo containing both the core Next.js Web application and the companion Chrome Extension.
 
-## Using this example
+## 📦 What's inside?
 
-Run the following command:
+This monorepo utilizes [Turborepo](https://turborepo.org) to manage multiple applications and shared packages efficiently.
 
-```sh
-npx create-turbo@latest
+### Applications
+
+- **`apps/web`**: The main VaultCore web application. Built with Next.js, featuring the primary user dashboard for managing credentials, notes, and vault settings.
+- **`apps/chrome-extension`**: The companion browser extension built with React and Vite. Interfaces securely with the web app to autofill passwords directly into the browser.
+
+### Shared Packages (`/packages/*`)
+
+The core business logic and configurations are decoupled into shared internal packages:
+
+- **`@repo/api`**: tRPC router definitions and backend API logic.
+- **`@repo/auth`**: Authentication logic integrating Better Auth.
+- **`@repo/database`**: Prisma schema, migrations, and database client instances.
+- **`@repo/store`**: Shared Zustand state management (e.g., managing the active vault lock state and derived keys).
+- **`@repo/ui`**: Shared React components based on Shadcn UI and Tailwind CSS v4.
+- **`@repo/email`**: Transactional email templates and Resend configurations.
+- **`@repo/jobs`**: Background jobs and queue logic processing.
+- Build/Config packages: **`@repo/eslint-config`**, **`@repo/prettier-config`**, **`@repo/typescript-config`**.
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+
+- [Node.js](https://nodejs.org/en/) (v18+)
+- [pnpm](https://pnpm.io/) (Package manager)
+- [PostgreSQL](https://www.postgresql.org/) database
+- [Redis](https://redis.io/) instance
+
+### 2. Environment Variables
+
+Create `.env` files based on `.env.example` in the root directory.
+
+#### Core Settings
+- `DATABASE_URL`: Your PostgreSQL connection string.
+- `REDIS_URL` / `REDIS_PUBLIC_URL`: Your Redis connection string (used for ratelimiting/caching).
+- `JWT_SECRET`: A secure random string for JWT signing.
+- `BETTER_AUTH_SECRET`: A secure random string for Better Auth sessions.
+- `WEB_APP_URL` / `NEXT_PUBLIC_WEB_APP_URL`: The URL where your Next.js app will be hosted (e.g., `http://localhost:3000`).
+
+#### External Integrations
+- `RESEND_API_KEY`: API key for transaction emails via [Resend](https://resend.com).
+- `EMAIL_FROM`: The verified sender address (e.g., `VaultCore <onboarding@resend.dev>`).
+- Polar.sh (Payments & Subscriptions)
+  - `POLAR_ACCESS_TOKEN`
+  - `POLAR_WEBHOOK_SECRET`
+  - `POLAR_FREE_PRODUCT_ID`
+  - `POLAR_PREMIUM_PRODUCT_ID`
+  - `POLAR_FAMILY_PRODUCT_ID`
+
+### 3. Installation
+
+Install all dependencies across the monorepo:
+
+```bash
+pnpm install
 ```
 
-## What's inside?
+### 4. Database Setup
 
-This Turborepo includes the following packages/apps:
+Push the Prisma database schema to your configured Postgres database:
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+pnpm --filter database db:push
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### 5. Running the Development Server
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+To start all applications and packages in development mode simultaneously:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```bash
+pnpm dev
 ```
 
-### Develop
+- Web App runs on: `http://localhost:3000`
+- The Chrome Extension will be built in watch mode in `apps/chrome-extension/dist`. See "Loading the Extension" to test it natively in Chrome.
 
-To develop all apps and packages, run the following command:
+## 🧩 Loading the Chrome Extension locally
 
-```
-cd my-turborepo
+1. Run `pnpm dev` or build the extension uniquely via `pnpm --filter chrome-extension build`.
+2. Open Google Chrome and navigate to `chrome://extensions/`.
+3. Enable **Developer mode** in the top right corner.
+4. Click **Load unpacked**.
+5. Select the `apps/chrome-extension/dist` folder in your repository.
+6. The extension is now loaded. Ensure your local `apps/web` server is running so the extension can fetch credentials.
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+## 🛠 Commands
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+We use `turbo` to map commands across the entire workspace safely.
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+- `pnpm build`: Build all apps and packages for production.
+- `pnpm dev`: Start development mode for all apps.
+- `pnpm lint`: Run ESLint across the repository.
+- `pnpm format`: Format codebase using Prettier.
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+## 🛡 Security Notes
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+VaultCore is built heavily on zero-knowledge architecture principles. Master Passwords are never sent or stored in plaintext on the server. Derived keys (using AES-GCM and PBKDF2) are generated completely client-side. The backend only ever receives heavily encrypted ciphertext for secure fields (Usernames, Passwords, URLs, Secure Notes).
