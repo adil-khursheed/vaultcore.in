@@ -21,7 +21,7 @@ const HeroSection = () => {
         </div>
 
         <div className="flex flex-col items-center gap-6 px-3">
-          <h1 className="text-foreground font-serif text-3xl font-semibold tracking-tight drop-shadow-md sm:text-5xl md:text-6xl lg:text-7xl">
+          <h1 className="text-foreground text-3xl font-bold tracking-tight drop-shadow-md sm:text-5xl md:text-6xl lg:text-7xl">
             Secure Your Digital Life
             <br />
             <span className="from-primary to-primary/50 bg-linear-to-b bg-clip-text text-transparent">

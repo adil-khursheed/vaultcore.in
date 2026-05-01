@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import SectionContainer from "@/components/shared/section-container";
 import {
   IconDevices,
@@ -17,15 +17,15 @@ import { cn } from "@repo/ui/lib/utils";
 // --- Skeletons ---
 
 const EncryptionSkeleton = () => {
-  const [cipher, setCipher] = React.useState("AES-256-GCM");
-  const ciphers = ["AES-256-GCM"];
+  const [cipher, setCipher] = useState("AES-256-GCM");
+  const ciphers = useMemo(() => ["AES-256-GCM"], []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setCipher(ciphers[Math.floor(Math.random() * ciphers.length)]!);
     }, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [ciphers]);
 
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 overflow-hidden p-4">
@@ -39,21 +39,19 @@ const EncryptionSkeleton = () => {
         }}
       />
 
-      <div className="relative flex w-full items-center justify-between gap-3">
+      <div className="relative mb-6 flex w-full items-center justify-between gap-3">
         {/* Client Node */}
-        <div className="flex flex-col items-center gap-1.5">
+        <div className="relative flex flex-col items-center gap-1.5">
           <div className="relative">
             <motion.div
               className="absolute -inset-1.5 rounded-xl opacity-50"
               style={{ background: "var(--primary)" }}
-              animate={{ opacity: [0.1, 0.3, 0.1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             />
             <div className="border-primary/30 bg-primary/10 relative flex size-10 items-center justify-center rounded-xl border backdrop-blur-sm">
               <IconLockSquareRounded className="text-primary size-5" />
             </div>
           </div>
-          <span className="text-primary/70 text-[9px] font-medium tracking-widest uppercase">
+          <span className="text-muted-foreground absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-medium tracking-widest uppercase">
             Client
           </span>
         </div>
@@ -83,10 +81,10 @@ const EncryptionSkeleton = () => {
               }}
             >
               <div
-                className="h-1 w-3 rounded-full"
+                className="h-px w-5 rounded-full"
                 style={{
                   background: "var(--primary)",
-                  boxShadow: "0 0 8px var(--primary), 0 0 16px var(--primary)",
+                  // boxShadow: "0 0 8px var(--primary), 0 0 16px var(--primary)",
                 }}
               />
             </motion.div>
@@ -94,23 +92,17 @@ const EncryptionSkeleton = () => {
         </div>
 
         {/* Server Node */}
-        <div className="flex flex-col items-center gap-1.5">
+        <div className="relative flex flex-col items-center gap-1.5">
           <div className="relative">
             <motion.div
               className="absolute -inset-1.5 rounded-xl opacity-50"
               style={{ background: "var(--ring)" }}
-              animate={{ opacity: [0.05, 0.2, 0.05] }}
-              transition={{
-                duration: 2.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
             />
             <div className="border-ring/30 bg-ring/10 relative flex size-10 items-center justify-center rounded-xl border backdrop-blur-sm">
               <IconShieldLock className="text-ring size-5" />
             </div>
           </div>
-          <span className="text-muted-foreground text-[9px] font-medium tracking-widest uppercase">
+          <span className="text-muted-foreground absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-medium tracking-widest uppercase">
             Server
           </span>
         </div>

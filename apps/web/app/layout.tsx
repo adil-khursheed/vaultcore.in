@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
+import { Geist_Mono, Outfit, Source_Serif_4 } from "next/font/google";
 
 import "@repo/ui/globals.css";
 
@@ -8,7 +8,7 @@ import { TRPCClientProvider } from "@/lib/trpc/client";
 
 import ThemeProvider from "@repo/ui/components/providers/theme-providers";
 
-const fontSans = Geist({
+const fontSans = Outfit({
   variable: "--font-sans",
   subsets: ["latin"],
 });
