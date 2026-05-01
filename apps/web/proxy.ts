@@ -6,7 +6,7 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const isPublicRoute =
-    ["/", "/login", "/verify"].includes(pathname) ||
+    ["/", "/login", "/verify", "/not-found"].includes(pathname) ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/api/auth/sign-up") ||
     pathname.startsWith("/api/auth/sign-in") ||

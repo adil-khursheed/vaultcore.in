@@ -30,7 +30,7 @@ const Page = () => {
             </CardDescription>
 
             <p className="text-sm">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/pricing/personal" className="text-primary underline">
                 SignUp
               </Link>
