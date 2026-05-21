@@ -1,11 +1,12 @@
 import js from "@eslint/js";
-import { globalIgnores } from "eslint/config";
-import eslintConfigPrettier from "eslint-config-prettier";
-import tseslint from "typescript-eslint";
-import pluginReactHooks from "eslint-plugin-react-hooks";
-import pluginReact from "eslint-plugin-react";
-import globals from "globals";
 import pluginNext from "@next/eslint-plugin-next";
+import eslintConfigPrettier from "eslint-config-prettier";
+import pluginReact from "eslint-plugin-react";
+import pluginReactHooks from "eslint-plugin-react-hooks";
+import { globalIgnores } from "eslint/config";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+
 import { config as baseConfig } from "./base.js";
 
 /**
@@ -52,6 +53,7 @@ export const nextJsConfig = [
       ...pluginReactHooks.configs.recommended.rules,
       // React scope no longer necessary with new JSX transform.
       "react/react-in-jsx-scope": "off",
+      "react/no-children-prop": "off",
     },
   },
 ];

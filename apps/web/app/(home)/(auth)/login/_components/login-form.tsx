@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
-import { decryptVaultKey, deriveKeys } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -17,6 +16,11 @@ import {
 import { toast } from "sonner";
 import { z } from "zod";
 
+import {
+  decryptPrivateKey,
+  deriveKeys,
+  unwrapVaultKeyFromMember,
+} from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {
@@ -46,7 +50,7 @@ const LoginForm = () => {
   const queryClient = useQueryClient();
   const trpc = useTRPC();
 
-  const { setMasterKey, setVaultKey } = useVaultStore();
+  const { setMasterKey, setVaultKey, setPrivateKey } = useVaultStore();
 
   const form = useForm({
     defaultValues: {
@@ -69,34 +73,67 @@ const LoginForm = () => {
         },
         {
           onSuccess: async (ctx) => {
+            const user = ctx.data.user;
+
+            // 1. Decrypt user's private key
+            let privateKey: CryptoKey | null = null;
+            if (user.encryptedPrivateKey && user.privateKeyIv) {
+              try {
+                privateKey = await decryptPrivateKey(
+                  {
+                    encryptedPrivateKey: user.encryptedPrivateKey,
+                    iv: user.privateKeyIv,
+                  },
+                  masterKey,
+                );
+              } catch (e) {
+                console.error("Failed to decrypt private key", e);
+                toast.error(
+                  "Failed to decrypt your private key. Check your master password.",
+                );
+                return;
+              }
+            } else {
+              // Legacy user missing RSA key pair - redirect to migration
+              console.warn("User missing RSA key pair, migrating...");
+              setMasterKey(masterKey);
+              router.replace(`/migrate`);
+              return;
+            }
+
             await authClient.organization.setActive(
               {
                 organizationSlug: ctx.data.user.id,
               },
               {
-                onSuccess: async (ctx) => {
-                  const data = await queryClient.fetchQuery(
-                    trpc.vault.getVaultKey.queryOptions({
-                      organizationId: ctx.data.id,
-                    }),
-                  );
+                onSuccess: async (orgCtx) => {
+                  try {
+                    const data = await queryClient.fetchQuery(
+                      trpc.vault.getMyVaultKey.queryOptions({
+                        organizationId: orgCtx.data.id,
+                      }),
+                    );
 
-                  const decryptedVaultKey = await decryptVaultKey(
-                    {
-                      encryptedKey: data.vaultKeyData.key,
-                      iv: data.vaultKeyData.iv,
-                    },
-                    masterKey,
-                  );
+                    if (privateKey) {
+                      const unwrappedVaultKey = await unwrapVaultKeyFromMember(
+                        data.vaultKeyData.encryptedKey,
+                        privateKey,
+                      );
 
-                  setMasterKey(masterKey);
-                  setVaultKey(decryptedVaultKey);
+                      setPrivateKey(privateKey);
+                      setMasterKey(masterKey);
+                      setVaultKey(unwrappedVaultKey);
 
-                  router.replace(`/${ctx.data.slug}/all-items`);
+                      router.replace(`/${orgCtx.data.slug}/all-items`);
+                    }
+                  } catch (e: unknown) {
+                    console.error(e);
+                    toast.error("Error retrieving vault key");
+                  }
                 },
-                onError: (ctx) => {
-                  console.log(ctx.error.message);
-                  toast.error(ctx.error.message);
+                onError: (orgCtx) => {
+                  console.log(orgCtx.error.message);
+                  toast.error(orgCtx.error.message);
                 },
               },
             );

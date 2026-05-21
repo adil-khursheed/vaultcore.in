@@ -7,13 +7,15 @@ import {
   setActiveOrganizationId,
 } from "@/lib/storage";
 import { LogOutIcon, PlusIcon, ShieldIcon } from "lucide-react";
+
+import { decryptString } from "@repo/crypto";
+import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 
 import { AutofillBanner } from "../components/AutofillBanner";
 import { CredentialListItem } from "../components/CredentialListItem";
 import { SearchBar } from "../components/SearchBar";
-import { useVaultStore } from "@repo/store";
-import { decryptString } from "@/lib/crypto";
+import { useRouter } from "../router";
 
 interface CredentialListScreenProps {
   onSelectCredential: (id: string) => void;
@@ -48,6 +50,8 @@ export function CredentialListScreen({
 
   const { vaultKey } = useVaultStore();
 
+  const { navigate } = useRouter();
+
   // Get current tab URL
   useEffect(() => {
     chrome.tabs?.query({ active: true, currentWindow: true }, (tabs) => {
@@ -61,6 +65,11 @@ export function CredentialListScreen({
   useEffect(() => {
     async function loadData() {
       try {
+        if (!vaultKey) {
+          navigate("lock");
+          return;
+        }
+
         setLoading(true);
 
         // Try to get organization ID
@@ -96,19 +105,19 @@ export function CredentialListScreen({
           isDeleted: false,
         });
 
-        if (!vaultKey) {
-          throw new Error("Vault is locked");
-        }
-
         // Decrypt all fields
         const decryptedItems = await Promise.all(
           result.items.map(async (item: any) => ({
             ...item,
-            username: item.username ? await decryptString(item.username, vaultKey) : null,
-            password: item.password ? await decryptString(item.password, vaultKey) : null,
+            username: item.username
+              ? await decryptString(item.username, vaultKey)
+              : null,
+            password: item.password
+              ? await decryptString(item.password, vaultKey)
+              : null,
             url: item.url ? await decryptString(item.url, vaultKey) : null,
             note: item.note ? await decryptString(item.note, vaultKey) : null,
-          }))
+          })),
         );
 
         setCredentials(decryptedItems as TCredential[]);
@@ -223,7 +232,7 @@ export function CredentialListScreen({
           variant="ghost"
           size="icon"
           onClick={handleLogout}
-          className="h-8 w-8 text-muted-foreground"
+          className="text-muted-foreground h-8 w-8"
           title="Sign out"
         >
           <LogOutIcon className="h-4 w-4" />
@@ -276,7 +285,7 @@ export function CredentialListScreen({
                 variant="link"
                 size="sm"
                 onClick={onAddCredential}
-                className="h-auto p-0 text-xs text-primary"
+                className="text-primary h-auto p-0 text-xs"
               >
                 Add your first credential
               </Button>

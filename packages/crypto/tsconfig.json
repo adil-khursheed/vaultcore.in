@@ -1,0 +1,14 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"]
+    },
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "downlevelIteration": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
+

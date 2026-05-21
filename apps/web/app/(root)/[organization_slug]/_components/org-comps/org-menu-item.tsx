@@ -3,9 +3,14 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
+import { useTRPC } from "@/lib/trpc/client";
 import { IconBuilding } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { type Organization } from "better-auth/plugins";
+import { toast } from "sonner";
 
+import { unwrapVaultKeyFromMember } from "@repo/crypto";
+import { useVaultStore } from "@repo/store";
 import {
   Avatar,
   AvatarFallback,
@@ -18,16 +23,47 @@ const OrgMenuItem = ({ org }: { org: Organization }) => {
   const { organization_slug } = useParams<{ organization_slug: string }>();
 
   const router = useRouter();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { getPrivateKey, setVaultKey } = useVaultStore();
 
-  const handleSelectOrganization = (e: Event) => {
+  const handleSelectOrganization = async (e: Event) => {
     e.preventDefault();
     if (organization_slug === org.slug) return;
 
-    authClient.organization.setActive({
+    await authClient.organization.setActive({
       organizationId: org.id,
       organizationSlug: org.slug,
     });
-    router.replace(`/${org.slug}/all-items`);
+
+    try {
+      // Fetch the vault key for the new organization
+      const vaultData = await queryClient.fetchQuery(
+        trpc.vault.getMyVaultKey.queryOptions({
+          organizationId: org.id,
+        }),
+      );
+
+      const privateKey = getPrivateKey();
+      if (!privateKey) {
+        throw new Error("Private key not unlocked");
+      }
+
+      // Unwrap it
+      const unwrappedVaultKey = await unwrapVaultKeyFromMember(
+        vaultData.vaultKeyData.encryptedKey,
+        privateKey,
+      );
+
+      setVaultKey(unwrappedVaultKey);
+      router.replace(`/${org.slug}/all-items`);
+    } catch (error) {
+      console.error("Failed to unwrap org vault key", error);
+      toast.error(
+        "Failed to access organization vault. Please re-enter your master password.",
+      );
+      // Could optionally redirect to /lock here
+    }
   };
 
   return (

@@ -3,7 +3,7 @@
 import React from "react";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
-import { encryptString } from "@/lib/utils";
+import { encryptString } from "@repo/crypto";
 import { IconPlus } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -125,3 +125,4 @@ const AddItemButton = () => {
 };
 
 export default AddItemButton;
+

@@ -4,11 +4,15 @@ import { z } from "zod";
 import { and, desc, eq, ilike, lt, or } from "@repo/db";
 import { credential } from "@repo/db/schema";
 
-import { protectedProcedure } from "../trpc";
+import { orgMemberProcedure } from "../trpc";
+import { logAuditEvent } from "../lib/audit";
 
 export const credentialRouter = {
-  // Fetch credentials for the current user
-  getCredentials: protectedProcedure
+  /**
+   * Fetch credentials for the current user's organization.
+   * Org membership is verified by the orgMemberProcedure middleware.
+   */
+  getCredentials: orgMemberProcedure
     .input(
       z.object({
         organizationId: z.string().min(1),
@@ -23,11 +27,7 @@ export const credentialRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { db, session } = ctx;
-
-      if (!session?.user?.id) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
-      }
+      const { db } = ctx;
 
       const {
         organizationId,
@@ -71,8 +71,11 @@ export const credentialRouter = {
       };
     }),
 
-  // Create a new credential
-  create: protectedProcedure
+  /**
+   * Create a new credential.
+   * Org membership is verified by the orgMemberProcedure middleware.
+   */
+  create: orgMemberProcedure
     .input(
       z.object({
         title: z.string().min(1),
@@ -90,10 +93,7 @@ export const credentialRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, session } = ctx;
-      if (!session || !session.user || !session.user.id) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
-      }
+      const { db } = ctx;
 
       const [newCredential] = await db
         .insert(credential)
@@ -102,11 +102,21 @@ export const credentialRouter = {
         })
         .returning();
 
-      return newCredential;
+      logAuditEvent({
+        actorUserId: ctx.session.user.id,
+        organizationId: input.organizationId,
+        action: "credential_created",
+        metadata: { credentialId: newCredential!.id, type: input.type },
+      });
+
+      return newCredential!;
     }),
 
-  // Update an existing credential
-  update: protectedProcedure
+  /**
+   * Update an existing credential.
+   * Org membership is verified by the orgMemberProcedure middleware.
+   */
+  update: orgMemberProcedure
     .input(
       z.object({
         id: z.uuid().min(1),
@@ -126,11 +136,7 @@ export const credentialRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, session } = ctx;
-      if (!session || !session.user || !session.user.id) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
-      }
-
+      const { db } = ctx;
       const { id, organizationId, ...updateData } = input;
 
       const [updatedCredential] = await db
@@ -151,11 +157,21 @@ export const credentialRouter = {
         });
       }
 
+      logAuditEvent({
+        actorUserId: ctx.session.user.id,
+        organizationId,
+        action: "credential_updated",
+        metadata: { credentialId: id },
+      });
+
       return updatedCredential;
     }),
 
-  // Batch create credentials
-  batchCreate: protectedProcedure
+  /**
+   * Batch create credentials.
+   * Org membership is verified by the orgMemberProcedure middleware.
+   */
+  batchCreate: orgMemberProcedure
     .input(
       z.object({
         organizationId: z.string().min(1),
@@ -176,11 +192,7 @@ export const credentialRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, session } = ctx;
-      if (!session || !session.user || !session.user.id) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
-      }
-
+      const { db } = ctx;
       const { organizationId, credentials: credentialsData } = input;
 
       const values = credentialsData.map((cred) => ({
@@ -192,6 +204,13 @@ export const credentialRouter = {
         .insert(credential)
         .values(values)
         .returning();
+
+      logAuditEvent({
+        actorUserId: ctx.session.user.id,
+        organizationId,
+        action: "credential_created",
+        metadata: { count: newCredentials.length, batch: true },
+      });
 
       return newCredentials;
     }),

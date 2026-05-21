@@ -9,7 +9,7 @@
     "start": "pnpm with-env next start",
     "lint": "eslint --max-warnings 0",
     "format": "prettier --check . --ignore-path ../../.gitignore",
-    "check-types": "next typegen && tsc --noEmit",
+    "check-types": "dotenv -e ../../.env -- next typegen && tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
@@ -18,6 +18,7 @@
     "@polar-sh/sdk": "^0.42.1",
     "@repo/api": "workspace:*",
     "@repo/auth": "workspace:*",
+    "@repo/crypto": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/email": "workspace:*",
     "@repo/store": "workspace:*",

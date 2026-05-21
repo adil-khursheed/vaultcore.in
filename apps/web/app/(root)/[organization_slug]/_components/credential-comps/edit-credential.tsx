@@ -4,10 +4,10 @@ import React from "react";
 import ItemForm from "@/components/shared/item-form";
 import { useUpdateCredential } from "@/hooks/use-update-credential";
 import { authClient } from "@/lib/auth/client";
-import { encryptString } from "@/lib/utils";
 import { IconEdit } from "@tabler/icons-react";
 import { toast } from "sonner";
 
+import { encryptString } from "@repo/crypto";
 import { ItemFormValues } from "@repo/db/types";
 import { useCredentialStore, useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";

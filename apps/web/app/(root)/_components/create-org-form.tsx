@@ -3,11 +3,15 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
+import { useTRPC } from "@/lib/trpc/client";
 import { useForm } from "@tanstack/react-form";
+import { useMutation } from "@tanstack/react-query";
 import { Loader2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { generateVaultKey, wrapVaultKeyForMember } from "@repo/crypto";
+import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import { DialogClose, DialogFooter } from "@repo/ui/components/dialog";
 import {
@@ -41,6 +45,17 @@ const generateSlug = (name: string) => {
 
 const CreateOrgForm = () => {
   const router = useRouter();
+  const trpc = useTRPC();
+  const { setVaultKey } = useVaultStore();
+
+  const grantVaultAccess = useMutation(
+    trpc.vault.selfGrantVaultAccess.mutationOptions({}),
+  );
+
+  const { data: sessionData } = authClient.useSession();
+  const user = sessionData?.user as
+    | (NonNullable<typeof sessionData>["user"] & { publicKey?: string })
+    | undefined;
 
   const form = useForm({
     defaultValues: {
@@ -51,6 +66,14 @@ const CreateOrgForm = () => {
       onSubmit: CreateOrgSchema,
     },
     onSubmit: async (data) => {
+      // 1. Ensure user has a public key
+      if (!user || !user.publicKey) {
+        toast.error(
+          "You need to upgrade your encryption keys before creating an organization.",
+        );
+        return;
+      }
+
       await authClient.organization.create(
         {
           name: data.value.name,
@@ -64,9 +87,32 @@ const CreateOrgForm = () => {
                 organizationSlug: ctx.data.slug,
               },
               {
-                onSuccess: () => {
-                  toast.success("Organization created successfully");
-                  router.replace(`/${ctx.data.slug}/all-items`);
+                onSuccess: async () => {
+                  try {
+                    // 2. Generate and wrap the vault key
+                    const vaultKey = await generateVaultKey();
+                    const publicKeyJwk = JSON.parse(atob(user.publicKey!));
+                    const wrappedKeyBase64 = await wrapVaultKeyForMember(
+                      vaultKey,
+                      publicKeyJwk,
+                    );
+
+                    // 3. Grant access to the creator
+                    await grantVaultAccess.mutateAsync({
+                      organizationId: ctx.data.id,
+                      userId: user.id,
+                      encryptedKey: wrappedKeyBase64,
+                    });
+
+                    setVaultKey(vaultKey);
+                    toast.success("Organization created successfully");
+                    router.replace(`/${ctx.data.slug}/all-items`);
+                  } catch (e) {
+                    console.error("Failed to secure organization", e);
+                    toast.error(
+                      "Organization created but encryption setup failed.",
+                    );
+                  }
                 },
                 onError: (ctx) => {
                   toast.error(ctx.error.message);
@@ -81,9 +127,6 @@ const CreateOrgForm = () => {
       );
     },
   });
-
-  const session = authClient.useSession();
-  console.log(session.data);
 
   return (
     <form

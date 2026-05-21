@@ -19,6 +19,8 @@ import { organization as organizationPlugin } from "better-auth/plugins";
 import { and, eq, gt } from "@repo/db";
 import { db } from "@repo/db/client";
 import {
+  auditLog,
+  memberVaultKey,
   organizationSubscriptions,
   payments,
   plans,
@@ -204,6 +206,34 @@ export function initAuth<
               })
               .onConflictDoNothing();
           },
+          afterAddMember: async ({ member, organization }) => {
+            // Note: Better Auth's organization plugin does not expose a separate
+            // `afterMemberAcceptInvitation` hook. The `afterAddMember` hook fires
+            // when a member joins the organization (both via direct add and invitation
+            // acceptance). The pending memberVaultKey row created here signals to
+            // the admin that vault access needs to be granted.
+            await db
+              .insert(memberVaultKey)
+              .values({
+                organizationId: organization.id,
+                userId: member.userId,
+                encryptedKey: "PENDING",
+                status: "pending",
+              })
+              .onConflictDoNothing();
+
+            // Log the member_accepted audit event (best-effort, non-blocking)
+            db.insert(auditLog)
+              .values({
+                actorUserId: member.userId,
+                organizationId: organization.id,
+                action: "member_accepted",
+                metadata: { role: member.role },
+              })
+              .catch((error: unknown) => {
+                console.error("[AUTH] Failed to log member_accepted audit event", error);
+              });
+          },
         },
       }),
       vaultVerificationPlugin(),
@@ -373,6 +403,26 @@ export function initAuth<
       enabled: true,
       minPasswordLength: 12,
       maxPasswordLength: 128,
+    },
+    user: {
+      additionalFields: {
+        publicKey: {
+          type: "string",
+          required: false, // Make it optional for migration, but required for new signups
+        },
+        encryptedPrivateKey: {
+          type: "string",
+          required: false,
+        },
+        privateKeyIv: {
+          type: "string",
+          required: false,
+        },
+        publicKeyFingerprint: {
+          type: "string",
+          required: false,
+        },
+      },
     },
     onAPIError: {
       onError(error, ctx) {

@@ -6,7 +6,7 @@ import EmptyList from "@/components/shared/empty-list";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
 import { TCredential } from "@/lib/types/types";
-import { decryptString } from "@/lib/utils";
+import { decryptString } from "@repo/crypto";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ChevronRight, Loader2 } from "lucide-react";
 
@@ -234,3 +234,4 @@ const ItemsList = ({
 };
 
 export default ItemsList;
+

@@ -5,7 +5,7 @@ import { canAddMember, canCreateOrg } from "@repo/auth/entitlements";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
-export const organizationRouter = createTRPCRouter({
+export const organizationRouter = {
   create: protectedProcedure
     .input(z.object({ name: z.string(), slug: z.string() }))
     .mutation(async ({ ctx }) => {
@@ -39,4 +39,4 @@ export const organizationRouter = createTRPCRouter({
       // Again, Better Auth handles the actual invitation.
       return { success: true };
     }),
-});
+};

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { TCredential } from "@/lib/types/types";
-import { decryptString } from "@/lib/utils";
 import {
   IconCheck,
   IconCopy,
@@ -14,6 +13,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { decryptString } from "@repo/crypto";
 import { useCredentialStore, useVaultStore } from "@repo/store";
 import {
   Avatar,

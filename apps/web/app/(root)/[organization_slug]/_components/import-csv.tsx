@@ -3,12 +3,12 @@
 import React, { useRef, useState } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
-import { encryptString } from "@/lib/utils";
 import { IconPlus, IconUpload } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Papa from "papaparse";
 import { toast } from "sonner";
 
+import { encryptString } from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {

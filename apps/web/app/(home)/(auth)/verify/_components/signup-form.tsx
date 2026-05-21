@@ -4,18 +4,21 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
-import {
-  calculatePasswordStrength,
-  deriveKeys,
-  encryptVaultKey,
-  generateVaultKey,
-} from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
+import {
+  calculatePasswordStrength,
+  computeKeyFingerprint,
+  deriveKeys,
+  encryptPrivateKey,
+  generateUserKeyPair,
+  generateVaultKey,
+  wrapVaultKeyForMember,
+} from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {
@@ -64,7 +67,7 @@ const SignUpForm = () => {
 
   const trpc = useTRPC();
 
-  const { setMasterKey, setVaultKey } = useVaultStore();
+  const { setMasterKey, setVaultKey, setPrivateKey } = useVaultStore();
 
   const verifyToken = useMutation(
     trpc.auth.verifyEmail.mutationOptions({
@@ -83,10 +86,10 @@ const SignUpForm = () => {
     if (token) {
       verifyToken.mutate({ token });
     }
-  }, []);
+  }, [token, verifyToken]);
 
-  const insertVaultKey = useMutation(
-    trpc.vault.createVaultKey.mutationOptions({}),
+  const grantVaultAccess = useMutation(
+    trpc.vault.selfGrantVaultAccess.mutationOptions({}),
   );
 
   const form = useForm({
@@ -108,8 +111,30 @@ const SignUpForm = () => {
           data.value.password,
           verifiedEmail,
         );
+
+        // 1. Generate RSA key pair and encrypt the private key
+        const userKeyPair = await generateUserKeyPair();
+        const encryptedPrivKeyData = await encryptPrivateKey(
+          userKeyPair.privateKey,
+          masterKey,
+        );
+
+        // Export public key to base64 string
+        const publicKeyJwk = await crypto.subtle.exportKey(
+          "jwk",
+          userKeyPair.publicKey,
+        );
+        const publicKeyBase64 = btoa(JSON.stringify(publicKeyJwk));
+
+        // Compute fingerprint
+        const fingerprint = await computeKeyFingerprint(publicKeyJwk);
+
+        // 2. Generate Organization Vault Key and wrap it
         const vaultKey = await generateVaultKey();
-        const encryptedVaultKey = await encryptVaultKey(vaultKey, masterKey);
+        const wrappedVaultKeyBase64 = await wrapVaultKeyForMember(
+          vaultKey,
+          publicKeyJwk,
+        );
 
         await authClient.signUp.email(
           {
@@ -118,39 +143,43 @@ const SignUpForm = () => {
             name: verifiedEmail.split("@")[0]?.toLowerCase() ?? "",
             // @ts-expect-error - token is handled by our server-side plugin
             token: token,
+            publicKey: publicKeyBase64,
+            encryptedPrivateKey: encryptedPrivKeyData.encryptedPrivateKey,
+            privateKeyIv: encryptedPrivKeyData.iv,
+            publicKeyFingerprint: fingerprint,
           },
           {
-            onSuccess: async (ctx) => {
-              console.log("New User", ctx.data);
+            onSuccess: async (signUpCtx) => {
+              const newUserId = signUpCtx.data.user.id;
 
               await authClient.organization.create(
                 {
                   name: "Personal",
-                  slug: ctx.data.user.id,
+                  slug: newUserId,
                 },
                 {
-                  onSuccess: async (ctx) => {
-                    console.log("New Organization", ctx.data);
-
+                  onSuccess: async (orgCtx) => {
                     await authClient.organization.setActive({
-                      organizationId: ctx.data.id,
-                      organizationSlug: ctx.data.slug,
+                      organizationId: orgCtx.data.id,
+                      organizationSlug: orgCtx.data.slug,
                     });
 
-                    insertVaultKey.mutate({
-                      organizationId: ctx.data.id,
-                      key: encryptedVaultKey.encryptedKey,
-                      iv: encryptedVaultKey.iv,
+                    // Store the RSA-wrapped vault key in memberVaultKey table
+                    await grantVaultAccess.mutateAsync({
+                      organizationId: orgCtx.data.id,
+                      userId: newUserId,
+                      encryptedKey: wrappedVaultKeyBase64,
                     });
 
                     setMasterKey(masterKey);
                     setVaultKey(vaultKey);
+                    setPrivateKey(userKeyPair.privateKey);
 
-                    router.replace(`/${ctx.data.slug}/all-items`);
+                    router.replace(`/${orgCtx.data.slug}/all-items`);
                   },
-                  onError: (ctx) => {
-                    console.log("Organization Error => ", ctx.error);
-
+                  onError: (orgErrCtx) => {
+                    console.error("Organization Error => ", orgErrCtx.error);
+                    toast.error(orgErrCtx.error.message);
                     router.replace("/organization/create");
                   },
                 },

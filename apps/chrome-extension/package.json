@@ -11,6 +11,8 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@repo/api": "workspace:*",
+    "@repo/crypto": "workspace:*",
     "@repo/store": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tanstack/react-form": "^1.28.4",

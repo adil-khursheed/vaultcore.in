@@ -5,9 +5,9 @@ import { getOrgPlan } from "@repo/auth/entitlements";
 import { desc, eq } from "@repo/db";
 import { organizationSubscriptions, payments, plans } from "@repo/db/schema";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { protectedProcedure } from "../trpc";
 
-export const subscriptionRouter = createTRPCRouter({
+export const subscriptionRouter = {
   getAllPlans: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.db.query.plans.findMany();
   }),
@@ -127,4 +127,4 @@ export const subscriptionRouter = createTRPCRouter({
         },
       };
     }),
-});
+};

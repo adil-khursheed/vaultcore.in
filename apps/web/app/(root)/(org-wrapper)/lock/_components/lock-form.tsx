@@ -4,13 +4,17 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
-import { decryptVaultKey, deriveKeys } from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import {
+  decryptPrivateKey,
+  deriveKeys,
+  unwrapVaultKeyFromMember,
+} from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {
@@ -36,7 +40,7 @@ const LockForm = () => {
 
   const router = useRouter();
 
-  const { setMasterKey, setVaultKey } = useVaultStore();
+  const { setMasterKey, setVaultKey, setPrivateKey } = useVaultStore();
 
   const { data: session } = authClient.useSession();
   const { data: activeOrganization } = authClient.useActiveOrganization();
@@ -62,24 +66,50 @@ const LockForm = () => {
 
         const { masterKey } = await deriveKeys(data.value.password, user_email);
 
+        const user = session?.user as any;
+
+        // 1. Decrypt user's private key
+        let privateKey: CryptoKey | null = null;
+        if (user && user.encryptedPrivateKey && user.privateKeyIv) {
+          try {
+            privateKey = await decryptPrivateKey(
+              {
+                encryptedPrivateKey: user.encryptedPrivateKey,
+                iv: user.privateKeyIv,
+              },
+              masterKey,
+            );
+          } catch (e) {
+            console.error("Failed to decrypt private key", e);
+            toast.error(
+              "Failed to unlock your vault. Check your master password.",
+            );
+            return;
+          }
+        }
+
         const vaultData = await queryClient.fetchQuery(
-          trpc.vault.getVaultKey.queryOptions({
+          trpc.vault.getMyVaultKey.queryOptions({
             organizationId: activeOrganization?.id!,
           }),
         );
 
-        const decryptedVaultKey = await decryptVaultKey(
-          {
-            encryptedKey: vaultData.vaultKeyData.key,
-            iv: vaultData.vaultKeyData.iv,
-          },
-          masterKey,
-        );
+        if (privateKey) {
+          const unwrappedVaultKey = await unwrapVaultKeyFromMember(
+            vaultData.vaultKeyData.encryptedKey,
+            privateKey,
+          );
 
-        setMasterKey(masterKey);
-        setVaultKey(decryptedVaultKey);
-
-        router.back();
+          setPrivateKey(privateKey);
+          setMasterKey(masterKey);
+          setVaultKey(unwrappedVaultKey);
+          router.back();
+        } else {
+          // Legacy user missing RSA key pair - redirect to migration
+          console.warn("User missing RSA key pair, migrating...");
+          setMasterKey(masterKey);
+          router.replace(`/migrate`);
+        }
       } catch (err) {
         console.log(err);
         toast.error("Something went wrong");
