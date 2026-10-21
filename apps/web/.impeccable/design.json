@@ -1,0 +1,384 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-21T00:00:00.000Z",
+  "title": "Design System: VaultCore",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "oklch(0.9911 0 0)",
+        "tonalRamp": [
+          "oklch(0.1500 0 0)",
+          "oklch(0.2700 0 0)",
+          "oklch(0.3900 0 0)",
+          "oklch(0.5100 0 0)",
+          "oklch(0.6300 0 0)",
+          "oklch(0.7500 0 0)",
+          "oklch(0.8700 0 0)",
+          "oklch(0.9500 0 0)"
+        ]
+      },
+      "paper-deep": {
+        "role": "neutral",
+        "displayName": "Warm Stone",
+        "canonical": "oklch(0.9461 0 0)",
+        "tonalRamp": [
+          "oklch(0.1500 0 0)",
+          "oklch(0.2700 0 0)",
+          "oklch(0.3900 0 0)",
+          "oklch(0.5100 0 0)",
+          "oklch(0.6300 0 0)",
+          "oklch(0.7500 0 0)",
+          "oklch(0.8700 0 0)",
+          "oklch(0.9500 0 0)"
+        ]
+      },
+      "graphite": {
+        "role": "neutral",
+        "displayName": "Graphite Ink",
+        "canonical": "oklch(0.2046 0 0)",
+        "tonalRamp": [
+          "oklch(0.1500 0 0)",
+          "oklch(0.2700 0 0)",
+          "oklch(0.3900 0 0)",
+          "oklch(0.5100 0 0)",
+          "oklch(0.6300 0 0)",
+          "oklch(0.7500 0 0)",
+          "oklch(0.8700 0 0)",
+          "oklch(0.9500 0 0)"
+        ]
+      },
+      "graphite-soft": {
+        "role": "neutral",
+        "displayName": "Soft Graphite",
+        "canonical": "oklch(0.2435 0 0)",
+        "tonalRamp": [
+          "oklch(0.1500 0 0)",
+          "oklch(0.2700 0 0)",
+          "oklch(0.3900 0 0)",
+          "oklch(0.5100 0 0)",
+          "oklch(0.6300 0 0)",
+          "oklch(0.7500 0 0)",
+          "oklch(0.8700 0 0)",
+          "oklch(0.9500 0 0)"
+        ]
+      },
+      "slate": {
+        "role": "neutral",
+        "displayName": "Slate Gray",
+        "canonical": "oklch(0.5452 0 0)",
+        "tonalRamp": [
+          "oklch(0.1500 0 0)",
+          "oklch(0.2700 0 0)",
+          "oklch(0.3900 0 0)",
+          "oklch(0.5100 0 0)",
+          "oklch(0.6300 0 0)",
+          "oklch(0.7500 0 0)",
+          "oklch(0.8700 0 0)",
+          "oklch(0.9500 0 0)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(0.9037 0 0)",
+        "tonalRamp": [
+          "oklch(0.1500 0 0)",
+          "oklch(0.2700 0 0)",
+          "oklch(0.3900 0 0)",
+          "oklch(0.5100 0 0)",
+          "oklch(0.6300 0 0)",
+          "oklch(0.7500 0 0)",
+          "oklch(0.8700 0 0)",
+          "oklch(0.9500 0 0)"
+        ]
+      },
+      "field": {
+        "role": "neutral",
+        "displayName": "Field Wash",
+        "canonical": "oklch(0.9731 0 0)",
+        "tonalRamp": [
+          "oklch(0.1500 0 0)",
+          "oklch(0.2700 0 0)",
+          "oklch(0.3900 0 0)",
+          "oklch(0.5100 0 0)",
+          "oklch(0.6300 0 0)",
+          "oklch(0.7500 0 0)",
+          "oklch(0.8700 0 0)",
+          "oklch(0.9500 0 0)"
+        ]
+      },
+      "mint": {
+        "role": "primary",
+        "displayName": "Pale Mint Signal",
+        "canonical": "oklch(0.8348 0.1302 160.908)",
+        "tonalRamp": [
+          "oklch(0.1500 0.1302 160.908)",
+          "oklch(0.2700 0.1302 160.908)",
+          "oklch(0.3900 0.1302 160.908)",
+          "oklch(0.5100 0.1302 160.908)",
+          "oklch(0.6300 0.1302 160.908)",
+          "oklch(0.7500 0.1302 160.908)",
+          "oklch(0.8700 0.1302 160.908)",
+          "oklch(0.9500 0.1302 160.908)"
+        ]
+      },
+      "mint-ink": {
+        "role": "primary",
+        "displayName": "Deep Mint Ink",
+        "canonical": "oklch(0.2626 0.0147 166.4589)",
+        "tonalRamp": [
+          "oklch(0.1500 0.0147 166.4589)",
+          "oklch(0.2700 0.0147 166.4589)",
+          "oklch(0.3900 0.0147 166.4589)",
+          "oklch(0.5100 0.0147 166.4589)",
+          "oklch(0.6300 0.0147 166.4589)",
+          "oklch(0.7500 0.0147 166.4589)",
+          "oklch(0.8700 0.0147 166.4589)",
+          "oklch(0.9500 0.0147 166.4589)"
+        ]
+      },
+      "alert": {
+        "role": "tertiary",
+        "displayName": "Signal Red",
+        "canonical": "oklch(0.5523 0.1927 32.7272)",
+        "tonalRamp": [
+          "oklch(0.1500 0.1927 32.7272)",
+          "oklch(0.2700 0.1927 32.7272)",
+          "oklch(0.3900 0.1927 32.7272)",
+          "oklch(0.5100 0.1927 32.7272)",
+          "oklch(0.6300 0.1927 32.7272)",
+          "oklch(0.7500 0.1927 32.7272)",
+          "oklch(0.8700 0.1927 32.7272)",
+          "oklch(0.9500 0.1927 32.7272)"
+        ]
+      },
+      "alert-ink": {
+        "role": "tertiary",
+        "displayName": "Signal Red Ink",
+        "canonical": "oklch(0.9934 0.0032 17.2118)",
+        "tonalRamp": [
+          "oklch(0.1500 0.0032 17.2118)",
+          "oklch(0.2700 0.0032 17.2118)",
+          "oklch(0.3900 0.0032 17.2118)",
+          "oklch(0.5100 0.0032 17.2118)",
+          "oklch(0.6300 0.0032 17.2118)",
+          "oklch(0.7500 0.0032 17.2118)",
+          "oklch(0.8700 0.0032 17.2118)",
+          "oklch(0.9500 0.0032 17.2118)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Landing hero only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Marketing section titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card, dialog, and panel headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions and marketing prose."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase micro-labels and metadata."
+      },
+      "ui": {
+        "displayName": "UI",
+        "purpose": "Buttons, nav items, and compact controls."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-xs",
+        "value": "0px 1px 3px 0px hsl(0 0% 0% / 0.09)",
+        "purpose": "Inputs, outline buttons, and small controls at rest."
+      },
+      {
+        "name": "shadow-sm",
+        "value": "0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 1px 2px -1px hsl(0 0% 0% / 0.17)",
+        "purpose": "Cards and panels at rest."
+      },
+      {
+        "name": "shadow-lg",
+        "value": "0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 4px 6px -1px hsl(0 0% 0% / 0.17)",
+        "purpose": "Dialogs, sheets, popovers, and menus."
+      },
+      {
+        "name": "shadow-xl",
+        "value": "0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 8px 10px -1px hsl(0 0% 0% / 0.17)",
+        "purpose": "Feature and pricing cards on hover only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Color, border, and shadow transitions on controls."
+      },
+      {
+        "name": "lift",
+        "value": "300ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Card hover translate and shadow."
+      },
+      {
+        "name": "entrance",
+        "value": "400ms cubic-bezier(0.4, 0, 0.2, 1) with 50ms stagger",
+        "purpose": "Section and card entrance on scroll."
+      },
+      {
+        "name": "ambient",
+        "value": "linear infinite, 1.8s-22s",
+        "purpose": "Feature demos, data packets, empty-state scroll."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single mint action on a screen. 36px tall, 6px radius, medium weight.",
+      "html": "<button class=\"ds-btn-primary\">Get Started Free</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 8px 16px; border: 1px solid transparent; border-radius: calc(var(--radius) - 2px); background: var(--primary); color: var(--primary-foreground); font-family: var(--font-sans); font-size: 14px; font-weight: 500; letter-spacing: 0.025em; white-space: nowrap; cursor: pointer; transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: color-mix(in oklch, var(--primary) 90%, transparent); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent); } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action and the base of every vault row. Paper fill, hairline border.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 8px 16px; border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); background: var(--background); color: var(--foreground); font-family: var(--font-sans); font-size: 14px; font-weight: 500; letter-spacing: 0.025em; cursor: pointer; box-shadow: var(--shadow-xs); transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-outline:hover { background: var(--accent); color: var(--accent-foreground); } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Navigation and low-emphasis actions. Transparent until hover.",
+      "html": "<button class=\"ds-btn-ghost\">Pricing</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 8px 16px; border: 1px solid transparent; border-radius: calc(var(--radius) - 2px); background: transparent; color: var(--foreground); font-family: var(--font-sans); font-size: 14px; font-weight: 500; letter-spacing: 0.025em; cursor: pointer; transition: background 150ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-ghost:hover { background: var(--accent); color: var(--accent-foreground); } .ds-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent); }"
+    },
+    {
+      "name": "Type Badge",
+      "kind": "badge",
+      "refersTo": "badge-secondary",
+      "description": "Compact, fully round label for item types and metadata.",
+      "html": "<span class=\"ds-badge\">login</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: fit-content; padding: 2px 8px; border: 1px solid transparent; border-radius: 9999px; background: var(--secondary); color: var(--secondary-foreground); font-family: var(--font-sans); font-size: 12px; font-weight: 500; line-height: 1.4; letter-spacing: 0.1em; text-transform: capitalize; white-space: nowrap; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Input group with a leading muted icon; the ring is the only focus ornament.",
+      "html": "<div class=\"ds-input-group\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.35-4.35\"/></svg><input class=\"ds-input\" placeholder=\"Search...\" /></div>",
+      "css": ".ds-input-group { display: flex; align-items: center; gap: 8px; height: 36px; width: 100%; padding: 0 12px; border: 1px solid var(--input); border-radius: calc(var(--radius) - 2px); background: transparent; color: var(--muted-foreground); box-shadow: var(--shadow-xs); transition: border-color 150ms, box-shadow 150ms; } .ds-input-group:focus-within { border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent); } .ds-input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; color: var(--foreground); font-family: var(--font-sans); font-size: 14px; font-weight: 400; letter-spacing: 0.025em; } .ds-input::placeholder { color: var(--muted-foreground); }"
+    },
+    {
+      "name": "Vault Row",
+      "kind": "custom",
+      "description": "The recurring vault item: avatar, title, type badge, username, chevron. Selected rows gain a 4px mint left border.",
+      "html": "<button class=\"ds-vault-row\"><span class=\"ds-vault-avatar\">G</span><span class=\"ds-vault-main\"><span class=\"ds-vault-title\">Google Account <span class=\"ds-vault-type\">login</span></span><span class=\"ds-vault-user\">you@vaultcore.in</span></span><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button>",
+      "css": ".ds-vault-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 16px; border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); background: var(--background); color: var(--foreground); text-align: left; cursor: pointer; box-shadow: var(--shadow-xs); transition: background 150ms, border-color 150ms; } .ds-vault-row:hover { background: color-mix(in oklch, var(--accent) 50%, transparent); } .ds-vault-row:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent); } .ds-vault-row.ds-selected { border-left: 4px solid var(--primary); } .ds-vault-avatar { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 9999px; background: var(--muted); color: var(--foreground); font-family: var(--font-sans); font-size: 14px; font-weight: 500; text-transform: capitalize; } .ds-vault-main { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; } .ds-vault-title { display: flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 14px; font-weight: 500; } .ds-vault-type { padding: 2px 8px; border-radius: 9999px; background: var(--secondary); color: var(--secondary-foreground); font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: capitalize; } .ds-vault-user { overflow: hidden; color: var(--muted-foreground); font-family: var(--font-sans); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }"
+    },
+    {
+      "name": "Standard Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Paper panel with hairline border, 12px radius, and shadow-sm at rest.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Premium</div><p class=\"ds-card-description\">For individuals who want more organizations and members.</p><button class=\"ds-btn-primary\">Get Started</button></div>",
+      "css": ".ds-card { display: flex; flex-direction: column; gap: 16px; padding: 24px; border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px); background: var(--card); color: var(--card-foreground); box-shadow: var(--shadow-sm); transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); } .ds-card-title { font-family: var(--font-sans); font-size: 20px; font-weight: 500; letter-spacing: 0.025em; } .ds-card-description { margin: 0; color: var(--muted-foreground); font-family: var(--font-sans); font-size: 14px; line-height: 1.6; } .ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 8px 16px; border: 1px solid transparent; border-radius: calc(var(--radius) - 2px); background: var(--primary); color: var(--primary-foreground); font-family: var(--font-sans); font-size: 14px; font-weight: 500; cursor: pointer; } .ds-btn-primary:hover { background: color-mix(in oklch, var(--primary) 90%, transparent); }"
+    },
+    {
+      "name": "Sidebar Item",
+      "kind": "nav",
+      "refersTo": "sidebar-item",
+      "description": "36px navigation row in the app shell; stone fill marks hover and the current route.",
+      "html": "<div class=\"ds-sidebar-item ds-active\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/></svg><span>All Items</span></div>",
+      "css": ".ds-sidebar-item { display: flex; align-items: center; gap: 8px; height: 36px; padding: 8px; border-radius: calc(var(--radius) - 2px); color: var(--sidebar-foreground); font-family: var(--font-sans); font-size: 14px; font-weight: 500; letter-spacing: 0.025em; cursor: pointer; transition: background 150ms, color 150ms; } .ds-sidebar-item:hover { background: var(--sidebar-accent); color: var(--sidebar-accent-foreground); } .ds-sidebar-item.ds-active { background: var(--sidebar-accent); color: var(--sidebar-accent-foreground); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Vault",
+    "overview": "VaultCore looks like a well-kept private archive rather than a security console. Paper-white surfaces, graphite text, and hairline rules do the structural work; a single pale mint accent marks the action or fact that matters. Nothing glows, nothing alarms, nothing performs vigilance. The calm is the security claim: a product that handles secrets can afford to speak softly.\n\nThe system is dense where users work and generous where they decide. The vault app is a tight split pane with 12px padding, compact rows, and a fixed 16rem sidebar. Marketing pages breathe inside a 1152px column, separated by full-bleed horizontal rules and 96px section padding. Animated demos add life in short, linear loops, but the static composition still reads without motion.\n\nDepth is conditional. Surfaces sit flat at rest and lift only in response to hover, focus, or overlay. Borders carry hierarchy first; shadows confirm it second. The world explicitly rejects cyberpunk and hacker aesthetics: no neon-on-black, matrix rain, glowing shields, or lock iconography used as ornament.",
+    "keyCharacteristics": [
+      "Paper white, graphite ink, one pale mint signal.",
+      "Hairline borders and full-bleed rules define the grid.",
+      "Compact, engineered controls: 36px tall, 6px radius, visible states.",
+      "Flat at rest; shadow is a response, not a decoration.",
+      "Outfit for everything functional; serif reserved for the wordmark and watermark."
+    ],
+    "rules": [
+      {
+        "name": "The One Signal Rule",
+        "body": "Mint is scarce. Use it for the primary action, the current selection, a verified state, or one emphasized phrase per section. Never flood a panel or a page background with it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Paper Ground Rule",
+        "body": "Large surfaces stay paper white or stone. Color enters through icons, borders, text emphasis, and 5-10% tinted washes, not through saturated blocks.",
+        "section": "colors"
+      },
+      {
+        "name": "The Serif Exception Rule",
+        "body": "Source Serif 4 is an identity gesture, not a text face. It may appear in the wordmark and the oversized footer watermark; do not set product copy, headings, or labels in it.",
+        "section": "typography"
+      },
+      {
+        "name": "The Mono Evidence Rule",
+        "body": "Use Geist Mono only where the user must verify exact characters: passwords, keys, hashes, domains, and audit values. Never use it for general body copy.",
+        "section": "typography"
+      },
+      {
+        "name": "The Container Rule",
+        "body": "Marketing surfaces live inside the 1152px ruled column. App surfaces span the viewport. Never wrap the app shell in the marketing container.",
+        "section": "layout"
+      },
+      {
+        "name": "The Breathing Section Rule",
+        "body": "Marketing sections earn 96px of vertical padding and one full-bleed divider. Do not stack more than two competing visual events in a single band.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "A surface at rest gets a border before it gets a shadow. Shadows appear only as a response to state or as proof that an overlay floats.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Radius Rule",
+        "body": "A component uses one corner radius family. Do not pair a 6px button with a 12px input inside the same control group.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do keep mint to one primary action, one active marker, or one emphasized phrase per section.",
+      "Do use 1px hairline borders and paper/stone tones to build hierarchy before reaching for shadow.",
+      "Do keep controls 36px tall in the app, 44px in authentication, with 6px radius and clear hover states.",
+      "Do reserve Geist Mono for passwords, keys, hashes, domains, and audit values.",
+      "Do hide or simplify the hero demo below md rather than compressing it into an unreadable phone layout.",
+      "Do honor reduced-motion preferences in the animated demos and empty-state loop."
+    ],
+    "donts": [
+      "Don't use cyberpunk or hacker aesthetics: no neon-on-black, matrix rain, glowing shields, or lock emblems as decoration.",
+      "Don't flood panels or page backgrounds with mint; the accent loses meaning when it becomes a fill.",
+      "Don't pair multiple corner radii inside one control group or card.",
+      "Don't put shadows on resting cards beyond shadow-sm, and never use a glow as a focus or hover state.",
+      "Don't use Source Serif 4 for interface or body copy.",
+      "Don't fabricate testimonials, customer logos, benchmarks, or security proof to fill a layout."
+    ]
+  }
+}

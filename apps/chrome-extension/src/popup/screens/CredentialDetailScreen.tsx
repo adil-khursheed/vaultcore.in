@@ -14,7 +14,7 @@ import { Button } from "@repo/ui/components/button";
 
 import { getTrpcClient } from "@/lib/api";
 import { getActiveOrganizationId } from "@/lib/storage";
-import { decryptString } from "@/lib/crypto";
+import { decryptString } from "@repo/crypto";
 import type { TCredential, CredentialType } from "@/lib/types";
 import { useVaultStore } from "@repo/store";
 

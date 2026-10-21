@@ -3,7 +3,7 @@ export const plans = [
     id: "free",
     name: "Free",
     yearlyPriceUsd: 0,
-    description: "Secure personal vault with bank-grade encryption.",
+    description: "A private, encrypted vault for one person. Free to keep.",
     features: [
       "1 organization",
       "2 members per org",
@@ -11,14 +11,15 @@ export const plans = [
       "Zero-knowledge architecture",
       "Unlimited devices & sync",
     ],
-    cta: "Get started",
+    cta: "Create free vault",
     isPopular: false,
   },
   {
     id: "premium",
     name: "Premium",
     yearlyPriceUsd: 1000,
-    description: "Advanced security and collaboration for professionals.",
+    description:
+      "More organizations and members for work, side projects, and family.",
     features: [
       "2 organizations",
       "3 members per org",
@@ -26,14 +27,14 @@ export const plans = [
       "Priority email support",
       "Advanced vault items",
     ],
-    cta: "Get Started",
+    cta: "Choose Premium",
     isPopular: true,
   },
   {
     id: "family",
     name: "Family",
     yearlyPriceUsd: 4999,
-    description: "Organization-wide security for your entire household.",
+    description: "One shared vault for the whole household, with room to grow.",
     features: [
       "Unlimited organizations",
       "10 members per org",
@@ -41,7 +42,7 @@ export const plans = [
       "Household sharing",
       "Family security dashboard",
     ],
-    cta: "Get Started",
+    cta: "Choose Family",
     isPopular: false,
   },
 ];

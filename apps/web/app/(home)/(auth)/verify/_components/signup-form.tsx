@@ -4,18 +4,21 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
-import {
-  calculatePasswordStrength,
-  deriveKeys,
-  encryptVaultKey,
-  generateVaultKey,
-} from "@/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod/v4";
 
+import {
+  calculatePasswordStrength,
+  computeKeyFingerprint,
+  deriveKeys,
+  encryptPrivateKey,
+  generateUserKeyPair,
+  generateVaultKey,
+  wrapVaultKeyForMember,
+} from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {
@@ -37,12 +40,12 @@ export const SignUpSchema = z
   .object({
     password: z
       .string()
-      .min(12, "Password must be at least 12 characters long")
-      .max(128, "Password must be at most 128 characters long"),
+      .min(12, "Use at least 12 characters.")
+      .max(128, "Use at most 128 characters."),
     confirm_password: z
       .string()
-      .min(12, "Password must be at least 12 characters long")
-      .max(128, "Password must be at most 128 characters long"),
+      .min(12, "Use at least 12 characters.")
+      .max(128, "Use at most 128 characters."),
   })
   .refine((data) => {
     if (data.password !== data.confirm_password) {
@@ -64,7 +67,7 @@ const SignUpForm = () => {
 
   const trpc = useTRPC();
 
-  const { setMasterKey, setVaultKey } = useVaultStore();
+  const { setMasterKey, setVaultKey, setPrivateKey } = useVaultStore();
 
   const verifyToken = useMutation(
     trpc.auth.verifyEmail.mutationOptions({
@@ -83,10 +86,10 @@ const SignUpForm = () => {
     if (token) {
       verifyToken.mutate({ token });
     }
-  }, []);
+  }, [token, verifyToken]);
 
-  const insertVaultKey = useMutation(
-    trpc.vault.createVaultKey.mutationOptions({}),
+  const grantVaultAccess = useMutation(
+    trpc.vault.selfGrantVaultAccess.mutationOptions({}),
   );
 
   const form = useForm({
@@ -108,8 +111,30 @@ const SignUpForm = () => {
           data.value.password,
           verifiedEmail,
         );
+
+        // 1. Generate RSA key pair and encrypt the private key
+        const userKeyPair = await generateUserKeyPair();
+        const encryptedPrivKeyData = await encryptPrivateKey(
+          userKeyPair.privateKey,
+          masterKey,
+        );
+
+        // Export public key to base64 string
+        const publicKeyJwk = await crypto.subtle.exportKey(
+          "jwk",
+          userKeyPair.publicKey,
+        );
+        const publicKeyBase64 = btoa(JSON.stringify(publicKeyJwk));
+
+        // Compute fingerprint
+        const fingerprint = await computeKeyFingerprint(publicKeyJwk);
+
+        // 2. Generate Organization Vault Key and wrap it
         const vaultKey = await generateVaultKey();
-        const encryptedVaultKey = await encryptVaultKey(vaultKey, masterKey);
+        const wrappedVaultKeyBase64 = await wrapVaultKeyForMember(
+          vaultKey,
+          publicKeyJwk,
+        );
 
         await authClient.signUp.email(
           {
@@ -118,39 +143,43 @@ const SignUpForm = () => {
             name: verifiedEmail.split("@")[0]?.toLowerCase() ?? "",
             // @ts-expect-error - token is handled by our server-side plugin
             token: token,
+            publicKey: publicKeyBase64,
+            encryptedPrivateKey: encryptedPrivKeyData.encryptedPrivateKey,
+            privateKeyIv: encryptedPrivKeyData.iv,
+            publicKeyFingerprint: fingerprint,
           },
           {
-            onSuccess: async (ctx) => {
-              console.log("New User", ctx.data);
+            onSuccess: async (signUpCtx) => {
+              const newUserId = signUpCtx.data.user.id;
 
               await authClient.organization.create(
                 {
                   name: "Personal",
-                  slug: ctx.data.user.id,
+                  slug: newUserId,
                 },
                 {
-                  onSuccess: async (ctx) => {
-                    console.log("New Organization", ctx.data);
-
+                  onSuccess: async (orgCtx) => {
                     await authClient.organization.setActive({
-                      organizationId: ctx.data.id,
-                      organizationSlug: ctx.data.slug,
+                      organizationId: orgCtx.data.id,
+                      organizationSlug: orgCtx.data.slug,
                     });
 
-                    insertVaultKey.mutate({
-                      organizationId: ctx.data.id,
-                      key: encryptedVaultKey.encryptedKey,
-                      iv: encryptedVaultKey.iv,
+                    // Store the RSA-wrapped vault key in memberVaultKey table
+                    await grantVaultAccess.mutateAsync({
+                      organizationId: orgCtx.data.id,
+                      userId: newUserId,
+                      encryptedKey: wrappedVaultKeyBase64,
                     });
 
                     setMasterKey(masterKey);
                     setVaultKey(vaultKey);
+                    setPrivateKey(userKeyPair.privateKey);
 
-                    router.replace(`/${ctx.data.slug}/all-items`);
+                    router.replace(`/${orgCtx.data.slug}/all-items`);
                   },
-                  onError: (ctx) => {
-                    console.log("Organization Error => ", ctx.error);
-
+                  onError: (orgErrCtx) => {
+                    console.error("Organization Error => ", orgErrCtx.error);
+                    toast.error(orgErrCtx.error.message);
                     router.replace("/organization/create");
                   },
                 },
@@ -200,12 +229,7 @@ const SignUpForm = () => {
             return (
               <Field data-invalid={isInvalid}>
                 <FieldContent>
-                  <FieldLabel
-                    htmlFor={field.name}
-                    className={`text-[${strength.color}]`}
-                  >
-                    Master Password
-                  </FieldLabel>
+                  <FieldLabel htmlFor={field.name}>Master password</FieldLabel>
                 </FieldContent>
 
                 <InputGroup className="h-11">
@@ -216,6 +240,7 @@ const SignUpForm = () => {
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
                     placeholder="Enter your master password"
                     aria-invalid={isInvalid}
                   />
@@ -227,6 +252,10 @@ const SignUpForm = () => {
                     <InputGroupButton
                       variant={"ghost"}
                       size={"icon-sm"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      aria-pressed={showPassword}
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
@@ -239,6 +268,10 @@ const SignUpForm = () => {
                   data-level={strength.level}
                   indicatorStyle={{ backgroundColor: strength.color }}
                 />
+
+                <p className="text-muted-foreground text-xs">
+                  Use at least 12 characters. A short passphrase works well.
+                </p>
 
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
@@ -256,7 +289,7 @@ const SignUpForm = () => {
               <Field data-invalid={isInvalid}>
                 <FieldContent>
                   <FieldLabel htmlFor={field.name}>
-                    Confirm Master Password
+                    Confirm master password
                   </FieldLabel>
                 </FieldContent>
 
@@ -268,6 +301,7 @@ const SignUpForm = () => {
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
                     placeholder="Re-enter your master password"
                     aria-invalid={isInvalid}
                   />
@@ -279,6 +313,10 @@ const SignUpForm = () => {
                     <InputGroupButton
                       variant={"ghost"}
                       size={"icon-sm"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      aria-pressed={showPassword}
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
@@ -296,11 +334,16 @@ const SignUpForm = () => {
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit, isSubmitting]) => {
             return (
-              <Button type="submit" disabled={!canSubmit || isSubmitting}>
+              <Button
+                type="submit"
+                className="h-11"
+                disabled={!canSubmit || isSubmitting}
+                aria-busy={isSubmitting}
+              >
                 {isSubmitting ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
-                  "Sign Up"
+                  "Create my vault"
                 )}
               </Button>
             );

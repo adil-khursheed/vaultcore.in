@@ -18,6 +18,11 @@ export const { organization, user, member, verification, session, account } =
   authSchema;
 export * from "./auth-schema";
 
+/**
+ * @deprecated Legacy vault key table using AES-GCM wrapping with master key.
+ * Replaced by `memberVaultKey` which uses RSA-OAEP per-member wrapping.
+ * Kept only for migration of existing data.
+ */
 export const vaultKey = pgTable(
   "vaultKey",
   {
@@ -33,6 +38,39 @@ export const vaultKey = pgTable(
       .notNull(),
   },
   (table) => [index("vaultKey_organizationId_idx").on(table.organizationId)],
+);
+
+export const memberVaultKey = pgTable(
+  "member_vault_key",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    encryptedKey: text("encrypted_key").notNull(), // vault key wrapped with user's RSA public key
+    status: text("status", { enum: ["active", "pending"] })
+      .notNull()
+      .default("pending"),
+    keyVersion: integer("key_version").notNull().default(1),
+    rotatedAt: timestamp("rotated_at"),
+    grantedBy: text("granted_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("member_vault_key_org_user_uidx").on(
+      table.organizationId,
+      table.userId,
+    ),
+    index("member_vault_key_userId_idx").on(table.userId),
+  ],
 );
 
 export const credentialTypeEnum = pgEnum("credential_type", [
@@ -176,6 +214,105 @@ export const payments = pgTable(
   ],
 );
 
+// --- Vault Key Rotation Log ---
+
+export const vaultKeyRotationLog = pgTable(
+  "vault_key_rotation_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    initiatedBy: text("initiated_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "set null" }),
+    previousVersion: integer("previous_version").notNull(),
+    newVersion: integer("new_version").notNull(),
+    membersRotated: integer("members_rotated").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("vault_key_rotation_org_idx").on(table.organizationId),
+  ],
+);
+
+// --- Audit Log ---
+
+export const auditActionEnum = pgEnum("audit_action", [
+  "vault_key_granted",
+  "vault_key_revoked",
+  "vault_key_rotated",
+  "member_invited",
+  "member_accepted",
+  "member_removed",
+  "credential_created",
+  "credential_updated",
+  "credential_deleted",
+  "vault_unlocked",
+  "vault_locked",
+  "user_keys_migrated",
+  "login_success",
+  "login_failed",
+]);
+
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    organizationId: text("organization_id").references(() => organization.id, {
+      onDelete: "set null",
+    }),
+    actorUserId: text("actor_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    targetUserId: text("target_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    action: auditActionEnum("action").notNull(),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .default({}),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("audit_log_org_id_idx").on(table.organizationId),
+    index("audit_log_actor_idx").on(table.actorUserId),
+    index("audit_log_action_idx").on(table.action),
+    index("audit_log_created_at_idx").on(table.createdAt),
+  ],
+);
+
+// --- Relations ---
+
+export const memberVaultKeyRelations = relations(
+  memberVaultKey,
+  ({ one }) => ({
+    organization: one(organization, {
+      fields: [memberVaultKey.organizationId],
+      references: [organization.id],
+    }),
+    user: one(user, {
+      fields: [memberVaultKey.userId],
+      references: [user.id],
+      relationName: "memberVaultKeyUser",
+    }),
+    grantor: one(user, {
+      fields: [memberVaultKey.grantedBy],
+      references: [user.id],
+      relationName: "memberVaultKeyGrantor",
+    }),
+  }),
+);
+
+export const credentialRelations = relations(credential, ({ one }) => ({
+  organization: one(organization, {
+    fields: [credential.organizationId],
+    references: [organization.id],
+  }),
+}));
+
 export const plansRelations = relations(plans, ({ many }) => ({
   subscriptions: many(organizationSubscriptions),
 }));
@@ -212,3 +349,34 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
     references: [organizationSubscriptions.id],
   }),
 }));
+
+export const auditLogRelations = relations(auditLog, ({ one }) => ({
+  organization: one(organization, {
+    fields: [auditLog.organizationId],
+    references: [organization.id],
+  }),
+  actor: one(user, {
+    fields: [auditLog.actorUserId],
+    references: [user.id],
+    relationName: "auditLogActor",
+  }),
+  target: one(user, {
+    fields: [auditLog.targetUserId],
+    references: [user.id],
+    relationName: "auditLogTarget",
+  }),
+}));
+
+export const vaultKeyRotationLogRelations = relations(
+  vaultKeyRotationLog,
+  ({ one }) => ({
+    organization: one(organization, {
+      fields: [vaultKeyRotationLog.organizationId],
+      references: [organization.id],
+    }),
+    initiator: one(user, {
+      fields: [vaultKeyRotationLog.initiatedBy],
+      references: [user.id],
+    }),
+  }),
+);

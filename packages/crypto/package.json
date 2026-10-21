@@ -1,0 +1,29 @@
+{
+  "name": "@repo/crypto",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": {
+      "react-native": "./src/index.native.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "peerDependencies": {
+    "react-native-quick-crypto": ">=0.7.0"
+  },
+  "peerDependenciesMeta": {
+    "react-native-quick-crypto": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/prettier-config": "workspace:*",
+    "typescript": "^5.3.3"
+  },
+  "prettier": "@repo/prettier-config"
+}

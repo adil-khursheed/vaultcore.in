@@ -15,6 +15,8 @@ const CategoryTab = ({ category }: { category: string }) => {
 
   const router = useRouter();
 
+  if (tabs.length < 2) return null;
+
   return (
     <div className="bg_pattern border_top border_bottom relative flex h-20 w-full items-center justify-center">
       <Tabs

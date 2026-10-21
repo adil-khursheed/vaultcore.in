@@ -16,6 +16,10 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
+  publicKey: text("public_key"), // RSA-OAEP public key (JWK JSON)
+  encryptedPrivateKey: text("encrypted_private_key"), // RSA-OAEP private key, encrypted with masterKey (base64)
+  privateKeyIv: text("private_key_iv"), // IV used to encrypt the private key
+  publicKeyFingerprint: text("public_key_fingerprint"), // SHA-256 fingerprint for out-of-band key verification
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -195,3 +199,8 @@ export const VerifyNewUserEmailSchema = createInsertSchema(user, {
   createdAt: true,
   updatedAt: true,
 });
+
+
+
+
+

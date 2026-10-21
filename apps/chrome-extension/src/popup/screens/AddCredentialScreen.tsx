@@ -1,8 +1,19 @@
-import { useState, useEffect } from "react";
-import { ArrowLeftIcon, SaveIcon, EyeIcon, EyeOffIcon, RefreshCwIcon, Loader2Icon } from "lucide-react";
+import type { CredentialType } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { getTrpcClient } from "@/lib/api";
+import { getActiveOrganizationId } from "@/lib/storage";
 import { useForm } from "@tanstack/react-form";
+import {
+  ArrowLeftIcon,
+  EyeIcon,
+  EyeOffIcon,
+  Loader2Icon,
+  RefreshCwIcon,
+  SaveIcon,
+} from "lucide-react";
 import { z } from "zod";
 
+import { encryptString } from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {
@@ -19,11 +30,6 @@ import {
   InputGroupInput,
 } from "@repo/ui/components/input-group";
 import { Textarea } from "@repo/ui/components/textarea";
-
-import { getTrpcClient } from "@/lib/api";
-import { getActiveOrganizationId } from "@/lib/storage";
-import { encryptString } from "@/lib/crypto";
-import type { CredentialType } from "@/lib/types";
 
 interface AddCredentialScreenProps {
   onBack: () => void;
@@ -61,7 +67,7 @@ export function AddCredentialScreen({
   const [type, setType] = useState<CredentialType>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  
+
   const { vaultKey } = useVaultStore();
 
   const form = useForm({
@@ -81,7 +87,9 @@ export function AddCredentialScreen({
       try {
         const orgId = await getActiveOrganizationId();
         if (!orgId) {
-          throw new Error("No organization found. Please set up your vault first.");
+          throw new Error(
+            "No organization found. Please set up your vault first.",
+          );
         }
 
         if (!vaultKey) {
@@ -89,20 +97,20 @@ export function AddCredentialScreen({
         }
 
         // Encrypt sensitive fields before saving
-        const encryptedUsername = value.username 
-          ? await encryptString(value.username, vaultKey) 
+        const encryptedUsername = value.username
+          ? await encryptString(value.username, vaultKey)
           : undefined;
-          
-        const encryptedPassword = value.password 
-          ? await encryptString(value.password, vaultKey) 
+
+        const encryptedPassword = value.password
+          ? await encryptString(value.password, vaultKey)
           : undefined;
-          
-        const encryptedUrl = value.url 
-          ? await encryptString(value.url, vaultKey) 
+
+        const encryptedUrl = value.url
+          ? await encryptString(value.url, vaultKey)
           : undefined;
-          
-        const encryptedNote = value.note 
-          ? await encryptString(value.note, vaultKey) 
+
+        const encryptedNote = value.note
+          ? await encryptString(value.note, vaultKey)
           : undefined;
 
         const trpc = getTrpcClient(apiBaseUrl);
@@ -119,7 +127,8 @@ export function AddCredentialScreen({
         onBack();
       } catch (err: unknown) {
         console.error(err);
-        const errorMessage = err instanceof Error ? err.message : "Failed to save credential";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to save credential";
         setError(errorMessage);
       }
     },
@@ -130,10 +139,11 @@ export function AddCredentialScreen({
     chrome.tabs?.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.url && !tabs[0].url.startsWith("chrome")) {
         form.setFieldValue("url", tabs[0].url);
-        
+
         try {
           const parsed = new URL(tabs[0].url);
-          let hostname = parsed.hostname.replace("www.", "").split(".")[0] || "";
+          let hostname =
+            parsed.hostname.replace("www.", "").split(".")[0] || "";
           if (hostname) {
             hostname = hostname.charAt(0).toUpperCase() + hostname.slice(1);
             form.setFieldValue("title", hostname);
@@ -148,16 +158,16 @@ export function AddCredentialScreen({
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-border px-3 py-3">
+      <div className="border-border flex items-center gap-2 border-b px-3 py-3">
         <Button
           variant="ghost"
           size="icon"
           onClick={onBack}
-          className="h-8 w-8 text-muted-foreground"
+          className="text-muted-foreground h-8 w-8"
         >
           <ArrowLeftIcon className="h-5 w-5" />
         </Button>
-        <span className="text-sm font-medium text-foreground">
+        <span className="text-foreground text-sm font-medium">
           Add Credential
         </span>
       </div>
@@ -200,11 +210,14 @@ export function AddCredentialScreen({
             <form.Field
               name="title"
               children={(field) => {
-                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldContent>
-                      <FieldLabel htmlFor={field.name} className="text-xs">Title *</FieldLabel>
+                      <FieldLabel htmlFor={field.name} className="text-xs">
+                        Title *
+                      </FieldLabel>
                     </FieldContent>
                     <InputGroup className="h-10">
                       <InputGroupInput
@@ -217,7 +230,9 @@ export function AddCredentialScreen({
                         aria-invalid={isInvalid}
                       />
                     </InputGroup>
-                    {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    {isInvalid && (
+                      <FieldError errors={field.state.meta.errors} />
+                    )}
                   </Field>
                 );
               }}
@@ -242,7 +257,11 @@ export function AddCredentialScreen({
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
                           onBlur={field.handleBlur}
-                          placeholder={type === "identity" ? "Full name" : "username or email"}
+                          placeholder={
+                            type === "identity"
+                              ? "Full name"
+                              : "username or email"
+                          }
                         />
                       </InputGroup>
                     </Field>
@@ -259,7 +278,9 @@ export function AddCredentialScreen({
                   return (
                     <Field>
                       <FieldContent>
-                        <FieldLabel htmlFor={field.name} className="text-xs">Password</FieldLabel>
+                        <FieldLabel htmlFor={field.name} className="text-xs">
+                          Password
+                        </FieldLabel>
                       </FieldContent>
                       <div className="flex gap-2">
                         <InputGroup className="h-10 flex-1">
@@ -291,14 +312,14 @@ export function AddCredentialScreen({
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-10 px-2.5 text-xs text-muted-foreground"
+                          className="text-muted-foreground h-10 px-2.5 text-xs"
                           onClick={() => {
                             field.handleChange(generatePassword());
                             setShowPassword(true);
                           }}
                           title="Generate password"
                         >
-                          <RefreshCwIcon className="h-3.5 w-3.5 mr-1" />
+                          <RefreshCwIcon className="mr-1 h-3.5 w-3.5" />
                           Gen
                         </Button>
                       </div>
@@ -316,7 +337,9 @@ export function AddCredentialScreen({
                   return (
                     <Field>
                       <FieldContent>
-                        <FieldLabel htmlFor={field.name} className="text-xs">Website URL</FieldLabel>
+                        <FieldLabel htmlFor={field.name} className="text-xs">
+                          Website URL
+                        </FieldLabel>
                       </FieldContent>
                       <InputGroup className="h-10">
                         <InputGroupInput
@@ -342,7 +365,9 @@ export function AddCredentialScreen({
                 return (
                   <Field>
                     <FieldContent>
-                      <FieldLabel htmlFor={field.name} className="text-xs">Notes</FieldLabel>
+                      <FieldLabel htmlFor={field.name} className="text-xs">
+                        Notes
+                      </FieldLabel>
                     </FieldContent>
                     <div className="mt-1">
                       <Textarea
@@ -353,7 +378,7 @@ export function AddCredentialScreen({
                         onBlur={field.handleBlur}
                         placeholder="Add any additional notes..."
                         rows={3}
-                        className="resize-none text-sm bg-muted/50"
+                        className="bg-muted/50 resize-none text-sm"
                       />
                     </div>
                   </Field>
@@ -367,11 +392,11 @@ export function AddCredentialScreen({
                 return (
                   <Button
                     type="submit"
-                    className="w-full mt-4"
+                    className="mt-4 w-full"
                     disabled={!canSubmit || isSubmitting}
                   >
                     {isSubmitting ? (
-                      <Loader2Icon className="animate-spin h-4 w-4" />
+                      <Loader2Icon className="h-4 w-4 animate-spin" />
                     ) : (
                       <>
                         <SaveIcon className="mr-2 h-4 w-4" />

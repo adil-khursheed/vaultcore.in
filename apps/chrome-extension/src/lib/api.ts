@@ -1,127 +1,68 @@
-import {
-  createTRPCClient,
-  httpBatchLink,
-  type CreateTRPCClient,
-} from "@trpc/client";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import SuperJSON from "superjson";
 
-// We define a minimal type-safe interface here instead of importing @repo/api
-// because @repo/api depends on server-side packages (drizzle, etc.)
-// that cannot be resolved in the Chrome extension environment.
+import type { AppRouter } from "@repo/api";
 
-type CredentialType = "login" | "card" | "identity" | "note" | "ssh_key";
+import { getApiBaseUrl } from "./storage";
 
-interface Credential {
-  id: string;
-  organizationId: string;
-  title: string;
-  username: string | null;
-  password: string | null;
-  url: string | null;
-  note: string | null;
-  type: CredentialType;
-  data: unknown;
-  otp: string | null;
-  isFavorite: boolean | null;
-  isDeleted: boolean | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+let trpcClient: ReturnType<typeof createTRPCClient<AppRouter>> | null = null;
+let currentBaseUrl: string | null = null;
 
-interface GetCredentialsInput {
-  organizationId: string;
-  type?: CredentialType;
-  search?: string | null;
-  isFavorite?: boolean;
-  isDeleted?: boolean;
-  limit?: number;
-  cursor?: string | null;
-}
+/**
+ * Get or create a tRPC client for the Chrome extension.
+ * The client is cached as a singleton and re-created if the base URL changes.
+ *
+ * @param apiBaseUrl - Optional base URL override. If not provided, reads from chrome storage.
+ */
+export function getTrpcClient(apiBaseUrl?: string): ReturnType<typeof createTRPCClient<AppRouter>> {
+  const baseUrl = apiBaseUrl ?? currentBaseUrl;
 
-interface GetCredentialsOutput {
-  items: Credential[];
-  nextCursor: string | undefined;
-}
-
-interface CreateCredentialInput {
-  title: string;
-  username?: string;
-  password?: string;
-  url?: string;
-  note?: string;
-  type?: CredentialType;
-  data?: Record<string, any>;
-  organizationId: string;
-  otp?: string;
-  isFavorite?: boolean;
-}
-
-// Minimal tRPC-compatible client interface
-interface VaultCoreAPI {
-  credential: {
-    getCredentials: {
-      query: (input: GetCredentialsInput) => Promise<GetCredentialsOutput>;
-    };
-    create: {
-      mutate: (input: CreateCredentialInput) => Promise<any>;
-    };
-  };
-  vault: {
-    getVaultKey: {
-      query: (input: {
-        organizationId: string;
-      }) => Promise<{ vaultKeyData: { key: string; iv: string } }>;
-    };
-  };
-}
-
-let apiClientInstance: VaultCoreAPI | null = null;
-
-export function getTrpcClient(baseUrl: string): VaultCoreAPI {
-  if (!apiClientInstance) {
-    const client = createTRPCClient({
-      links: [
-        httpBatchLink({
-          transformer: SuperJSON,
-          url: `${baseUrl}/api/trpc`,
-          headers() {
-            return {
-              "x-trpc-source": "chrome-extension",
-            };
-          },
-          fetch(url, options) {
-            return fetch(url, {
-              ...options,
-              credentials: "include",
-            });
-          },
-        }),
-      ],
-    });
-
-    // Wrap the untyped client into our typed interface
-    apiClientInstance = {
-      credential: {
-        getCredentials: {
-          query: (input: GetCredentialsInput) =>
-            (client as any).credential.getCredentials.query(input),
-        },
-        create: {
-          mutate: (input: CreateCredentialInput) =>
-            (client as any).credential.create.mutate(input),
-        },
-      },
-      vault: {
-        getVaultKey: {
-          query: (input: { organizationId: string }) =>
-            (client as any).vault.getVaultKey.query(input),
-        },
-      },
-    } as VaultCoreAPI;
+  // Return cached client if URL hasn't changed
+  if (trpcClient && currentBaseUrl === baseUrl && baseUrl) {
+    return trpcClient;
   }
-  return apiClientInstance;
+
+  if (!baseUrl) {
+    // Synchronous fallback — create with default URL
+    // Callers should prefer passing apiBaseUrl for guaranteed correctness
+    const defaultUrl = "http://localhost:3000";
+    return createClient(defaultUrl);
+  }
+
+  return createClient(baseUrl);
 }
 
+/**
+ * Async version that reads from chrome storage if no URL is provided.
+ */
+export async function getTrpcClientAsync(): Promise<ReturnType<typeof createTRPCClient<AppRouter>>> {
+  const baseUrl = await getApiBaseUrl();
+  return getTrpcClient(baseUrl);
+}
+
+function createClient(baseUrl: string) {
+  currentBaseUrl = baseUrl;
+  trpcClient = createTRPCClient<AppRouter>({
+    links: [
+      httpBatchLink({
+        url: `${baseUrl}/api/trpc`,
+        transformer: SuperJSON,
+        fetch(url, options) {
+          return fetch(url, {
+            ...options,
+            credentials: "include",
+          });
+        },
+      }),
+    ],
+  });
+  return trpcClient;
+}
+
+/**
+ * Reset the cached tRPC client (e.g., on logout or base URL change).
+ */
 export function resetTrpcClient() {
-  apiClientInstance = null;
+  trpcClient = null;
+  currentBaseUrl = null;
 }
