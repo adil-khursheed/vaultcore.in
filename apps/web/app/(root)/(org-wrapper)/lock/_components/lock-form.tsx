@@ -66,7 +66,7 @@ const LockForm = () => {
 
         const { masterKey } = await deriveKeys(data.value.password, user_email);
 
-        const user = session?.user as any;
+        const user = session?.user;
 
         // 1. Decrypt user's private key
         let privateKey: CryptoKey | null = null;
@@ -90,7 +90,7 @@ const LockForm = () => {
 
         const vaultData = await queryClient.fetchQuery(
           trpc.vault.getMyVaultKey.queryOptions({
-            organizationId: activeOrganization?.id!,
+            organizationId: activeOrganization?.id || "",
           }),
         );
 

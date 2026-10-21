@@ -171,11 +171,13 @@ const LoginForm = () => {
                   <InputGroupInput
                     id={field.name}
                     name={field.name}
+                    type="email"
+                    autoComplete="email"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     aria-invalid={isInvalid}
-                    placeholder="Enter your email"
+                    placeholder="you@example.com"
                   />
 
                   <InputGroupAddon>
@@ -209,6 +211,7 @@ const LoginForm = () => {
                     onBlur={field.handleBlur}
                     aria-invalid={isInvalid}
                     type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
                     placeholder="Enter your master password"
                   />
 
@@ -219,6 +222,10 @@ const LoginForm = () => {
                     <InputGroupButton
                       variant={"ghost"}
                       size={"icon-sm"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      aria-pressed={showPassword}
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
@@ -235,11 +242,16 @@ const LoginForm = () => {
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit, isSubmitting]) => {
             return (
-              <Button type="submit" disabled={!canSubmit || isSubmitting}>
+              <Button
+                type="submit"
+                className="h-11"
+                disabled={!canSubmit || isSubmitting}
+                aria-busy={isSubmitting}
+              >
                 {isSubmitting ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
-                  "Login"
+                  "Log in"
                 )}
               </Button>
             );

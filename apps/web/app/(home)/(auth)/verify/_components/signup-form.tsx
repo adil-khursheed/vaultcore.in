@@ -40,12 +40,12 @@ export const SignUpSchema = z
   .object({
     password: z
       .string()
-      .min(12, "Password must be at least 12 characters long")
-      .max(128, "Password must be at most 128 characters long"),
+      .min(12, "Use at least 12 characters.")
+      .max(128, "Use at most 128 characters."),
     confirm_password: z
       .string()
-      .min(12, "Password must be at least 12 characters long")
-      .max(128, "Password must be at most 128 characters long"),
+      .min(12, "Use at least 12 characters.")
+      .max(128, "Use at most 128 characters."),
   })
   .refine((data) => {
     if (data.password !== data.confirm_password) {
@@ -229,12 +229,7 @@ const SignUpForm = () => {
             return (
               <Field data-invalid={isInvalid}>
                 <FieldContent>
-                  <FieldLabel
-                    htmlFor={field.name}
-                    className={`text-[${strength.color}]`}
-                  >
-                    Master Password
-                  </FieldLabel>
+                  <FieldLabel htmlFor={field.name}>Master password</FieldLabel>
                 </FieldContent>
 
                 <InputGroup className="h-11">
@@ -245,6 +240,7 @@ const SignUpForm = () => {
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
                     placeholder="Enter your master password"
                     aria-invalid={isInvalid}
                   />
@@ -256,6 +252,10 @@ const SignUpForm = () => {
                     <InputGroupButton
                       variant={"ghost"}
                       size={"icon-sm"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      aria-pressed={showPassword}
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
@@ -268,6 +268,10 @@ const SignUpForm = () => {
                   data-level={strength.level}
                   indicatorStyle={{ backgroundColor: strength.color }}
                 />
+
+                <p className="text-muted-foreground text-xs">
+                  Use at least 12 characters. A short passphrase works well.
+                </p>
 
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
@@ -285,7 +289,7 @@ const SignUpForm = () => {
               <Field data-invalid={isInvalid}>
                 <FieldContent>
                   <FieldLabel htmlFor={field.name}>
-                    Confirm Master Password
+                    Confirm master password
                   </FieldLabel>
                 </FieldContent>
 
@@ -297,6 +301,7 @@ const SignUpForm = () => {
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
                     placeholder="Re-enter your master password"
                     aria-invalid={isInvalid}
                   />
@@ -308,6 +313,10 @@ const SignUpForm = () => {
                     <InputGroupButton
                       variant={"ghost"}
                       size={"icon-sm"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      aria-pressed={showPassword}
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {!showPassword ? <EyeIcon /> : <EyeOffIcon />}
@@ -325,11 +334,16 @@ const SignUpForm = () => {
           selector={(state) => [state.canSubmit, state.isSubmitting]}
           children={([canSubmit, isSubmitting]) => {
             return (
-              <Button type="submit" disabled={!canSubmit || isSubmitting}>
+              <Button
+                type="submit"
+                className="h-11"
+                disabled={!canSubmit || isSubmitting}
+                aria-busy={isSubmitting}
+              >
                 {isSubmitting ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
-                  "Sign Up"
+                  "Create my vault"
                 )}
               </Button>
             );

@@ -196,7 +196,7 @@ const AppDashboardDemo = () => {
               </div>
 
               <div className="flex w-full min-w-0 flex-col gap-1 px-1 py-2">
-                <div className="text-sidebar-foreground/70 flex h-8 justify-start px-2 text-xs font-medium">
+                <div className="text-sidebar-foreground flex h-8 justify-start px-2 text-xs font-medium">
                   <span>Types</span>
                 </div>
                 <MenuItem
@@ -226,7 +226,7 @@ const AppDashboardDemo = () => {
 
                 <Separator orientation="vertical" className="h-full w-px" />
 
-                <h3 className="text-lg font-medium">All Items</h3>
+                <div className="text-lg font-medium">All Items</div>
               </div>
 
               <div className="flex items-center gap-3">
@@ -249,23 +249,25 @@ const AppDashboardDemo = () => {
                     </span>
                   </div>
 
-                  <div className="bg-primary text-primary-foreground flex size-9 items-center justify-center rounded-md">
+                  <div className="bg-mint text-mint-ink flex size-9 items-center justify-center rounded-md">
                     <IconPlus className="size-5" />
                   </div>
                 </div>
 
                 <div className="flex flex-col">
                   {credentials.map((cred) => (
-                    <div
+                    <button
                       key={cred.id}
+                      type="button"
                       onClick={() => {
                         setSelectedId(cred.id);
                         setShowPassword(false);
                       }}
+                      aria-pressed={cred.id === selectedId}
                       className={cn(
-                        "flex cursor-pointer items-center gap-2.5 border-l-2 border-transparent px-3 py-2 transition-colors",
+                        "flex w-full items-center gap-2.5 border-l-4 border-transparent px-3 py-2 text-left transition-colors duration-150",
                         cred.id === selectedId
-                          ? "border-l-primary bg-accent/50"
+                          ? "border-l-mint bg-accent/50"
                           : "hover:bg-accent/30",
                       )}
                     >
@@ -288,7 +290,7 @@ const AppDashboardDemo = () => {
                           {cred.username}
                         </p>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -309,9 +311,9 @@ const AppDashboardDemo = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="text-left">
-                      <h4 className="text-foreground text-sm font-semibold">
+                      <div className="text-foreground text-sm font-semibold">
                         {selected.name}
-                      </h4>
+                      </div>
                       <p className="text-muted-foreground text-xs">
                         Modified {selected.lastModified}
                       </p>
@@ -340,8 +342,12 @@ const AppDashboardDemo = () => {
                     mono
                     actions={
                       <button
+                        type="button"
                         onClick={() => setShowPassword((v) => !v)}
-                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                        className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 rounded-sm transition-colors outline-none focus-visible:ring-[3px]"
                       >
                         {showPassword ? (
                           <IconEyeOff className="size-3.5" />
@@ -361,7 +367,7 @@ const AppDashboardDemo = () => {
 
                   {selected.notes && (
                     <div className="mt-3">
-                      <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+                      <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
                         Notes
                       </span>
                       <p className="text-foreground/80 mt-1 text-xs leading-relaxed">
@@ -373,10 +379,10 @@ const AppDashboardDemo = () => {
                   <Separator className="my-3" />
 
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-[10px]">
+                    <span className="text-muted-foreground text-[11px]">
                       Created {selected.created}
                     </span>
-                    <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] font-medium">
+                    <span className="bg-mint/10 text-mint rounded px-1.5 py-0.5 text-[11px] font-medium">
                       {selected.category}
                     </span>
                   </div>
@@ -408,7 +414,7 @@ function DetailField({
   return (
     <div className="group/field hover:bg-accent/30 flex items-center justify-between rounded-md px-2 py-1.5 transition-colors">
       <div className="min-w-0 flex-1">
-        <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+        <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
           {label}
         </span>
         <p
@@ -422,7 +428,7 @@ function DetailField({
       </div>
       <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover/field:opacity-100">
         {actions}
-        <IconCopy className="text-muted-foreground hover:text-foreground size-3.5 cursor-pointer transition-colors" />
+        <IconCopy aria-hidden className="text-muted-foreground size-3.5" />
       </div>
     </div>
   );

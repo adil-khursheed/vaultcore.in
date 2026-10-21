@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Outfit, Source_Serif_4 } from "next/font/google";
 
 import "@repo/ui/globals.css";
@@ -21,26 +21,69 @@ const fontMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const description =
+  "VaultCore is a zero-knowledge password manager for logins, cards, identities, notes, and SSH keys. Everything is encrypted on your device before it reaches our servers.";
+
 export const metadata: Metadata = {
-  title: "VaultCore",
-  description:
-    "VaultCore is a secure and reliable password manager and generator. Be it your any valuable credential, store it in vaultcore safely and securely without any worry.",
+  title: {
+    default: "VaultCore — Zero-knowledge password manager",
+    template: "%s · VaultCore",
+  },
+  description,
+  applicationName: "VaultCore",
+  category: "security",
+  keywords: [
+    "password manager",
+    "zero-knowledge vault",
+    "encrypted password storage",
+    "secure notes",
+    "SSH key storage",
+    "password generator",
+  ],
+  authors: [{ name: "VaultCore" }],
+  creator: "VaultCore",
+  publisher: "VaultCore",
   metadataBase: new URL(env.NEXT_PUBLIC_WEB_APP_URL),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "VaultCore",
-    description:
-      "VaultCore is a secure and reliable password manager and generator. Be it your any valuable credential, store it in vaultcore safely and securely without any worry.",
+    title: "VaultCore — Zero-knowledge password manager",
+    description,
     type: "website",
     siteName: "VaultCore",
+    locale: "en_US",
     url: env.NEXT_PUBLIC_WEB_APP_URL,
   },
   twitter: {
     card: "summary_large_image",
-    title: "VaultCore",
-    description:
-      "VaultCore is a secure and reliable password manager and generator. Be it your any valuable credential, store it in vaultcore safely and securely without any worry.",
+    title: "VaultCore — Zero-knowledge password manager",
+    description,
     site: "@VaultCore",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
+};
+
+export const viewport: Viewport = {
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fcfcfc" },
+    { media: "(prefers-color-scheme: dark)", color: "#181818" },
+  ],
 };
 
 export default function RootLayout({

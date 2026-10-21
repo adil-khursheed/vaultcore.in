@@ -1,13 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import {
-  IconBrandGithub,
-  IconBrandLinkedin,
-  IconBrandTwitter,
-  IconShieldLock,
-} from "@tabler/icons-react";
-
-import { cn } from "@repo/ui/lib/utils";
 
 import Logo from "./logo";
 
@@ -16,44 +8,80 @@ const footerLinks = [
     title: "Product",
     links: [
       { label: "Features", href: "/#features" },
-      { label: "Pricing", href: "/pricing" },
-      { label: "Security", href: "/security" },
-      { label: "Enterprise", href: "/enterprise" },
+      { label: "Security", href: "/#security" },
+      { label: "Pricing", href: "/pricing/personal" },
     ],
   },
   {
-    title: "Company",
+    title: "Account",
     links: [
-      { label: "About Us", href: "/about" },
-      { label: "Blog", href: "/blog" },
-      { label: "Careers", href: "/careers" },
-      { label: "Contact", href: "/contact" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Cookie Policy", href: "/cookies" },
-      { label: "Compliance", href: "/compliance" },
+      { label: "Log in", href: "/login" },
+      { label: "Create an account", href: "/signup/free" },
     ],
   },
 ];
 
-const socialLinks = [
-  { icon: IconBrandTwitter, href: "https://twitter.com", label: "Twitter" },
-  { icon: IconBrandGithub, href: "https://github.com", label: "GitHub" },
-  { icon: IconBrandLinkedin, href: "https://linkedin.com", label: "LinkedIn" },
-];
+const linkClassName =
+  "text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 relative w-fit rounded-sm text-sm outline-none transition-colors duration-200 after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-foreground after:transition-[width] after:duration-300 hover:after:w-full focus-visible:ring-[3px]";
 
 const Footer = () => {
   return (
     <footer className="px-3">
-      <div className="text-foreground bg-background relative mx-auto min-h-[300px] w-full max-w-6xl overflow-hidden border-r border-l">
-        <span className="text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center font-serif text-[280px] leading-0 font-extrabold opacity-5">
-          VaultCore
-        </span>
+      <div className="bg-background relative mx-auto w-full max-w-6xl overflow-hidden border-r border-l">
+        <div className="relative z-10 grid gap-10 px-6 py-12 md:grid-cols-[1.6fr_1fr_1fr] md:px-10 md:py-16">
+          <div className="flex max-w-sm flex-col gap-4">
+            <Link
+              href="/"
+              aria-label="VaultCore home"
+              className="focus-visible:ring-ring/50 w-fit rounded-sm outline-none focus-visible:ring-[3px]"
+            >
+              <Logo className="h-8" />
+            </Link>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              A zero-knowledge vault for the passwords, cards, notes, and keys
+              that keep your life running.
+            </p>
+            <p className="text-muted-foreground flex items-center gap-2 text-xs">
+              <span className="bg-mint size-1.5 rounded-full" />
+              Encrypted on your device. Never on our servers.
+            </p>
+          </div>
+
+          {footerLinks.map((group) => (
+            <nav key={group.title} aria-label={group.title}>
+              <h2 className="text-muted-foreground text-xs font-medium tracking-[0.1em] uppercase">
+                {group.title}
+              </h2>
+              <ul className="mt-4 flex flex-col gap-3">
+                {group.links.map((link) => (
+                  <li key={link.href}>
+                    <Link href={link.href} className={linkClassName}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+        </div>
+
+        <div className="border-border relative z-10 flex flex-col gap-2 border-t px-6 py-5 sm:flex-row sm:items-center sm:justify-between md:px-10">
+          <p className="text-muted-foreground text-xs">
+            © {new Date().getFullYear()} VaultCore. All rights reserved.
+          </p>
+          <p className="text-muted-foreground text-xs">
+            Built to keep secrets quiet.
+          </p>
+        </div>
+
+        <div
+          aria-hidden
+          className="border-border relative flex items-end justify-center overflow-hidden border-t"
+        >
+          <span className="text-foreground/[0.05] translate-y-[18%] font-serif text-[clamp(4rem,16vw,13rem)] leading-[0.78] font-extrabold tracking-tight select-none">
+            VaultCore
+          </span>
+        </div>
       </div>
     </footer>
   );

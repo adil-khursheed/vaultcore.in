@@ -2,90 +2,82 @@
 
 import React from "react";
 import Link from "next/link";
-import { useTRPC } from "@/lib/trpc/client";
 import { plans } from "@/lib/utils/constants";
 import NumberFlow from "@number-flow/react";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowRight, BadgeCheck } from "lucide-react";
+import { IconArrowRight, IconCheck } from "@tabler/icons-react";
 
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@repo/ui/components/card";
 import { cn } from "@repo/ui/lib/utils";
 
 const Pricing = () => {
   return (
-    <div className="mt-8 grid w-full max-w-4xl gap-4 px-2 lg:grid-cols-3">
+    <div className="grid w-full max-w-4xl gap-4 px-2 lg:grid-cols-3">
       {plans.map((plan) => (
-        <Card
-          className={cn(
-            "relative w-full scale-100 text-left lg:hover:scale-105 lg:hover:shadow-2xl lg:hover:transition-all lg:hover:duration-300",
-            plan.isPopular && "ring-primary ring-2",
-          )}
+        <article
           key={plan.id}
+          aria-labelledby={`plan-${plan.id}`}
+          className={cn(
+            "group bg-card relative flex flex-col rounded-xl border p-6 shadow-sm transition-[transform,box-shadow] duration-300 ease-out hover:shadow-xl motion-safe:hover:-translate-y-1",
+            plan.isPopular ? "border-mint/60 ring-mint ring-2" : "",
+          )}
         >
           {plan.isPopular && (
-            <Badge className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full">
-              Popular
+            <Badge className="bg-mint text-mint-ink absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full">
+              Most popular
             </Badge>
           )}
-          <CardHeader>
-            <CardTitle className="text-xl font-medium">{plan.name}</CardTitle>
-            <CardDescription>
-              <p>{plan.description}</p>
-              {typeof plan.yearlyPriceUsd === "number" ? (
-                <NumberFlow
-                  className="text-foreground font-medium"
-                  format={{
-                    style: "currency",
-                    currency: "USD",
-                    minimumFractionDigits: Number.isInteger(plan.yearlyPriceUsd)
-                      ? 0
-                      : 2,
-                    maximumFractionDigits: 2,
-                  }}
-                  suffix={`/year`}
-                  value={plan.yearlyPriceUsd / 100}
-                />
-              ) : (
-                <span className="text-foreground font-medium">
-                  {plan.yearlyPriceUsd / 100}.
-                </span>
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-2">
-            {plan.features &&
-              plan.features.map((feature, index) => (
-                <div
-                  className="text-muted-foreground flex gap-2 text-sm"
-                  key={index}
-                >
-                  <BadgeCheck className="h-lh w-4 flex-none" />
-                  {feature}
-                </div>
-              ))}
-          </CardContent>
-          <CardFooter>
-            <Button
-              asChild
-              className="w-full"
-              variant={plan.isPopular ? "default" : "secondary"}
+
+          <div className="flex flex-col gap-2">
+            <h3
+              id={`plan-${plan.id}`}
+              className="text-foreground text-lg font-semibold"
             >
-              <Link href={`/signup/${plan.id}`}>
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardFooter>
-        </Card>
+              {plan.name}
+            </h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              {plan.description}
+            </p>
+          </div>
+
+          <div className="mt-6 flex items-baseline gap-1">
+            <span className="text-foreground text-3xl font-semibold tracking-tight">
+              <NumberFlow
+                format={{
+                  style: "currency",
+                  currency: "USD",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                }}
+                value={plan.yearlyPriceUsd / 100}
+              />
+            </span>
+            <span className="text-muted-foreground text-sm">/year</span>
+          </div>
+
+          <ul className="border-border mt-6 flex flex-1 flex-col gap-3 border-t pt-6">
+            {plan.features.map((feature) => (
+              <li
+                key={feature}
+                className="text-muted-foreground flex items-start gap-2.5 text-sm"
+              >
+                <IconCheck className="text-mint mt-0.5 size-4 shrink-0" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+
+          <Button
+            asChild
+            className="group/cta mt-6 w-full"
+            variant={plan.isPopular ? "default" : "outline"}
+          >
+            <Link href={`/signup/${plan.id}`}>
+              {plan.cta}
+              <IconArrowRight className="size-4 transition-transform duration-300 ease-out group-hover/cta:translate-x-1" />
+            </Link>
+          </Button>
+        </article>
       ))}
     </div>
   );

@@ -17,6 +17,8 @@
   --popover-foreground: oklch(0.4386 0 0);
   --primary: oklch(0.8348 0.1302 160.908);
   --primary-foreground: oklch(0.2626 0.0147 166.4589);
+  --mint: oklch(0.8348 0.1302 160.908);
+  --mint-ink: oklch(0.2626 0.0147 166.4589);
   --secondary: oklch(0.994 0 0);
   --secondary-foreground: oklch(0.2046 0 0);
   --muted: oklch(0.9461 0 0);
@@ -77,6 +79,8 @@
   --popover-foreground: oklch(0.7348 0 0);
   --primary: oklch(0.4365 0.1044 156.7556);
   --primary-foreground: oklch(0.9213 0.0135 167.1556);
+  --mint: oklch(0.8348 0.1302 160.908);
+  --mint-ink: oklch(0.2626 0.0147 166.4589);
   --secondary: oklch(0.2603 0 0);
   --secondary-foreground: oklch(0.9851 0 0);
   --muted: oklch(0.2393 0 0);
@@ -135,6 +139,8 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-mint: var(--mint);
+  --color-mint-ink: var(--mint-ink);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -190,9 +196,32 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
   body {
     @apply bg-background text-foreground overflow-x-hidden;
     letter-spacing: var(--tracking-normal);
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 38%, transparent);
+    color: var(--foreground);
+  }
+  input,
+  textarea {
+    caret-color: var(--primary);
+  }
+  @supports (scrollbar-width: thin) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
   }
   .bg_pattern {
     @apply bg-[repeating-linear-gradient(315deg,var(--pattern-fg)_0,var(--pattern-fg)_1px,transparent_0,transparent_50%)] bg-size-[5px_5px] bg-fixed [--pattern-fg:var(--color-border)]/50;

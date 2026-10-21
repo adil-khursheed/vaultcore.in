@@ -231,7 +231,10 @@ export function initAuth<
                 metadata: { role: member.role },
               })
               .catch((error: unknown) => {
-                console.error("[AUTH] Failed to log member_accepted audit event", error);
+                console.error(
+                  "[AUTH] Failed to log member_accepted audit event",
+                  error,
+                );
               });
           },
         },

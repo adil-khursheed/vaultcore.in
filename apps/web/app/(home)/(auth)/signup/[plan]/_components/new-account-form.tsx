@@ -75,11 +75,13 @@ const NewAccountForm = () => {
                   <InputGroupInput
                     id={field.name}
                     name={field.name}
+                    type="email"
+                    autoComplete="email"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     aria-invalid={isInvalid}
-                    placeholder="Enter your email"
+                    placeholder="you@example.com"
                     className="h-full"
                   />
 
@@ -100,12 +102,13 @@ const NewAccountForm = () => {
               <Button
                 type="submit"
                 disabled={!canSubmit || isSubmitting}
-                className="h-10"
+                className="h-11"
+                aria-busy={isSubmitting}
               >
                 {isSubmitting ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
-                  "Sign Up"
+                  "Continue"
                 )}
               </Button>
             );
