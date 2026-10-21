@@ -1,6 +1,6 @@
 # VaultCore
 
-VaultCore is a secure, open-source password manager and digital vault system. This repository is structured as a modern full-stack Turborepo containing both the core Next.js Web application and the companion Chrome Extension.
+VaultCore is a zero-knowledge password manager and digital vault for logins, cards, identities, secure notes, and SSH keys, with organization-based sharing, per-member vault key access, audit logging, and key rotation. Everything is encrypted client-side before it reaches the server. This repository is structured as a Turborepo containing the core Next.js web application and the companion Chrome extension.
 
 ## 📦 What's inside?
 
