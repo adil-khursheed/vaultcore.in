@@ -7,7 +7,6 @@ import {
   webhooks,
 } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
-import { waitUntil } from "@vercel/functions";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
@@ -223,23 +222,21 @@ export function initAuth<
               })
               .onConflictDoNothing();
 
-            // Log the member_accepted audit event (best-effort, non-blocking)
-            waitUntil(
-              db
-                .insert(auditLog)
-                .values({
-                  actorUserId: member.userId,
-                  organizationId: organization.id,
-                  action: "member_accepted",
-                  metadata: { role: member.role },
-                })
-                .catch((error: unknown) => {
-                  console.error(
-                    "[AUTH] Failed to log member_accepted audit event",
-                    error,
-                  );
-                }),
-            );
+            // Log the member_accepted audit event (best-effort)
+            await db
+              .insert(auditLog)
+              .values({
+                actorUserId: member.userId,
+                organizationId: organization.id,
+                action: "member_accepted",
+                metadata: { role: member.role },
+              })
+              .catch((error: unknown) => {
+                console.error(
+                  "[AUTH] Failed to log member_accepted audit event",
+                  error,
+                );
+              });
           },
         },
       }),
