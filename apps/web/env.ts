@@ -18,7 +18,7 @@ export const env = createEnv({
   server: {
     DATABASE_URL: z.url(),
     JWT_SECRET: z.string().min(1),
-    PORT: z.string(),
+    PORT: z.string().optional(),
   },
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
