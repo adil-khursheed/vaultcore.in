@@ -17,6 +17,23 @@ export const metadata: Metadata = {
     title: "VaultCore — The quiet vault for your passwords",
     description:
       "A zero-knowledge password manager for logins, cards, identities, notes, and SSH keys. Encrypted on your device, shared safely with the people you trust.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "VaultCore — The quiet vault for your passwords",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [
+      {
+        url: "/og-image.png",
+        alt: "VaultCore — The quiet vault for your passwords",
+      },
+    ],
   },
 };
 
