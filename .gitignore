@@ -37,3 +37,10 @@ yarn-error.log*
 .DS_Store
 *.pem
 .env*
+
+# Agents
+.agent
+.agents
+.codex
+.impeccable
+.opencode
