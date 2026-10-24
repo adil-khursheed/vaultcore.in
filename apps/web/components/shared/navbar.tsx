@@ -31,7 +31,9 @@ const Navbar = () => {
 
   const isPricing = pathname.startsWith("/pricing");
   const showNavigation =
-    !pathname.startsWith("/verify") && !pathname.startsWith("/lock");
+    !pathname.startsWith("/verify") &&
+    !pathname.startsWith("/lock") &&
+    !pathname.startsWith("/organization");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);

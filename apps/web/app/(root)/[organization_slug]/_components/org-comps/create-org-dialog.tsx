@@ -2,13 +2,9 @@
 
 import React from "react";
 
-import { Button } from "@repo/ui/components/button";
 import {
-  Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@repo/ui/components/dialog";
@@ -25,7 +21,7 @@ const CreateOrgDialog = () => {
         </DialogDescription>
       </DialogHeader>
 
-      <CreateOrgForm />
+      <CreateOrgForm variant="dialog" />
     </DialogContent>
   );
 };
