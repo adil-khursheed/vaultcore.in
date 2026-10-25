@@ -91,8 +91,15 @@ const orgMemberMiddleware = t.middleware(
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
-    const input = rawInput as { organizationId?: string } | undefined;
-    const organizationId = input?.organizationId;
+    console.log("ORG_MW_INPUT", JSON.stringify(rawInput));
+    const input = rawInput as
+      | { organizationId?: string; json?: { organizationId?: string } }
+      | undefined;
+    const organizationId =
+      input?.organizationId ??
+      input?.json?.organizationId ??
+      (ctx.session.session as { activeOrganizationId?: string })
+        ?.activeOrganizationId;
 
     if (!organizationId) {
       throw new TRPCError({

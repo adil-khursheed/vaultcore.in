@@ -2,6 +2,7 @@ import React from "react";
 
 import { cn } from "@repo/ui/lib/utils";
 
+// eslint-disable-next-line react/prop-types
 const VaultCore = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg

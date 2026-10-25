@@ -3,11 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import {
-  IconLockPassword,
-  IconStarFilled,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconLockPassword, IconStar, IconTrash } from "@tabler/icons-react";
 
 import {
   SidebarMenu,
@@ -24,7 +20,7 @@ const menuItems = [
   {
     title: "Favorites",
     href: "/:org_slug/favorites",
-    icon: IconStarFilled,
+    icon: IconStar,
   },
   {
     title: "Trash",

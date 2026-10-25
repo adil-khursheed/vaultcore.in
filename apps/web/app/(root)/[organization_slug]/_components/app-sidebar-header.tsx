@@ -1,12 +1,11 @@
 "use client";
 
-import React from "react";
-import { useParams, useRouter } from "next/navigation";
-import VaultCore from "@/components/icons/vaultcore";
+import React, { useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import Logo from "@/components/shared/logo";
 import { authClient } from "@/lib/auth/client";
 import { IconBuilding, IconPlus } from "@tabler/icons-react";
-import { type Organization } from "better-auth/plugins";
 import { ChevronDown } from "lucide-react";
 
 import {
@@ -14,7 +13,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/ui/components/avatar";
-import { Dialog, DialogTrigger } from "@repo/ui/components/dialog";
+import { Dialog } from "@repo/ui/components/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,15 +29,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@repo/ui/components/sidebar";
-import { cn } from "@repo/ui/lib/utils";
 
 import CreateOrgDialog from "./org-comps/create-org-dialog";
 import OrgMenuItem from "./org-comps/org-menu-item";
 
 const AppSidebarHeader = () => {
   const { organization_slug } = useParams<{ organization_slug: string }>();
-  const router = useRouter();
   const { isMobile } = useSidebar();
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data: activeOrganization } = authClient.useActiveOrganization();
   const { data: organizations } = authClient.useListOrganizations();
@@ -46,29 +44,38 @@ const AppSidebarHeader = () => {
   return (
     <SidebarMenu className="gap-3">
       <SidebarMenuItem>
-        <SidebarMenuButton className="hover:bg-transparent">
-          <Logo />
+        <SidebarMenuButton asChild className="hover:bg-transparent">
+          <Link
+            href={`/${organization_slug}/all-items`}
+            aria-label="Go to all items"
+          >
+            <Logo />
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
-        <Dialog>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton
                 size={"lg"}
+                aria-label="Switch organization"
                 className="flex items-center justify-between"
               >
-                <div className="flex items-center gap-2">
-                  <Avatar className="size-7 rounded-lg">
-                    <AvatarImage src={activeOrganization?.logo || undefined} />
+                <div className="flex min-w-0 items-center gap-2">
+                  <Avatar className="size-7 shrink-0 rounded-lg">
+                    <AvatarImage
+                      src={activeOrganization?.logo || undefined}
+                      alt=""
+                    />
                     <AvatarFallback>
-                      <IconBuilding className="size-4" />
+                      <IconBuilding className="size-4" aria-hidden="true" />
                     </AvatarFallback>
                   </Avatar>
-                  <span>{activeOrganization?.name}</span>
+                  <span className="truncate">{activeOrganization?.name}</span>
                 </div>
-                <ChevronDown />
+                <ChevronDown className="size-4 shrink-0" aria-hidden="true" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
 
@@ -93,13 +100,9 @@ const AppSidebarHeader = () => {
                   <DropdownMenuSeparator />
                 )}
 
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <DialogTrigger asChild>
-                    <div className="flex items-center gap-2">
-                      <IconPlus className="mr-2 size-4" />
-                      <span>Create Organization</span>
-                    </div>
-                  </DialogTrigger>
+                <DropdownMenuItem onSelect={() => setCreateOpen(true)}>
+                  <IconPlus className="size-4" aria-hidden="true" />
+                  <span>Create Organization</span>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
@@ -58,6 +58,7 @@ export const SignUpSchema = z
 const SignUpForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  const verifiedTokenRef = useRef<string | null>(null);
 
   const searchParams = useSearchParams();
 
@@ -83,9 +84,12 @@ const SignUpForm = () => {
   );
 
   useEffect(() => {
-    if (token) {
-      verifyToken.mutate({ token });
+    if (!token || verifiedTokenRef.current === token) {
+      return;
     }
+
+    verifiedTokenRef.current = token;
+    verifyToken.mutate({ token });
   }, [token, verifyToken]);
 
   const grantVaultAccess = useMutation(

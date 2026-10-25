@@ -6,10 +6,10 @@ import EmptyList from "@/components/shared/empty-list";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
 import { TCredential } from "@/lib/types/types";
-import { decryptString } from "@repo/crypto";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { AlertTriangleIcon, ChevronRight, Loader2 } from "lucide-react";
 
+import { decryptString } from "@repo/crypto";
 import { useCredentialStore, useVaultStore } from "@repo/store";
 import {
   Avatar,
@@ -18,11 +18,21 @@ import {
 } from "@repo/ui/components/avatar";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
-import { Card, CardContent, CardHeader } from "@repo/ui/components/card";
 import { SheetTrigger } from "@repo/ui/components/sheet";
-import { useSidebar } from "@repo/ui/components/sidebar";
 import { Skeleton } from "@repo/ui/components/skeleton";
 import { cn } from "@repo/ui/lib/utils";
+
+const CredentialRowSkeleton = () => {
+  return (
+    <div className="border-border bg-background flex shrink-0 items-center gap-4 rounded-md border px-4 py-3 shadow-xs">
+      <Skeleton className="size-8 shrink-0 rounded-full" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <Skeleton className="h-3 w-32 max-w-full" />
+        <Skeleton className="h-3 w-20 max-w-full" />
+      </div>
+    </div>
+  );
+};
 
 const DecryptedCredential = ({
   cred,
@@ -39,6 +49,8 @@ const DecryptedCredential = ({
   const { setSelectedCredential, selectedCredential } = useCredentialStore();
 
   React.useEffect(() => {
+    let cancelled = false;
+
     const decrypt = async () => {
       try {
         const username = cred.username
@@ -47,36 +59,39 @@ const DecryptedCredential = ({
         const url = cred.url
           ? await decryptString(cred.url, vaultKey)
           : undefined;
-        setDecrypted({ username, url });
+
+        if (!cancelled) {
+          setDecrypted({ username, url });
+        }
       } catch (error) {
         console.error("Failed to decrypt credential:", error);
+
+        if (!cancelled) {
+          setDecrypted({ username: "" });
+        }
       }
     };
-    decrypt();
+
+    void decrypt();
+
+    return () => {
+      cancelled = true;
+    };
   }, [cred, vaultKey]);
 
   if (!decrypted) {
-    return (
-      <Card className="hover:bg-accent/50 transition-all">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Skeleton className="h-6 w-32" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="mt-2 h-4 w-full" />
-        </CardContent>
-      </Card>
-    );
+    return <CredentialRowSkeleton />;
   }
 
   return (
     <SheetTrigger asChild>
       <Button
         variant={"outline"}
+        aria-current={selectedCredential?.id === cred.id ? "true" : undefined}
         className={cn(
-          "h-auto w-full cursor-pointer justify-start",
+          "relative h-auto w-full shrink-0 cursor-pointer justify-start overflow-hidden",
           selectedCredential?.id === cred.id &&
-            "border-primary dark:border-primary border-l-4",
+            "after:bg-primary after:absolute after:inset-y-0 after:left-0 after:w-1 after:content-['']",
         )}
         onClick={() => {
           setSelectedCredential(null);
@@ -101,7 +116,10 @@ const DecryptedCredential = ({
             <div className="flex min-w-0 flex-col gap-y-1 text-left">
               <div className="flex items-center gap-2">
                 <p className="truncate font-medium">{cred.title}</p>
-                <Badge variant="secondary" className="text-[10px] capitalize">
+                <Badge
+                  variant="secondary"
+                  className="border-border bg-muted text-muted-foreground text-[10px] capitalize"
+                >
                   {cred.type.replace("_", " ")}
                 </Badge>
               </div>
@@ -113,7 +131,7 @@ const DecryptedCredential = ({
             </div>
           </div>
 
-          <ChevronRight className="size-4" />
+          <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
         </div>
       </Button>
     </SheetTrigger>
@@ -140,20 +158,27 @@ const ItemsList = ({
 
   const { data: session } = authClient.useSession();
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteQuery({
-      ...trpc.credential.getCredentials.infiniteQueryOptions({
-        organizationId: session?.session.activeOrganizationId as string,
-        limit: 20,
-        type,
-        isFavorite,
-        isDeleted,
-        search,
-      }),
-      initialPageParam: null as string | null,
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-      enabled: !isLocked && !!session?.session.activeOrganizationId,
-    });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    refetch,
+  } = useInfiniteQuery({
+    ...trpc.credential.getCredentials.infiniteQueryOptions({
+      organizationId: session?.session.activeOrganizationId as string,
+      limit: 20,
+      type,
+      isFavorite,
+      isDeleted,
+      search,
+    }),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    enabled: !isLocked && !!session?.session.activeOrganizationId,
+  });
 
   React.useEffect(() => {
     const observer = new IntersectionObserver(
@@ -184,34 +209,73 @@ const ItemsList = ({
 
   const credentials = data?.pages.flatMap((page) => page.items) ?? [];
 
+  const typeLabels = {
+    login: "logins",
+    card: "cards",
+    identity: "identities",
+    note: "notes",
+    ssh_key: "SSH keys",
+  } as const;
+
+  const emptyCopy = search
+    ? {
+        title: `No results for “${search}”.`,
+        subtitle: "Try a different name, username, or website.",
+      }
+    : isDeleted
+      ? {
+          title: "Trash is empty.",
+          subtitle: "Items you delete will appear here.",
+        }
+      : isFavorite
+        ? {
+            title: "No favorites yet.",
+            subtitle: "Star an item to find it here quickly.",
+          }
+        : type
+          ? {
+              title: `No ${typeLabels[type]} yet.`,
+              subtitle: "Create a new item to get started.",
+            }
+          : {
+              title: "No items found.",
+              subtitle: "Create a new credential to get started.",
+            };
+
   return (
     <div className="flex h-full flex-col gap-3 overflow-hidden p-3">
-      {isLoading ? (
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
+      {isError ? (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center">
+          <AlertTriangleIcon
+            className="text-muted-foreground size-8"
+            aria-hidden="true"
+          />
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Couldn&apos;t load your items</p>
+            <p className="text-muted-foreground text-sm">
+              Check your connection and try again.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => void refetch()}>
+            Try again
+          </Button>
+        </div>
+      ) : isLoading ? (
+        <div
+          className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain"
+          role="status"
+          aria-label="Loading vault items"
+        >
           {[...Array(10)].map((_, i) => (
-            <Skeleton
-              key={i}
-              className="bg-background dark:bg-input/30 dark:border-input w-full rounded-md border px-4 py-3 shadow-xs"
-            >
-              <div className="flex items-center gap-2">
-                <Skeleton className="size-8 rounded-full" />
-                <div className="flex flex-col gap-1">
-                  <Skeleton className="h-3 w-24" />
-                  <Skeleton className="h-3 w-16" />
-                </div>
-              </div>
-            </Skeleton>
+            <CredentialRowSkeleton key={i} />
           ))}
         </div>
       ) : credentials.length === 0 ? (
         <div className="flex h-full w-full flex-col items-center justify-center">
-          <EmptyList
-            title="No items found."
-            subtitle="Create a new credential to get started."
-          />
+          <EmptyList title={emptyCopy.title} subtitle={emptyCopy.subtitle} />
         </div>
       ) : (
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
           {credentials.map((cred) => (
             <DecryptedCredential
               key={cred.id}
@@ -220,7 +284,7 @@ const ItemsList = ({
             />
           ))}
 
-          <div ref={loadMoreRef} className="h-4 w-full">
+          <div ref={loadMoreRef} className="h-4 w-full shrink-0">
             {isFetchingNextPage && (
               <div className="flex justify-center p-2">
                 <Loader2 className="text-primary size-4 animate-spin" />
@@ -234,4 +298,3 @@ const ItemsList = ({
 };
 
 export default ItemsList;
-

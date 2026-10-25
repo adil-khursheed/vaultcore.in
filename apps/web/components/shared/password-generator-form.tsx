@@ -11,17 +11,11 @@ import { Checkbox } from "@repo/ui/components/checkbox";
 import { DialogClose, DialogFooter } from "@repo/ui/components/dialog";
 import {
   Field,
-  FieldContent,
   FieldDescription,
   FieldError,
   FieldLabel,
 } from "@repo/ui/components/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@repo/ui/components/input-group";
+import { InputGroup, InputGroupInput } from "@repo/ui/components/input-group";
 import {
   Tabs,
   TabsContent,
@@ -502,7 +496,6 @@ const PasswordGeneratorForm = ({
     validators: {
       onChange: ({ value }) => {
         const result = PasswordOptionsSchema.safeParse(value);
-        console.log(result);
         if (!result.success) {
           return result.error.message;
         }
@@ -642,13 +635,12 @@ const PasswordGeneratorForm = ({
       selector={(state) => state.values}
       children={(formValues) => (
         <div className="flex flex-col gap-6">
-          <SideEffectTrigger
-            values={formValues as any}
-            onValuesChange={generate}
-          />
+          <SideEffectTrigger values={formValues} onValuesChange={generate} />
           <Tabs
             value={formValues.type}
-            onValueChange={(val) => form.setFieldValue("type", val as any)}
+            onValueChange={(val) =>
+              form.setFieldValue("type", val as PasswordOptions["type"])
+            }
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2">
@@ -664,10 +656,10 @@ const PasswordGeneratorForm = ({
                     <span
                       key={i}
                       className={cn(
-                        CHAR_SETS.numbers.includes(char) && "text-blue-500",
-                        CHAR_SETS.special.includes(char) && "text-blue-400",
+                        CHAR_SETS.numbers.includes(char) && "text-primary",
+                        CHAR_SETS.special.includes(char) && "text-primary/70",
                         AMBIGUOUS_CHARS.includes(char) &&
-                          "bg-yellow-500/10 text-yellow-500",
+                          "bg-muted text-muted-foreground rounded-xs",
                       )}
                     >
                       {char}
@@ -678,23 +670,28 @@ const PasswordGeneratorForm = ({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => generate(formValues as any)}
+                    onClick={() => generate(formValues)}
                     type="button"
+                    aria-label="Regenerate password"
                     title="Regenerate"
                   >
-                    <IconRefresh className="size-4" />
+                    <IconRefresh className="size-4" aria-hidden="true" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon-sm"
                     onClick={copyToClipboard}
                     type="button"
+                    aria-label="Copy password"
                     title="Copy"
                   >
                     {copied ? (
-                      <IconCheck className="size-4 text-green-500" />
+                      <IconCheck
+                        className="text-primary size-4"
+                        aria-hidden="true"
+                      />
                     ) : (
-                      <IconCopy className="size-4" />
+                      <IconCopy className="size-4" aria-hidden="true" />
                     )}
                   </Button>
                 </div>

@@ -19,7 +19,6 @@ import {
   DialogTrigger,
 } from "@repo/ui/components/dialog";
 import { SidebarMenuItem } from "@repo/ui/components/sidebar";
-import { cn } from "@repo/ui/lib/utils";
 
 const UpgradePlanButton = ({ organizationId }: { organizationId: string }) => {
   const trpc = useTRPC();
@@ -42,7 +41,7 @@ const UpgradePlanButton = ({ organizationId }: { organizationId: string }) => {
   const plansToUpgrade = useMemo(
     () =>
       plans.filter((plan) => plan.id !== data.plan.id && plan.id !== "free"),
-    [data.plan],
+    [data.plan.id, plans],
   );
 
   const handlePlanCheckout = async (planId: string) => {
@@ -76,18 +75,16 @@ const UpgradePlanButton = ({ organizationId }: { organizationId: string }) => {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="flex w-full items-center justify-center gap-8">
+              <div className="flex w-full flex-col gap-4 sm:flex-row sm:justify-center">
                 {plansToUpgrade.map((plan, index) => (
                   <motion.div
-                    key={plan.name}
+                    key={plan.id}
                     initial={{ opacity: 0, y: 10, filter: "blur(10px)" }}
                     whileInView={{ opacity: 1, y: 0, filter: "blur(0)" }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
                     whileHover={{ y: -5 }}
-                    className={cn(
-                      "bg-card border-border relative flex flex-col rounded-3xl border p-8 shadow-sm transition-all",
-                    )}
+                    className="bg-card border-border relative flex w-full flex-col rounded-3xl border p-6 shadow-sm transition-all sm:max-w-sm sm:p-8"
                   >
                     <div className="mb-8">
                       <h3 className="text-foreground text-2xl font-bold">
@@ -120,7 +117,7 @@ const UpgradePlanButton = ({ organizationId }: { organizationId: string }) => {
                           />
                         ) : (
                           <span className="text-foreground font-medium">
-                            {plan.yearlyPriceUsd && plan.yearlyPriceUsd / 100}.
+                            Contact us
                           </span>
                         )}
                       </div>

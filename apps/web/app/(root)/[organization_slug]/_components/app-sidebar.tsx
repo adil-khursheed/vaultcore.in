@@ -19,7 +19,9 @@ import NavUser from "./app-sidebar-footer/nav-user";
 import UpgradePlanButton from "./app-sidebar-footer/upgrade-plan-button";
 import AppSidebarHeader from "./app-sidebar-header";
 import AppSidebarMenu from "./app-sidebar-menu";
+import AppSidebarOrgMenu from "./app-sidebar-org-menu";
 import AppSidebarTypesMenu from "./app-sidebar-types-menu";
+import SidebarAutoClose from "./sidebar-auto-close";
 
 const AppSidebar = async ({
   ...props
@@ -40,6 +42,8 @@ const AppSidebar = async ({
   return (
     <HydrateClient>
       <Sidebar {...props}>
+        <SidebarAutoClose />
+
         <SidebarHeader className="p-0">
           <SidebarGroup>
             <SidebarGroupContent>
@@ -59,6 +63,13 @@ const AppSidebar = async ({
             <SidebarGroupLabel>Types</SidebarGroupLabel>
             <SidebarGroupContent>
               <AppSidebarTypesMenu />
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Organization</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <AppSidebarOrgMenu />
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>

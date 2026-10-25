@@ -3,11 +3,12 @@
 import React from "react";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
-import { encryptString } from "@repo/crypto";
 import { IconPlus } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { encryptString } from "@repo/crypto";
+import { ItemFormValues } from "@repo/db/types";
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {
@@ -38,22 +39,28 @@ const AddItemButton = () => {
         setOpen(false);
       },
       onError: (error) => {
-        console.log(error.message);
+        console.error(error.message);
         toast.error(error.message);
       },
     }),
   );
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: ItemFormValues) => {
     if (!vaultKey || !session?.session.activeOrganizationId) {
       toast.error("Vault is locked or organization not selected");
       return;
     }
 
     try {
-      const { title, type, note, isFavorite, ...rest } = values;
+      const { title, type, note, isFavorite, ...rest } =
+        values as ItemFormValues & {
+          username?: string;
+          password?: string;
+          url?: string;
+          otp?: string;
+        };
 
-      let encryptedData: any = {};
+      const encryptedData: Record<string, string | undefined> = {};
       let username = "";
       let password = "";
       let url = "";
@@ -125,4 +132,3 @@ const AddItemButton = () => {
 };
 
 export default AddItemButton;
-

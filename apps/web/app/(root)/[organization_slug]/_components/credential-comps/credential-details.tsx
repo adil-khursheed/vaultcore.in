@@ -8,7 +8,6 @@ import {
   IconEye,
   IconEyeOff,
   IconLockPassword,
-  IconTrash,
 } from "@tabler/icons-react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -28,64 +27,88 @@ import {
   SheetTitle,
 } from "@repo/ui/components/sheet";
 import { useSidebar } from "@repo/ui/components/sidebar";
+import { cn } from "@repo/ui/lib/utils";
 
 import DeleteCredential from "./delete-credential";
 import EditCredential from "./edit-credential";
 import MarkFavorite from "./mark-favorite";
+import RestoreCredential from "./restore-credential";
 
 const CopyableField = ({
   label,
   value,
   isSecret = false,
+  mono = false,
 }: {
   label: string;
   value: string | undefined | null;
   isSecret?: boolean;
+  mono?: boolean;
 }) => {
   const [copied, setCopied] = useState(false);
   const [show, setShow] = useState(!isSecret);
 
   if (!value) return null;
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    toast.success(`${label} copied to clipboard`);
-    setTimeout(() => setCopied(false), 2000);
+  const isLongValue = value.includes("\n") || value.length > 120;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      toast.success(`${label} copied to clipboard`);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error(`Could not copy ${label.toLowerCase()}`);
+    }
   };
 
   return (
-    <div className="group bg-accent/30 hover:bg-accent/50 flex flex-col gap-1.5 rounded-lg p-3 transition-colors">
+    <div className="group bg-accent/30 hover:bg-accent/50 flex shrink-0 flex-col gap-1.5 rounded-lg p-3 transition-colors">
       <span className="text-muted-foreground text-xs font-medium">{label}</span>
       <div className="flex items-center justify-between gap-2">
-        <span className="flex-1 truncate text-sm font-medium">
+        <div
+          className={cn(
+            "min-w-0 flex-1 text-sm font-medium",
+            mono && "font-mono",
+            isLongValue
+              ? "max-h-40 overflow-y-auto break-all whitespace-pre-wrap"
+              : "truncate",
+          )}
+        >
           {isSecret && !show ? "•".repeat(12) : value}
-        </span>
-        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        </div>
+        <div className="flex shrink-0 items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
           {isSecret && (
             <Button
+              type="button"
               variant="ghost"
               size="icon"
               className="h-7 w-7"
+              aria-label={show ? `Hide ${label}` : `Show ${label}`}
+              title={show ? `Hide ${label}` : `Show ${label}`}
               onClick={() => setShow(!show)}
             >
               {show ? (
-                <IconEyeOff className="size-4" />
+                <IconEyeOff className="size-4" aria-hidden="true" />
               ) : (
-                <IconEye className="size-4" />
+                <IconEye className="size-4" aria-hidden="true" />
               )}
             </Button>
           )}
           <Button
+            type="button"
             variant="ghost"
             size="icon"
             className="h-7 w-7"
+            aria-label={`Copy ${label}`}
+            title={`Copy ${label}`}
             onClick={handleCopy}
           >
             {copied ? (
-              <IconCheck className="size-4 text-emerald-500" />
+              <IconCheck className="text-primary size-4" aria-hidden="true" />
             ) : (
-              <IconCopy className="size-4" />
+              <IconCopy className="size-4" aria-hidden="true" />
             )}
           </Button>
         </div>
@@ -106,9 +129,12 @@ const CredentialDetails = () => {
   const { vaultKey } = useVaultStore();
 
   useEffect(() => {
+    let cancelled = false;
+
     const decryptData = async () => {
       if (!selectedCredential || !vaultKey) return;
       setIsLoading(true);
+      setDecryptedFields({});
 
       const decrypted: Record<string, string> = {};
 
@@ -155,15 +181,26 @@ const CredentialDetails = () => {
             vaultKey,
           );
 
-        setDecryptedFields(decrypted);
-      } catch (err) {
-        toast.error("Failed to decrypt some fields");
+        if (!cancelled) {
+          setDecryptedFields(decrypted);
+        }
+      } catch {
+        if (!cancelled) {
+          setDecryptedFields({});
+          toast.error("Failed to decrypt some fields");
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     void decryptData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedCredential, vaultKey]);
 
   if (!selectedCredential) {
@@ -188,7 +225,7 @@ const CredentialDetails = () => {
     <>
       {isMobile ? (
         <SheetContent>
-          <SheetHeader className="pb-0">
+          <SheetHeader className="shrink-0 pb-0">
             <SheetTitle>Credential Details</SheetTitle>
             <SheetDescription className="sr-only">
               Selected Credential
@@ -223,7 +260,7 @@ function SelectedCredential({
   isLoading: boolean;
 }) {
   return (
-    <div className="bg-background flex h-full flex-1 flex-col overflow-hidden">
+    <div className="bg-background flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       {/* Header Block */}
       <div className="flex shrink-0 items-center justify-between border-b p-4">
         <div className="flex min-w-0 items-center gap-3">
@@ -249,16 +286,22 @@ function SelectedCredential({
 
         {/* Actions */}
         <div className="flex shrink-0 items-center gap-1">
-          <MarkFavorite />
+          {selectedCredential.isDeleted ? (
+            <RestoreCredential />
+          ) : (
+            <>
+              <MarkFavorite />
 
-          <EditCredential decryptedFields={decryptedFields} />
+              <EditCredential decryptedFields={decryptedFields} />
 
-          <DeleteCredential />
+              <DeleteCredential />
+            </>
+          )}
         </div>
       </div>
 
       {/* Scrollable Fields container */}
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain p-4">
         {isLoading ? (
           <div className="flex justify-center p-8">
             <Loader2 className="text-muted-foreground size-6 animate-spin" />
@@ -275,14 +318,17 @@ function SelectedCredential({
                   label="Password"
                   value={decryptedFields.password}
                   isSecret
+                  mono
                 />
                 <CopyableField
                   label="Website URL"
                   value={decryptedFields.url}
+                  mono
                 />
                 <CopyableField
                   label="Authenticator (OTP)"
                   value={decryptedFields.otp}
+                  mono
                 />
               </>
             )}
@@ -297,6 +343,7 @@ function SelectedCredential({
                   label="Card Number"
                   value={decryptedFields.cardNumber}
                   isSecret
+                  mono
                 />
                 <div className="grid grid-cols-2 gap-3">
                   <CopyableField label="Brand" value={decryptedFields.brand} />
@@ -313,6 +360,7 @@ function SelectedCredential({
                   label="CVV"
                   value={decryptedFields.cvv}
                   isSecret
+                  mono
                 />
               </>
             )}
@@ -349,16 +397,19 @@ function SelectedCredential({
                   label="Social Security Number"
                   value={decryptedFields.socialSecurityNumber}
                   isSecret
+                  mono
                 />
                 <CopyableField
                   label="Passport Number"
                   value={decryptedFields.passportNumber}
                   isSecret
+                  mono
                 />
                 <CopyableField
                   label="License Number"
                   value={decryptedFields.licenseNumber}
                   isSecret
+                  mono
                 />
                 <CopyableField label="Email" value={decryptedFields.email} />
                 <CopyableField label="Phone" value={decryptedFields.phone} />
@@ -406,21 +457,24 @@ function SelectedCredential({
                 <CopyableField
                   label="Public Key"
                   value={decryptedFields.publicKey}
+                  mono
                 />
                 <CopyableField
                   label="Private Key"
                   value={decryptedFields.privateKey}
                   isSecret
+                  mono
                 />
                 <CopyableField
                   label="Fingerprint"
                   value={decryptedFields.fingerprint}
+                  mono
                 />
               </>
             )}
 
             {selectedCredential.note && (
-              <div className="bg-accent/30 flex flex-col gap-1.5 rounded-lg p-3">
+              <div className="bg-accent/30 flex shrink-0 flex-col gap-1.5 rounded-lg p-3">
                 <span className="text-muted-foreground text-xs font-medium">
                   Secure Note
                 </span>

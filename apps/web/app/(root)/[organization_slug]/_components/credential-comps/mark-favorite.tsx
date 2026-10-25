@@ -26,6 +26,17 @@ const MarkFavorite = () => {
       variant="ghost"
       size="icon"
       className="text-muted-foreground size-8 cursor-pointer"
+      aria-label={
+        selectedCredential?.isFavorite
+          ? "Remove from favorites"
+          : "Add to favorites"
+      }
+      aria-pressed={selectedCredential?.isFavorite ?? false}
+      title={
+        selectedCredential?.isFavorite
+          ? "Remove from favorites"
+          : "Add to favorites"
+      }
       onClick={handleMarkFavorite}
       disabled={isPending}
     >

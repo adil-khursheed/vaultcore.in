@@ -1,12 +1,8 @@
 import React from "react";
-import AddItemButton from "@/components/shared/add-item-button";
-import SearchInput from "@/components/shared/search-input";
 
-import { Sheet } from "@repo/ui/components/sheet";
 import { SidebarProvider } from "@repo/ui/components/sidebar";
 
 import AppSidebar from "./_components/app-sidebar";
-import CredentialDetails from "./_components/credential-comps/credential-details";
 import MainHeader from "./_components/main-header";
 import RedirectUnauthorizedUser from "./_components/redirect-unauthorized-user";
 
@@ -16,21 +12,9 @@ const ProtectedLayout = async ({ children }: { children: React.ReactNode }) => {
       <SidebarProvider>
         <AppSidebar />
 
-        <main className="flex w-full flex-1 flex-col items-start overflow-hidden">
+        <main className="flex h-svh w-full flex-1 flex-col items-start overflow-hidden">
           <MainHeader />
-          <div className="flex w-full flex-1 overflow-hidden">
-            <Sheet>
-              <div className="border-border flex h-full w-full flex-col border-r md:w-2/5">
-                <div className="flex shrink-0 items-center gap-2 px-3 pt-3 pb-2">
-                  <SearchInput />
-                  <AddItemButton />
-                </div>
-                <div className="min-h-0 flex-1">{children}</div>
-              </div>
-
-              <CredentialDetails />
-            </Sheet>
-          </div>
+          {children}
         </main>
       </SidebarProvider>
     </RedirectUnauthorizedUser>

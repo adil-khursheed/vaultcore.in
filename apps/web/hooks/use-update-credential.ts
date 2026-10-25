@@ -6,10 +6,12 @@ import { useCredentialStore } from "@repo/store";
 
 export const useUpdateCredential = ({
   setOpen,
-  isDeleted = false,
+  clearSelection = false,
+  successMessage = "Credential updated successfully",
 }: {
   setOpen?: (open: boolean) => void;
-  isDeleted?: boolean;
+  clearSelection?: boolean;
+  successMessage?: string;
 }) => {
   const { setSelectedCredential } = useCredentialStore();
   const trpc = useTRPC();
@@ -22,13 +24,13 @@ export const useUpdateCredential = ({
           queryKey: trpc.credential.getCredentials.pathKey(),
         });
 
-        if (isDeleted) {
+        if (clearSelection) {
           setSelectedCredential(null);
         } else {
           setSelectedCredential(data);
         }
 
-        toast.success("Credential updated successfully");
+        toast.success(successMessage);
         setOpen?.(false);
       },
       onError: (error) => {

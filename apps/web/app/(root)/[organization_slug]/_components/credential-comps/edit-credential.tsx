@@ -27,7 +27,7 @@ const EditCredential = ({
 }) => {
   const [open, setOpen] = React.useState(false);
 
-  const { selectedCredential, setSelectedCredential } = useCredentialStore();
+  const { selectedCredential } = useCredentialStore();
   const { vaultKey } = useVaultStore();
 
   const { data: session } = authClient.useSession();
@@ -47,33 +47,47 @@ const EditCredential = ({
     setOpen,
   });
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: ItemFormValues) => {
     if (!vaultKey || !session?.session.activeOrganizationId) {
       toast.error("Vault is locked or organization not selected");
       return;
     }
 
+    if (!selectedCredential) {
+      toast.error("No credential selected");
+      return;
+    }
+
     try {
       const { title, type, note, isFavorite, ...rest } = values;
+      const restValues = rest as unknown as Record<string, unknown>;
 
-      let encryptedData: any = {};
+      const encryptedData: Record<string, unknown> = {};
       let username = "";
       let password = "";
       let url = "";
       let otp = "";
 
       if (type === "login") {
-        username = rest.username
-          ? await encryptString(rest.username, vaultKey)
-          : "";
-        password = rest.password
-          ? await encryptString(rest.password, vaultKey)
-          : "";
-        url = rest.url ? await encryptString(rest.url, vaultKey) : "";
-        otp = rest.otp ? await encryptString(rest.otp, vaultKey) : "";
+        username =
+          typeof restValues.username === "string" && restValues.username
+            ? await encryptString(restValues.username, vaultKey)
+            : "";
+        password =
+          typeof restValues.password === "string" && restValues.password
+            ? await encryptString(restValues.password, vaultKey)
+            : "";
+        url =
+          typeof restValues.url === "string" && restValues.url
+            ? await encryptString(restValues.url, vaultKey)
+            : "";
+        otp =
+          typeof restValues.otp === "string" && restValues.otp
+            ? await encryptString(restValues.otp, vaultKey)
+            : "";
       } else {
         // For other types, encrypt all fields into the data blob
-        for (const [key, value] of Object.entries(rest)) {
+        for (const [key, value] of Object.entries(restValues)) {
           if (value && typeof value === "string") {
             encryptedData[key] = await encryptString(value, vaultKey);
           } else {
@@ -83,7 +97,7 @@ const EditCredential = ({
       }
 
       await updateMutate({
-        id: selectedCredential?.id!,
+        id: selectedCredential.id,
         title,
         type,
         note,
@@ -96,8 +110,8 @@ const EditCredential = ({
         data: Object.keys(encryptedData).length > 0 ? encryptedData : undefined,
       });
     } catch (error) {
-      console.error("Failed to create item:", error);
-      toast.error("An unexpected error occurred");
+      console.error("Failed to update item:", error);
+      toast.error("Couldn't save your changes. Please try again.");
     }
   };
 
@@ -108,15 +122,19 @@ const EditCredential = ({
           variant="ghost"
           size="icon"
           className="text-muted-foreground h-8 w-8"
+          aria-label="Edit item"
+          title="Edit item"
         >
-          <IconEdit className="size-4" />
+          <IconEdit className="size-4" aria-hidden="true" />
         </Button>
       </DialogTrigger>
 
       <DialogContent className="w-full px-0 sm:max-w-2xl">
         <DialogHeader className="px-6">
           <DialogTitle>Edit Credential</DialogTitle>
-          <DialogDescription>Edit the selected credential</DialogDescription>
+          <DialogDescription>
+            Update the details for “{selectedCredential?.title}”.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[80vh] overflow-y-auto px-6 py-4">

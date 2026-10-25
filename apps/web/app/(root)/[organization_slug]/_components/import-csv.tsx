@@ -3,7 +3,7 @@
 import React, { useRef, useState } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
-import { IconPlus, IconUpload } from "@tabler/icons-react";
+import { IconUpload } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Papa from "papaparse";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ interface DashlaneRow {
 
 const ImportCSV = () => {
   const [isImporting, setIsImporting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,12 +49,15 @@ const ImportCSV = () => {
     trpc.credential.batchCreate.mutationOptions(),
   );
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const importFile = async (file: File) => {
     if (!vaultKey) {
       toast.error("Vault is locked. Please unlock your vault first.");
+      return;
+    }
+
+    const organizationId = activeOrganization?.id;
+    if (!organizationId) {
+      toast.error("No active organization found.");
       return;
     }
 
@@ -67,7 +71,6 @@ const ImportCSV = () => {
           const rows = results.data;
           if (rows.length === 0) {
             toast.error("CSV file is empty.");
-            setIsImporting(false);
             return;
           }
 
@@ -116,7 +119,7 @@ const ImportCSV = () => {
           );
 
           await mutateAsync({
-            organizationId: activeOrganization?.id!,
+            organizationId,
             credentials: encryptedCredentials,
           });
 
@@ -126,28 +129,43 @@ const ImportCSV = () => {
 
           toast.success(`Successfully imported ${rows.length} items.`);
           setIsOpen(false);
-          // Clear file input
-          if (fileInputRef.current) fileInputRef.current.value = "";
         } catch (error) {
           console.error("Import failed:", error);
           toast.error("Failed to import CSV. Please check the file format.");
         } finally {
           setIsImporting(false);
+          if (fileInputRef.current) fileInputRef.current.value = "";
         }
       },
       error: (error) => {
         console.error("Parse error:", error);
         toast.error("Failed to parse CSV file.");
         setIsImporting(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
       },
     });
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) void importFile(file);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+
+    if (isImporting) return;
+
+    const file = event.dataTransfer.files?.[0];
+    if (file) void importFile(file);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant={"outline"} size={"sm"}>
-          <IconPlus className="size-4" />
+          <IconUpload className="size-4" aria-hidden="true" />
           <span className="sr-only md:not-sr-only">Import CSV</span>
         </Button>
       </DialogTrigger>
@@ -156,37 +174,58 @@ const ImportCSV = () => {
         <DialogHeader>
           <DialogTitle>Import CSV</DialogTitle>
           <DialogDescription>
-            Upload a CSV file exported from Dashlane to import your credentials.
+            Import logins from a Dashlane CSV. Items are encrypted on this
+            device before they are uploaded.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col items-center justify-center gap-4 py-8">
+        <div className="flex flex-col items-center justify-center gap-4 py-6">
           <input
             type="file"
-            accept=".csv"
+            accept=".csv,text/csv"
             className="hidden"
             ref={fileInputRef}
             onChange={handleFileChange}
             disabled={isImporting}
           />
 
-          <div
-            className={`flex h-40 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
-              isImporting
-                ? "bg-muted cursor-not-allowed border-neutral-300"
-                : "hover:bg-accent border-neutral-200"
+          <button
+            type="button"
+            disabled={isImporting}
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(event) => {
+              event.preventDefault();
+              if (!isImporting) setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`focus-visible:border-ring focus-visible:ring-ring/50 flex h-40 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-60 ${
+              isDragging
+                ? "border-primary bg-primary/5"
+                : "border-border hover:bg-accent"
             }`}
-            onClick={() => !isImporting && fileInputRef.current?.click()}
           >
-            <IconUpload className="mb-2 size-10 text-neutral-400" />
-            <p className="text-sm text-neutral-500">
-              {isImporting ? "Importing items..." : "Click to select CSV file"}
-            </p>
-          </div>
+            <IconUpload
+              className="text-muted-foreground mb-2 size-8"
+              aria-hidden="true"
+            />
+            <span className="text-sm font-medium">
+              {isImporting
+                ? "Importing items…"
+                : isDragging
+                  ? "Drop the CSV to import"
+                  : "Choose a CSV file"}
+            </span>
+            <span className="text-muted-foreground mt-1 text-xs">
+              or drag and drop it here
+            </span>
+          </button>
 
-          <div className="w-full text-xs text-neutral-400">
-            <p className="font-semibold text-neutral-500">Required Columns:</p>
-            <p>title, url, username, password, note</p>
+          <div className="text-muted-foreground w-full text-xs">
+            <p className="text-foreground font-medium">Expected columns</p>
+            <p className="mt-1 leading-relaxed">
+              title, url, user_name, password, note, category, otp
+            </p>
           </div>
         </div>
       </DialogContent>

@@ -101,15 +101,17 @@ const ItemForm = ({
           <Tabs
             value={field.state.value}
             onValueChange={(value) => {
+              const { title, note, isFavorite } = form.state.values;
+
               form.reset();
-              field.handleChange(value as ItemFormValues["type"]);
+              form.setFieldValue("type", value as ItemFormValues["type"]);
+              form.setFieldValue("title", title);
+              form.setFieldValue("note", note);
+              form.setFieldValue("isFavorite", isFavorite);
             }}
             className="w-full"
           >
-            <TabsList
-              defaultValue={initialValues ? initialValues?.type : "login"}
-              className="w-full justify-start overflow-x-auto"
-            >
+            <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger
                 disabled={initialValues && initialValues?.type !== "login"}
                 value="login"
@@ -172,7 +174,8 @@ const ItemForm = ({
                     </InputGroup>
                     <FieldError
                       errors={field.state.meta.errors.map((err) => ({
-                        message: (err as any)?.message || String(err),
+                        message:
+                          (err as { message?: string }).message ?? String(err),
                       }))}
                     />
                   </Field>
@@ -220,13 +223,31 @@ const ItemForm = ({
                           <InputGroupAddon align={"inline-end"}>
                             <InputGroupButton
                               size={"icon-sm"}
+                              aria-label={
+                                togglePassword
+                                  ? "Hide password"
+                                  : "Show password"
+                              }
+                              title={
+                                togglePassword
+                                  ? "Hide password"
+                                  : "Show password"
+                              }
                               onClick={() => setTogglePassword(!togglePassword)}
                             >
-                              {togglePassword ? <IconEyeOff /> : <IconEye />}
+                              {togglePassword ? (
+                                <IconEyeOff aria-hidden="true" />
+                              ) : (
+                                <IconEye aria-hidden="true" />
+                              )}
                             </InputGroupButton>
                             <DialogTrigger asChild>
-                              <InputGroupButton size={"icon-sm"}>
-                                <IconRefreshDot />
+                              <InputGroupButton
+                                size={"icon-sm"}
+                                aria-label="Generate password"
+                                title="Generate password"
+                              >
+                                <IconRefreshDot aria-hidden="true" />
                               </InputGroupButton>
                             </DialogTrigger>
                           </InputGroupAddon>
@@ -338,7 +359,9 @@ const ItemForm = ({
                           name={field.name}
                           value={field.state.value || undefined}
                           onValueChange={(val) =>
-                            field.handleChange(val as any)
+                            field.handleChange(
+                              val as NonNullable<typeof field.state.value>,
+                            )
                           }
                         >
                           <SelectTrigger>
@@ -369,7 +392,9 @@ const ItemForm = ({
                           name={field.name}
                           value={field.state.value || undefined}
                           onValueChange={(val) =>
-                            field.handleChange(val as any)
+                            field.handleChange(
+                              val as NonNullable<typeof field.state.value>,
+                            )
                           }
                         >
                           <SelectTrigger>
@@ -450,7 +475,9 @@ const ItemForm = ({
                           name={field.name}
                           value={field.state.value || undefined}
                           onValueChange={(val) =>
-                            field.handleChange(val as any)
+                            field.handleChange(
+                              val as NonNullable<typeof field.state.value>,
+                            )
                           }
                         >
                           <SelectTrigger>
@@ -852,11 +879,26 @@ const ItemForm = ({
                         />
                         <InputGroupAddon align={"inline-end"}>
                           <InputGroupButton
+                            size={"icon-sm"}
+                            aria-label={
+                              togglePrivateKey
+                                ? "Hide private key"
+                                : "Show private key"
+                            }
+                            title={
+                              togglePrivateKey
+                                ? "Hide private key"
+                                : "Show private key"
+                            }
                             onClick={() =>
                               setTogglePrivateKey(!togglePrivateKey)
                             }
                           >
-                            {togglePrivateKey ? <IconEyeOff /> : <IconEye />}
+                            {togglePrivateKey ? (
+                              <IconEyeOff aria-hidden="true" />
+                            ) : (
+                              <IconEye aria-hidden="true" />
+                            )}
                           </InputGroupButton>
                         </InputGroupAddon>
                       </InputGroup>
