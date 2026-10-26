@@ -8,18 +8,7 @@ export const metadata = {
 };
 
 const MembersPage = () => {
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Members</h1>
-        <p className="text-muted-foreground text-sm">
-          Manage your team members and their access to the organization vault.
-        </p>
-      </div>
-
-      <MembersList />
-    </div>
-  );
+  return <MembersList />;
 };
 
 export default MembersPage;

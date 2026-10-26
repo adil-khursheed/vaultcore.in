@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
-import type { EmailTemplateProps } from "./types";
-import { getEmailTemplateHtml } from "./template";
+import type { EmailTemplateProps } from "./types.ts";
+import { getEmailTemplateHtml } from "./template.tsx";
 
 export const resend = new Resend(process.env.RESEND_API_KEY);
 

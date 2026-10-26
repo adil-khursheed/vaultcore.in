@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Html, Section, Text } from "@react-email/components";
 
-import { EmailLayout } from "./email-layout.js";
-import { theme } from "./theme.js";
+import { EmailLayout } from "./email-layout.tsx";
+import { theme } from "./theme.ts";
 
 interface WeeklyDigestProps {
   userName?: string;

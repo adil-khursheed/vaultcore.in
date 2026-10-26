@@ -107,7 +107,7 @@ const AddItemButton = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button size={"icon"}>
           <IconPlus className="size-4" />
           <span className="sr-only">Add New Vault Item</span>
         </Button>

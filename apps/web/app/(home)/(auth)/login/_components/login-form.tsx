@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { useTRPC } from "@/lib/trpc/client";
 import { useForm } from "@tanstack/react-form";
@@ -46,6 +46,12 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextParam = searchParams.get("next");
+  const next =
+    nextParam?.startsWith("/") && !nextParam.startsWith("//")
+      ? nextParam
+      : null;
 
   const queryClient = useQueryClient();
   const trpc = useTRPC();
@@ -124,7 +130,7 @@ const LoginForm = () => {
                       setMasterKey(masterKey);
                       setVaultKey(unwrappedVaultKey);
 
-                      router.replace(`/${orgCtx.data.slug}/all-items`);
+                      router.replace(next ?? `/${orgCtx.data.slug}/all-items`);
                     }
                   } catch (e: unknown) {
                     console.error(e);

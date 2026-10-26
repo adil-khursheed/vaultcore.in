@@ -12,11 +12,18 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import * as authSchema from "./auth-schema";
+import * as authSchema from "./auth-schema.ts";
 
-export const { organization, user, member, verification, session, account } =
-  authSchema;
-export * from "./auth-schema";
+export const {
+  organization,
+  user,
+  member,
+  invitation,
+  verification,
+  session,
+  account,
+} = authSchema;
+export * from "./auth-schema.ts";
 
 /**
  * @deprecated Legacy vault key table using AES-GCM wrapping with master key.

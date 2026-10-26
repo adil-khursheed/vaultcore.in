@@ -1,6 +1,11 @@
-import { and, count, eq } from "@repo/db";
+import { and, count, eq, gt } from "@repo/db";
 import { db } from "@repo/db/client";
-import { member, organizationSubscriptions, plans } from "@repo/db/schema";
+import {
+  invitation,
+  member,
+  organizationSubscriptions,
+  plans,
+} from "@repo/db/schema";
 
 import { env } from "../../env.ts";
 
@@ -58,6 +63,40 @@ export async function canAddMember(organizationId: string): Promise<boolean> {
     .where(eq(member.organizationId, organizationId));
 
   return (currentMembers[0]?.value ?? 0) < plan.maxMembersPerOrg;
+}
+
+/**
+ * Check if an org can create another invitation.
+ * Counts current members plus unexpired pending invitations so a plan cannot
+ * be exceeded by sending more invites than there are open seats.
+ */
+export async function canInviteMember(
+  organizationId: string,
+): Promise<boolean> {
+  const plan = await getOrgPlan(organizationId);
+  if (plan.maxMembersPerOrg === null) return true;
+
+  const [currentMembers, pendingInvitations] = await Promise.all([
+    db
+      .select({ value: count() })
+      .from(member)
+      .where(eq(member.organizationId, organizationId)),
+    db
+      .select({ value: count() })
+      .from(invitation)
+      .where(
+        and(
+          eq(invitation.organizationId, organizationId),
+          eq(invitation.status, "pending"),
+          gt(invitation.expiresAt, new Date()),
+        ),
+      ),
+  ]);
+
+  const occupiedSeats =
+    (currentMembers[0]?.value ?? 0) + (pendingInvitations[0]?.value ?? 0);
+
+  return occupiedSeats < plan.maxMembersPerOrg;
 }
 
 /**

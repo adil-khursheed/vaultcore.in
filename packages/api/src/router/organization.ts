@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 
-import { canAddMember, canCreateOrg } from "@repo/auth/entitlements";
+import { canCreateOrg, canInviteMember } from "@repo/auth/entitlements";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -27,8 +27,8 @@ export const organizationRouter = {
   inviteMember: protectedProcedure
     .input(z.object({ organizationId: z.string(), email: z.string() }))
     .mutation(async ({ input }) => {
-      const canAdd = await canAddMember(input.organizationId);
-      if (!canAdd) {
+      const canInvite = await canInviteMember(input.organizationId);
+      if (!canInvite) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message:

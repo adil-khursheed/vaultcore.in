@@ -1,7 +1,8 @@
 export type EmailTemplateType =
   | "emailVerification"
   | "welcomeOnboard"
-  | "weeklyDigest";
+  | "weeklyDigest"
+  | "invitation";
 
 export type EmailTemplateProps = {
   type: EmailTemplateType;
@@ -9,4 +10,8 @@ export type EmailTemplateProps = {
   actionUrl?: string;
   verificationCode?: string;
   digestContent?: string;
+  organizationName?: string;
+  inviterName?: string;
+  role?: string;
+  expiresAt?: string;
 };

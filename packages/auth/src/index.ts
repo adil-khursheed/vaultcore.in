@@ -20,6 +20,7 @@ import { and, eq, gt } from "@repo/db";
 import { db } from "@repo/db/client";
 import {
   auditLog,
+  invitation,
   memberVaultKey,
   organizationSubscriptions,
   payments,
@@ -27,9 +28,14 @@ import {
   user,
   verification,
 } from "@repo/db/schema";
+import { queueJob } from "@repo/jobs";
 
 import { env } from "../env.ts";
-import { canAddMember, canCreateOrg } from "./utils/entitlements.ts";
+import {
+  canCreateOrg,
+  canInviteMember,
+  getOrgPlan,
+} from "./utils/entitlements.ts";
 
 const vaultVerificationPlugin = () => {
   return {
@@ -149,8 +155,10 @@ const subscriptionLimitsPlugin = () => {
               });
             }
 
-            const { organizationId } = ctx.body as {
+            const { organizationId, resend, email } = ctx.body as {
               organizationId?: string;
+              resend?: boolean;
+              email?: string;
             };
 
             const orgId =
@@ -162,11 +170,27 @@ const subscriptionLimitsPlugin = () => {
               });
             }
 
-            const canAdd = await canAddMember(orgId);
+            // Resending an existing invitation does not consume a new seat.
+            if (resend && email) {
+              const existingInvitation = await db.query.invitation.findFirst({
+                where: and(
+                  eq(invitation.organizationId, orgId),
+                  eq(invitation.email, email.toLowerCase()),
+                  eq(invitation.status, "pending"),
+                  gt(invitation.expiresAt, new Date()),
+                ),
+              });
 
-            if (!canAdd) {
+              if (existingInvitation) {
+                return { context: ctx };
+              }
+            }
+
+            const canInvite = await canInviteMember(orgId);
+
+            if (!canInvite) {
               throw new APIError("FORBIDDEN", {
-                message: `This organization has reached the maximum number of members for its plan. Please upgrade to add more.`,
+                message: `This organization has reached the maximum number of members for its plan. Please upgrade to invite more people.`,
               });
             }
 
@@ -193,6 +217,35 @@ export function initAuth<
     baseURL: options.baseUrl,
     plugins: [
       organizationPlugin({
+        membershipLimit: async (_user, organization) => {
+          const plan = await getOrgPlan(organization.id);
+          return plan.maxMembersPerOrg ?? 1_000_000;
+        },
+        sendInvitationEmail: async ({
+          id,
+          email,
+          role,
+          organization,
+          inviter,
+          invitation,
+        }) => {
+          try {
+            await queueJob("SEND_EMAIL", {
+              to: email,
+              subject: `You're invited to join ${organization.name} on VaultCore`,
+              props: {
+                type: "invitation",
+                organizationName: organization.name,
+                inviterName: inviter.user.name,
+                role,
+                expiresAt: invitation.expiresAt.toISOString(),
+                actionUrl: `${options.baseUrl}/accept-invitation/${id}`,
+              },
+            });
+          } catch (error) {
+            console.error("[AUTH] Failed to queue invitation email", error);
+          }
+        },
         organizationHooks: {
           afterCreateOrganization: async ({ organization, member, user }) => {
             await db
@@ -207,11 +260,9 @@ export function initAuth<
               .onConflictDoNothing();
           },
           afterAddMember: async ({ member, organization }) => {
-            // Note: Better Auth's organization plugin does not expose a separate
-            // `afterMemberAcceptInvitation` hook. The `afterAddMember` hook fires
-            // when a member joins the organization (both via direct add and invitation
-            // acceptance). The pending memberVaultKey row created here signals to
-            // the admin that vault access needs to be granted.
+            // The owner is added here when an organization is created. Insert a
+            // pending key row so the admin grant flow has a single consistent
+            // starting point; self-grant immediately promotes it to active.
             await db
               .insert(memberVaultKey)
               .values({
@@ -221,15 +272,57 @@ export function initAuth<
                 status: "pending",
               })
               .onConflictDoNothing();
-
-            // Log the member_accepted audit event (best-effort)
+          },
+          afterCreateInvitation: async ({
+            invitation,
+            inviter,
+            organization,
+          }) => {
             await db
               .insert(auditLog)
               .values({
-                actorUserId: member.userId,
+                actorUserId: inviter.id,
+                organizationId: organization.id,
+                action: "member_invited",
+                metadata: {
+                  email: invitation.email,
+                  role: invitation.role,
+                  invitationId: invitation.id,
+                },
+              })
+              .catch((error: unknown) => {
+                console.error(
+                  "[AUTH] Failed to log member_invited audit event",
+                  error,
+                );
+              });
+          },
+          afterAcceptInvitation: async ({
+            invitation,
+            member,
+            user,
+            organization,
+          }) => {
+            await db
+              .insert(memberVaultKey)
+              .values({
+                organizationId: organization.id,
+                userId: user.id,
+                encryptedKey: "PENDING",
+                status: "pending",
+              })
+              .onConflictDoNothing();
+
+            await db
+              .insert(auditLog)
+              .values({
+                actorUserId: user.id,
                 organizationId: organization.id,
                 action: "member_accepted",
-                metadata: { role: member.role },
+                metadata: {
+                  role: member.role,
+                  invitationId: invitation.id,
+                },
               })
               .catch((error: unknown) => {
                 console.error(

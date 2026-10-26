@@ -4,8 +4,10 @@ import { getActiveOrganization, getSession } from "./lib/auth/server";
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const isInvitationRoute = pathname.startsWith("/accept-invitation");
 
   const isPublicRoute =
+    isInvitationRoute ||
     ["/", "/login", "/verify", "/not-found"].includes(pathname) ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/api/auth/sign-up") ||
@@ -15,7 +17,7 @@ export async function proxy(request: NextRequest) {
 
   const session = await getSession();
 
-  if (session && isPublicRoute) {
+  if (session && isPublicRoute && !isInvitationRoute) {
     const organization = await getActiveOrganization();
 
     if (!organization) {

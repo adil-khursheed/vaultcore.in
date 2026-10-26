@@ -3,9 +3,9 @@ import { Worker } from "bullmq";
 
 import { resend, sendEmail } from "@repo/email";
 
-import type { JobDataMap, JobName } from "./registry";
-import { connection } from "./index";
-import { JobNames } from "./registry";
+import type { JobDataMap, JobName } from "./registry.ts";
+import { connection } from "./index.ts";
+import { JobNames } from "./registry.ts";
 
 /**
  * Define handlers for each job type.

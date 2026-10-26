@@ -13,6 +13,7 @@ import { Button } from "@repo/ui/components/button";
 import {
   Field,
   FieldContent,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -23,7 +24,15 @@ import {
   InputGroupInput,
 } from "@repo/ui/components/input-group";
 
-const NewAccountForm = () => {
+type NewAccountFormProps = {
+  invitationId?: string;
+  invitedEmail?: string;
+};
+
+const NewAccountForm = ({
+  invitationId,
+  invitedEmail,
+}: NewAccountFormProps) => {
   const router = useRouter();
 
   const trpc = useTRPC();
@@ -36,19 +45,23 @@ const NewAccountForm = () => {
       },
       onError: (err) => {
         console.log(err);
-        toast.error("Failed to submit email");
+        toast.error(err.message || "Failed to submit email");
       },
     }),
   );
 
   const form = useForm({
     defaultValues: {
-      email: "",
+      email: invitedEmail ?? "",
     },
     validators: {
       onSubmit: VerifyNewUserEmailSchema,
     },
-    onSubmit: async (data) => await submitEmail.mutateAsync(data.value),
+    onSubmit: async (data) =>
+      await submitEmail.mutateAsync({
+        ...data.value,
+        invitationId,
+      }),
   });
 
   return (
@@ -83,12 +96,19 @@ const NewAccountForm = () => {
                     aria-invalid={isInvalid}
                     placeholder="you@example.com"
                     className="h-full"
+                    readOnly={!!invitedEmail}
+                    aria-readonly={!!invitedEmail}
                   />
 
                   <InputGroupAddon>
                     <MailIcon />
                   </InputGroupAddon>
                 </InputGroup>
+                {invitedEmail ? (
+                  <FieldDescription>
+                    This invitation is for {invitedEmail}.
+                  </FieldDescription>
+                ) : null}
                 {isInvalid && <FieldError errors={field.state.meta.errors} />}
               </Field>
             );

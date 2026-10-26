@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Column, Row, Section, Text } from "@react-email/components";
 
-import { EmailLayout } from "./email-layout";
-import { theme } from "./theme";
+import { EmailLayout } from "./email-layout.tsx";
+import { theme } from "./theme.ts";
 
 interface WelcomeOnboardProps {
   userName?: string;

@@ -10,7 +10,7 @@ import {
   Text,
 } from "@react-email/components";
 
-import { theme } from "./theme";
+import { theme } from "./theme.ts";
 
 interface EmailLayoutProps {
   previewText: string;

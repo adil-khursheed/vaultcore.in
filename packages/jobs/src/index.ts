@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 
-import type { JobDataMap, JobName } from "./registry";
+import type { JobDataMap, JobName } from "./registry.ts";
 
 /**
  * Shared connection options for BullMQ.
@@ -48,4 +48,4 @@ export async function queueJob<T extends JobName>(
   return getMainQueue().add(name, data);
 }
 
-export * from "./registry";
+export * from "./registry.ts";

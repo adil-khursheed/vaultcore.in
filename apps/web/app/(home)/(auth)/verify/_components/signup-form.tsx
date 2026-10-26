@@ -63,6 +63,7 @@ const SignUpForm = () => {
   const searchParams = useSearchParams();
 
   const token = searchParams.get("token");
+  const invitationId = searchParams.get("invitationId");
 
   const router = useRouter();
 
@@ -174,6 +175,30 @@ const SignUpForm = () => {
                       userId: newUserId,
                       encryptedKey: wrappedVaultKeyBase64,
                     });
+
+                    if (invitationId) {
+                      const { error: acceptError } =
+                        await authClient.organization.acceptInvitation({
+                          invitationId,
+                        });
+
+                      if (acceptError) {
+                        toast.error(
+                          acceptError.message ||
+                            "Your account was created, but the invitation couldn't be accepted.",
+                        );
+                      } else {
+                        toast.success("Invitation accepted");
+                      }
+
+                      // Accepting switches the active organization to the
+                      // invited org. Return to the personal vault so the
+                      // unlocked key in memory matches the active org.
+                      await authClient.organization.setActive({
+                        organizationId: orgCtx.data.id,
+                        organizationSlug: orgCtx.data.slug,
+                      });
+                    }
 
                     setMasterKey(masterKey);
                     setVaultKey(vaultKey);
