@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import React, { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import BGPattern from "@/components/shared/bg-pattern";
 import SectionContainer from "@/components/shared/section-container";
+import { getSession } from "@/lib/auth/server";
 import { Loader2Icon } from "lucide-react";
 
 import {
@@ -25,7 +27,13 @@ export const metadata: Metadata = {
   },
 };
 
-const Page = () => {
+const Page = async () => {
+  const session = await getSession();
+
+  if (session) {
+    redirect("/app");
+  }
+
   return (
     <SectionContainer>
       <div className="relative flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center px-4 py-16">

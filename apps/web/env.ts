@@ -14,6 +14,8 @@ export const env = createEnv({
   },
   client: {
     NEXT_PUBLIC_WEB_APP_URL: z.url(),
+    NEXT_PUBLIC_GA_ID: z.string().min(1).optional(),
+    NEXT_PUBLIC_GTM_ID: z.string().min(1).optional(),
   },
   server: {
     DATABASE_URL: z.url(),
@@ -23,6 +25,8 @@ export const env = createEnv({
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_WEB_APP_URL: process.env.NEXT_PUBLIC_WEB_APP_URL,
+    NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+    NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
   },
   skipValidation:
     !!process.env.CI || process.env.npm_lifecycle_event === "lint",

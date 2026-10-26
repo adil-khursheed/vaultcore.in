@@ -2,13 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { pricingCategories as tabs } from "@/lib/utils/constants";
 
 import { Tabs, TabsList, TabsTrigger } from "@repo/ui/components/tabs";
-
-const tabs = [
-  { value: "personal", label: "Personal" },
-  // { value: "business", label: "Business" },
-];
 
 const CategoryTab = ({ category }: { category: string }) => {
   const [activeTab, setActiveTab] = useState(category);

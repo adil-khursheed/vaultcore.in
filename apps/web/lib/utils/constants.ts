@@ -1,3 +1,13 @@
+export const pricingCategories = [
+  { value: "personal", label: "Personal" },
+] as const;
+
+export type PricingCategory = (typeof pricingCategories)[number]["value"];
+
+export const isPricingCategory = (value: string): value is PricingCategory => {
+  return pricingCategories.some((category) => category.value === value);
+};
+
 export const plans = [
   {
     id: "free",

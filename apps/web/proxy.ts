@@ -1,38 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getActiveOrganization, getSession } from "./lib/auth/server";
+const sessionCookieNames = [
+  "better-auth.session_token",
+  "__Secure-better-auth.session_token",
+  "better-auth-session_token",
+  "__Secure-better-auth-session_token",
+];
 
-export async function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-  const isInvitationRoute = pathname.startsWith("/accept-invitation");
-
-  const isPublicRoute =
-    isInvitationRoute ||
-    ["/", "/login", "/verify", "/not-found"].includes(pathname) ||
-    pathname.startsWith("/signup") ||
-    pathname.startsWith("/api/auth/sign-up") ||
-    pathname.startsWith("/api/auth/sign-in") ||
-    pathname.startsWith("/api/auth/polar/webhooks") ||
-    pathname.startsWith("/api/trpc/auth.");
-
-  const session = await getSession();
-
-  if (session && isPublicRoute && !isInvitationRoute) {
-    const organization = await getActiveOrganization();
-
-    if (!organization) {
-      return NextResponse.redirect(
-        new URL("/organization/create", request.url),
-      );
-    }
-
-    return NextResponse.redirect(
-      new URL(`/${organization.slug}/all-items`, request.url),
+export function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/") {
+    const hasSessionCookie = sessionCookieNames.some((name) =>
+      request.cookies.has(name),
     );
-  }
 
-  if (!session && !isPublicRoute && !pathname.startsWith("/pricing")) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    if (hasSessionCookie) {
+      return NextResponse.redirect(new URL("/app", request.url));
+    }
   }
 
   return NextResponse.next();

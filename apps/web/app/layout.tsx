@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Outfit, Source_Serif_4 } from "next/font/google";
+import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 
 import "@repo/ui/globals.css";
 
-import { env } from "@/env";
+import { gaId, gtmId, ogImage, site, twitterImage } from "@/lib/seo";
 import { TRPCClientProvider } from "@/lib/trpc/client";
 
 import ThemeProvider from "@repo/ui/components/providers/theme-providers";
@@ -21,16 +22,19 @@ const fontMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const description =
-  "VaultCore is a zero-knowledge password manager for logins, cards, identities, notes, and SSH keys. Everything is encrypted on your device before it reaches our servers.";
+const description = site.description;
+
+const isProduction = process.env.VERCEL_ENV
+  ? process.env.VERCEL_ENV === "production"
+  : process.env.NODE_ENV === "production";
 
 export const metadata: Metadata = {
   title: {
-    default: "VaultCore — Zero-knowledge password manager",
-    template: "%s · VaultCore",
+    default: site.title,
+    template: `%s · ${site.name}`,
   },
   description,
-  applicationName: "VaultCore",
+  applicationName: site.name,
   category: "security",
   keywords: [
     "password manager",
@@ -40,37 +44,41 @@ export const metadata: Metadata = {
     "SSH key storage",
     "password generator",
   ],
-  authors: [{ name: "VaultCore" }],
-  creator: "VaultCore",
-  publisher: "VaultCore",
-  metadataBase: new URL(env.NEXT_PUBLIC_WEB_APP_URL),
-  alternates: {
-    canonical: "/",
-  },
+  authors: [{ name: site.name }],
+  creator: site.name,
+  publisher: site.name,
+  metadataBase: new URL(site.url),
   openGraph: {
-    title: "VaultCore — Zero-knowledge password manager",
+    title: site.title,
     description,
     type: "website",
-    siteName: "VaultCore",
-    locale: "en_US",
-    url: env.NEXT_PUBLIC_WEB_APP_URL,
+    siteName: site.name,
+    locale: site.locale,
+    url: site.url,
+    images: [ogImage],
   },
   twitter: {
     card: "summary_large_image",
-    title: "VaultCore — Zero-knowledge password manager",
+    title: site.title,
     description,
-    site: "@VaultCore",
+    site: site.twitterHandle,
+    images: [twitterImage],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
+  robots: isProduction
+    ? {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+        },
+      }
+    : {
+        index: false,
+        follow: false,
+      },
   formatDetection: {
     telephone: false,
     email: false,
@@ -96,9 +104,11 @@ export default function RootLayout({
       <body
         className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} min-h-screen w-screen antialiased`}
       >
+        {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
         <ThemeProvider>
           <TRPCClientProvider>{children}</TRPCClientProvider>
         </ThemeProvider>
+        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
     </html>
   );

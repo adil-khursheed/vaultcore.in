@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import React from "react";
 import Link from "next/link";
 import BGPattern from "@/components/shared/bg-pattern";
@@ -6,6 +7,11 @@ import Navbar from "@/components/shared/navbar";
 import SectionContainer from "@/components/shared/section-container";
 
 import { Button } from "@repo/ui/components/button";
+
+export const metadata: Metadata = {
+  title: "Page not found",
+  robots: "noindex",
+};
 
 const NotFound = () => {
   return (
