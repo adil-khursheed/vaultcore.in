@@ -11,13 +11,19 @@ const RedirectUnauthorizedUser = ({
   children: React.ReactNode;
 }) => {
   const router = useRouter();
-  const { isLocked } = useVaultStore();
+  const hasVaultKey = useVaultStore((state) => state.vaultKey !== null);
 
   useEffect(() => {
-    if (isLocked) {
+    if (!hasVaultKey) {
       router.push("/lock");
     }
-  }, [isLocked, router]);
+  }, [hasVaultKey, router]);
+
+  // Never paint protected UI without a vault key. The store is empty on the
+  // server and on a hard reload, so both renders agree and no chrome flashes.
+  if (!hasVaultKey) {
+    return null;
+  }
 
   return children;
 };
