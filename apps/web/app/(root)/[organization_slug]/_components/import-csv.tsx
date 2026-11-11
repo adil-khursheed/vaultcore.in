@@ -78,7 +78,10 @@ const ImportCSV = () => {
 
           const encryptedCredentials = await Promise.all(
             rows.map(async (row) => {
-              const title = row.title || "Untitled";
+              const title = await encryptString(
+                row.title || "Untitled",
+                vaultKey,
+              );
               const username = await encryptString(
                 row.user_name || row.user_name_2 || row.user_name_3 || "",
                 vaultKey,

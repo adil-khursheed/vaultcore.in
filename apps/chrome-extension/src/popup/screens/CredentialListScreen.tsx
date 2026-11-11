@@ -8,7 +8,7 @@ import {
 } from "@/lib/storage";
 import { LogOutIcon, PlusIcon, ShieldIcon } from "lucide-react";
 
-import { decryptString } from "@repo/crypto";
+import { decryptStringOrPlaintext } from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 
@@ -109,14 +109,21 @@ export function CredentialListScreen({
         const decryptedItems = await Promise.all(
           result.items.map(async (item: any) => ({
             ...item,
+            title: item.title
+              ? await decryptStringOrPlaintext(item.title, vaultKey)
+              : "",
             username: item.username
-              ? await decryptString(item.username, vaultKey)
+              ? await decryptStringOrPlaintext(item.username, vaultKey)
               : null,
             password: item.password
-              ? await decryptString(item.password, vaultKey)
+              ? await decryptStringOrPlaintext(item.password, vaultKey)
               : null,
-            url: item.url ? await decryptString(item.url, vaultKey) : null,
-            note: item.note ? await decryptString(item.note, vaultKey) : null,
+            url: item.url
+              ? await decryptStringOrPlaintext(item.url, vaultKey)
+              : null,
+            note: item.note
+              ? await decryptStringOrPlaintext(item.note, vaultKey)
+              : null,
           })),
         );
 

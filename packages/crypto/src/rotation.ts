@@ -1,6 +1,6 @@
+import { unwrapVaultKeyFromMember, wrapVaultKeyForMember } from "./rsa";
+import { decryptStringOrPlaintext, encryptString } from "./strings";
 import { generateVaultKey } from "./vault";
-import { wrapVaultKeyForMember, unwrapVaultKeyFromMember } from "./rsa";
-import { encryptString, decryptString } from "./strings";
 
 export interface RotateVaultKeyParams {
   currentEncryptedVaultKey: string;
@@ -55,7 +55,10 @@ export async function rotateVaultKey(params: RotateVaultKeyParams) {
         field: string | null | undefined,
       ): Promise<string | null | undefined> => {
         if (!field) return field;
-        const decrypted = await decryptString(field, currentVaultKey);
+        const decrypted = await decryptStringOrPlaintext(
+          field,
+          currentVaultKey,
+        );
         return await encryptString(decrypted, newVaultKey);
       };
 

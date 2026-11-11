@@ -9,7 +9,7 @@ import { Button } from "@repo/ui/components/button";
 
 import ConfirmDialog from "../confirm-dialog";
 
-const DeleteCredential = () => {
+const DeleteCredential = ({ title }: { title: string }) => {
   const { selectedCredential } = useCredentialStore();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
@@ -52,7 +52,7 @@ const DeleteCredential = () => {
         title="Move item to trash?"
         description={
           selectedCredential
-            ? `“${selectedCredential.title}” will move to Trash. You can restore it later.`
+            ? `“${title}” will move to Trash. You can restore it later.`
             : "This item will move to Trash."
         }
         confirmLabel="Move to trash"

@@ -97,6 +97,8 @@ export function AddCredentialScreen({
         }
 
         // Encrypt sensitive fields before saving
+        const encryptedTitle = await encryptString(value.title, vaultKey);
+
         const encryptedUsername = value.username
           ? await encryptString(value.username, vaultKey)
           : undefined;
@@ -116,7 +118,7 @@ export function AddCredentialScreen({
         const trpc = getTrpcClient(apiBaseUrl);
         await trpc.credential.create.mutate({
           organizationId: orgId,
-          title: value.title,
+          title: encryptedTitle,
           type,
           username: encryptedUsername,
           password: encryptedPassword,

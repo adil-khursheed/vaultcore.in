@@ -5,7 +5,7 @@ import { z, ZodError } from "zod/v4";
 import type { Auth } from "@repo/auth";
 import { and, eq } from "@repo/db";
 import { db } from "@repo/db/client";
-import { member } from "@repo/db/schema";
+import { member, memberVaultKey } from "@repo/db/schema";
 
 export const createTRPCContext = async (opts: {
   headers: Headers;
@@ -91,7 +91,6 @@ const orgMemberMiddleware = t.middleware(
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
-    console.log("ORG_MW_INPUT", JSON.stringify(rawInput));
     const input = rawInput as
       | { organizationId?: string; json?: { organizationId?: string } }
       | undefined;
@@ -137,6 +136,29 @@ const orgMemberMiddleware = t.middleware(
 export const orgMemberProcedure = t.procedure
   .use(timingMiddleware)
   .use(orgMemberMiddleware);
+
+/**
+ * Org Vault Procedure — requires an org member whose vault access has been granted.
+ */
+export const orgVaultProcedure = orgMemberProcedure.use(
+  async ({ ctx, next }) => {
+    const vaultKeyRecord = await db.query.memberVaultKey.findFirst({
+      where: and(
+        eq(memberVaultKey.organizationId, ctx.memberRecord.organizationId),
+        eq(memberVaultKey.userId, ctx.session.user.id),
+      ),
+    });
+
+    if (!vaultKeyRecord || vaultKeyRecord.status !== "active") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Vault access has not been granted for this organization",
+      });
+    }
+
+    return next({ ctx: { vaultKeyRecord } });
+  },
+);
 
 /**
  * Org Admin Procedure — requires authenticated user who is an admin or owner of the specified org

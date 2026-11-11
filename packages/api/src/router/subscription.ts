@@ -5,7 +5,11 @@ import { getOrgPlan } from "@repo/auth/entitlements";
 import { desc, eq } from "@repo/db";
 import { organizationSubscriptions, payments, plans } from "@repo/db/schema";
 
-import { protectedProcedure } from "../trpc";
+import {
+  orgAdminProcedure,
+  orgMemberProcedure,
+  protectedProcedure,
+} from "../trpc";
 
 export const subscriptionRouter = {
   getAllPlans: protectedProcedure.query(async ({ ctx }) => {
@@ -14,7 +18,7 @@ export const subscriptionRouter = {
   /**
    * Get the current plan and subscription details for an organization
    */
-  getCurrentActivePlan: protectedProcedure
+  getCurrentActivePlan: orgMemberProcedure
     .input(z.object({ organizationId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
       const orgId =
@@ -47,7 +51,7 @@ export const subscriptionRouter = {
   /**
    * List payment history for an organization
    */
-  listPayments: protectedProcedure
+  listPayments: orgMemberProcedure
     .input(z.object({ organizationId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
       const orgId =
@@ -69,7 +73,7 @@ export const subscriptionRouter = {
   /**
    * Get a Polar checkout URL for a specific plan
    */
-  getCheckoutUrl: protectedProcedure
+  getCheckoutUrl: orgAdminProcedure
     .input(
       z.object({
         planId: z.string(),

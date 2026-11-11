@@ -12,7 +12,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { decryptString } from "@repo/crypto";
+import { decryptStringOrPlaintext } from "@repo/crypto";
 import { useCredentialStore, useVaultStore } from "@repo/store";
 import {
   Avatar,
@@ -139,24 +139,31 @@ const CredentialDetails = () => {
       const decrypted: Record<string, string> = {};
 
       try {
+        if (selectedCredential.title) {
+          decrypted.title = await decryptStringOrPlaintext(
+            selectedCredential.title,
+            vaultKey,
+          );
+        }
+
         if (selectedCredential.type === "login") {
           if (selectedCredential.username)
-            decrypted.username = await decryptString(
+            decrypted.username = await decryptStringOrPlaintext(
               selectedCredential.username,
               vaultKey,
             );
           if (selectedCredential.password)
-            decrypted.password = await decryptString(
+            decrypted.password = await decryptStringOrPlaintext(
               selectedCredential.password,
               vaultKey,
             );
           if (selectedCredential.url)
-            decrypted.url = await decryptString(
+            decrypted.url = await decryptStringOrPlaintext(
               selectedCredential.url,
               vaultKey,
             );
           if (selectedCredential.otp)
-            decrypted.otp = await decryptString(
+            decrypted.otp = await decryptStringOrPlaintext(
               selectedCredential.otp,
               vaultKey,
             );
@@ -169,14 +176,17 @@ const CredentialDetails = () => {
               selectedCredential.data,
             )) {
               if (value && typeof value === "string") {
-                decrypted[key] = await decryptString(value, vaultKey);
+                decrypted[key] = await decryptStringOrPlaintext(
+                  value,
+                  vaultKey,
+                );
               }
             }
           }
         }
 
         if (selectedCredential.note)
-          decrypted.note = await decryptString(
+          decrypted.note = await decryptStringOrPlaintext(
             selectedCredential.note,
             vaultKey,
           );
@@ -274,12 +284,14 @@ function SelectedCredential({
             />
 
             <AvatarFallback className="bg-primary/10 text-primary">
-              {selectedCredential.title.charAt(0).toUpperCase()}
+              {(decryptedFields.title ?? selectedCredential.title)
+                .charAt(0)
+                .toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-col">
             <h2 className="truncate text-base font-semibold">
-              {selectedCredential.title}
+              {decryptedFields.title ?? selectedCredential.title}
             </h2>
           </div>
         </div>
@@ -294,7 +306,9 @@ function SelectedCredential({
 
               <EditCredential decryptedFields={decryptedFields} />
 
-              <DeleteCredential />
+              <DeleteCredential
+                title={decryptedFields.title ?? selectedCredential.title}
+              />
             </>
           )}
         </div>

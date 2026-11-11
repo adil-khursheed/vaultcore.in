@@ -51,3 +51,19 @@ export const decryptString = async (encryptedText: string, key: CryptoKey) => {
 
   return new TextDecoder().decode(decrypted);
 };
+
+const ENCRYPTED_STRING_PATTERN = /^[A-Za-z0-9+/]+={0,2}:[A-Za-z0-9+/]+={0,2}$/;
+
+/**
+ * Decrypt a value that may be a legacy plaintext string.
+ * Only strings that look like `iv:ciphertext` are decrypted; anything else is
+ * returned unchanged so pre-encryption rows remain readable during migration.
+ */
+export const decryptStringOrPlaintext = async (
+  value: string,
+  key: CryptoKey,
+) => {
+  if (!value) return "";
+  if (!ENCRYPTED_STRING_PATTERN.test(value)) return value;
+  return decryptString(value, key);
+};

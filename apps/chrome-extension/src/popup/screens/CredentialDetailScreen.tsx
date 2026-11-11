@@ -1,22 +1,22 @@
-import { useState, useEffect } from "react";
-import {
-  ArrowLeftIcon,
-  GlobeIcon,
-  CreditCardIcon,
-  UserIcon,
-  FileTextIcon,
-  KeyIcon,
-  ZapIcon,
-  ExternalLinkIcon,
-  StarIcon,
-} from "lucide-react";
-import { Button } from "@repo/ui/components/button";
-
+import type { CredentialType, TCredential } from "@/lib/types";
+import { useEffect, useState } from "react";
 import { getTrpcClient } from "@/lib/api";
 import { getActiveOrganizationId } from "@/lib/storage";
-import { decryptString } from "@repo/crypto";
-import type { TCredential, CredentialType } from "@/lib/types";
+import {
+  ArrowLeftIcon,
+  CreditCardIcon,
+  ExternalLinkIcon,
+  FileTextIcon,
+  GlobeIcon,
+  KeyIcon,
+  StarIcon,
+  UserIcon,
+  ZapIcon,
+} from "lucide-react";
+
+import { decryptStringOrPlaintext } from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
+import { Button } from "@repo/ui/components/button";
 
 import { CopyButton } from "../components/CopyButton";
 import { PasswordField } from "../components/PasswordField";
@@ -78,9 +78,9 @@ export function CredentialDetailScreen({
           isDeleted: false,
         });
 
-        const found = result.items.find(
-          (c: any) => c.id === credentialId
-        ) as TCredential | undefined;
+        const found = result.items.find((c: any) => c.id === credentialId) as
+          | TCredential
+          | undefined;
 
         if (!vaultKey) {
           throw new Error("Vault is locked");
@@ -89,17 +89,29 @@ export function CredentialDetailScreen({
         if (found) {
           const decrypted = {
             ...found,
-            username: found.username ? await decryptString(found.username, vaultKey) : null,
-            password: found.password ? await decryptString(found.password, vaultKey) : null,
-            url: found.url ? await decryptString(found.url, vaultKey) : null,
-            note: found.note ? await decryptString(found.note, vaultKey) : null,
+            title: found.title
+              ? await decryptStringOrPlaintext(found.title, vaultKey)
+              : null,
+            username: found.username
+              ? await decryptStringOrPlaintext(found.username, vaultKey)
+              : null,
+            password: found.password
+              ? await decryptStringOrPlaintext(found.password, vaultKey)
+              : null,
+            url: found.url
+              ? await decryptStringOrPlaintext(found.url, vaultKey)
+              : null,
+            note: found.note
+              ? await decryptStringOrPlaintext(found.note, vaultKey)
+              : null,
           };
           setCredential(decrypted as TCredential);
         } else {
           setError("Credential not found");
         }
       } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to load credential";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load credential";
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -128,7 +140,7 @@ export function CredentialDetailScreen({
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     );
   }
@@ -136,18 +148,18 @@ export function CredentialDetailScreen({
   if (error || !credential) {
     return (
       <div className="flex h-full flex-col">
-        <div className="flex items-center border-b border-border px-3 py-3">
+        <div className="border-border flex items-center border-b px-3 py-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="h-8 w-8 text-muted-foreground"
+            className="text-muted-foreground h-8 w-8"
           >
             <ArrowLeftIcon className="h-4 w-4" />
           </Button>
         </div>
         <div className="flex flex-1 items-center justify-center px-4">
-          <p className="text-sm text-destructive">{error || "Not found"}</p>
+          <p className="text-destructive text-sm">{error || "Not found"}</p>
         </div>
       </div>
     );
@@ -156,22 +168,22 @@ export function CredentialDetailScreen({
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-border px-3 py-3">
+      <div className="border-border flex items-center gap-2 border-b px-3 py-3">
         <Button
           variant="ghost"
           size="icon"
           onClick={onBack}
-          className="h-8 w-8 text-muted-foreground"
+          className="text-muted-foreground h-8 w-8"
         >
           <ArrowLeftIcon className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-medium text-foreground">Details</span>
+        <span className="text-foreground text-sm font-medium">Details</span>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Title section */}
-        <div className="flex items-center gap-3 border-b border-border px-4 py-4">
+        <div className="border-border flex items-center gap-3 border-b px-4 py-4">
           <div
             className={`flex h-11 w-11 items-center justify-center rounded-xl ${typeColors[credential.type]}`}
           >
@@ -179,42 +191,40 @@ export function CredentialDetailScreen({
           </div>
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex items-center gap-1.5">
-              <h2 className="truncate text-base font-semibold text-foreground">
+              <h2 className="text-foreground truncate text-base font-semibold">
                 {credential.title}
               </h2>
               {credential.isFavorite && (
                 <StarIcon className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
               )}
             </div>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {typeLabels[credential.type]}
             </span>
           </div>
         </div>
 
         {/* Auto-fill button */}
-        {credential.type === "login" && (credential.username || credential.password) && (
-          <div className="border-b border-border px-4 py-3">
-            <Button
-              onClick={handleAutofill}
-              className="w-full"
-            >
-              <ZapIcon className="mr-2 h-4 w-4" />
-              Auto-fill on this page
-            </Button>
-          </div>
-        )}
+        {credential.type === "login" &&
+          (credential.username || credential.password) && (
+            <div className="border-border border-b px-4 py-3">
+              <Button onClick={handleAutofill} className="w-full">
+                <ZapIcon className="mr-2 h-4 w-4" />
+                Auto-fill on this page
+              </Button>
+            </div>
+          )}
 
         {/* Fields */}
-        <div className="flex flex-col divide-y divide-border">
+        <div className="divide-border flex flex-col divide-y">
           {/* Username */}
           {credential.username && (
             <div className="flex flex-col gap-1 px-4 py-3">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-medium">
                 Username / Email
               </span>
               <div className="flex items-center justify-between">
-                <span className="truncate text-sm text-foreground">
+                <span className="text-foreground truncate text-sm">
                   {credential.username}
                 </span>
                 <CopyButton text={credential.username} />
@@ -225,7 +235,7 @@ export function CredentialDetailScreen({
           {/* Password */}
           {credential.password && (
             <div className="flex flex-col gap-1 px-4 py-3">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-medium">
                 Password
               </span>
               <PasswordField value={credential.password} />
@@ -235,7 +245,7 @@ export function CredentialDetailScreen({
           {/* URL */}
           {credential.url && (
             <div className="flex flex-col gap-1 px-4 py-3">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-medium">
                 Website
               </span>
               <div className="flex items-center justify-between">
@@ -243,7 +253,7 @@ export function CredentialDetailScreen({
                   href={credential.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 truncate text-sm text-primary hover:underline"
+                  className="text-primary flex items-center gap-1 truncate text-sm hover:underline"
                 >
                   {credential.url}
                   <ExternalLinkIcon className="h-3 w-3 shrink-0" />
@@ -256,11 +266,11 @@ export function CredentialDetailScreen({
           {/* OTP */}
           {credential.otp && (
             <div className="flex flex-col gap-1 px-4 py-3">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-medium">
                 OTP / 2FA Secret
               </span>
               <div className="flex items-center justify-between">
-                <span className="truncate font-mono text-sm text-foreground">
+                <span className="text-foreground truncate font-mono text-sm">
                   {credential.otp}
                 </span>
                 <CopyButton text={credential.otp} />
@@ -271,10 +281,10 @@ export function CredentialDetailScreen({
           {/* Notes */}
           {credential.note && (
             <div className="flex flex-col gap-1 px-4 py-3">
-              <span className="text-xs font-medium text-muted-foreground">
+              <span className="text-muted-foreground text-xs font-medium">
                 Notes
               </span>
-              <p className="whitespace-pre-wrap text-sm text-foreground">
+              <p className="text-foreground text-sm whitespace-pre-wrap">
                 {credential.note}
               </p>
             </div>

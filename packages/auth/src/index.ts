@@ -522,8 +522,17 @@ export function initAuth<
       },
     },
     onAPIError: {
-      onError(error, ctx) {
-        console.error("BETTER AUTH API ERROR", error, ctx);
+      onError(error) {
+        const err = error as {
+          name?: string;
+          message?: string;
+          status?: string;
+        };
+        console.error("BETTER AUTH API ERROR", {
+          name: err.name,
+          message: err.message,
+          status: err.status,
+        });
       },
     },
   } satisfies BetterAuthOptions;

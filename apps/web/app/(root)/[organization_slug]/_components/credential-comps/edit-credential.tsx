@@ -35,7 +35,7 @@ const EditCredential = ({
   // Build initialValues from selectedCredential + decryptedFields
   const initialValues: Partial<ItemFormValues> = selectedCredential
     ? {
-        title: selectedCredential.title,
+        title: decryptedFields.title ?? selectedCredential.title,
         type: selectedCredential.type,
         isFavorite: selectedCredential.isFavorite ?? false,
         note: decryptedFields.note ?? "",
@@ -61,6 +61,10 @@ const EditCredential = ({
     try {
       const { title, type, note, isFavorite, ...rest } = values;
       const restValues = rest as unknown as Record<string, unknown>;
+
+      const encryptedTitle = await encryptString(title, vaultKey);
+      const encryptedNote =
+        note !== undefined ? await encryptString(note, vaultKey) : undefined;
 
       const encryptedData: Record<string, unknown> = {};
       let username = "";
@@ -98,9 +102,9 @@ const EditCredential = ({
 
       await updateMutate({
         id: selectedCredential.id,
-        title,
+        title: encryptedTitle,
         type,
-        note,
+        note: encryptedNote,
         organizationId: session.session.activeOrganizationId,
         username: username || undefined,
         password: password || undefined,

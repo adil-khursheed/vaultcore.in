@@ -9,7 +9,7 @@ import { TCredential } from "@/lib/types/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { AlertTriangleIcon, ChevronRight, Loader2 } from "lucide-react";
 
-import { decryptString } from "@repo/crypto";
+import { decryptStringOrPlaintext } from "@repo/crypto";
 import { useCredentialStore, useVaultStore } from "@repo/store";
 import {
   Avatar,
@@ -42,6 +42,7 @@ const DecryptedCredential = ({
   vaultKey: CryptoKey;
 }) => {
   const [decrypted, setDecrypted] = React.useState<{
+    title: string;
     username: string;
     url?: string;
   } | null>(null);
@@ -53,21 +54,24 @@ const DecryptedCredential = ({
 
     const decrypt = async () => {
       try {
+        const title = cred.title
+          ? await decryptStringOrPlaintext(cred.title, vaultKey)
+          : "";
         const username = cred.username
-          ? await decryptString(cred.username, vaultKey)
+          ? await decryptStringOrPlaintext(cred.username, vaultKey)
           : "";
         const url = cred.url
-          ? await decryptString(cred.url, vaultKey)
+          ? await decryptStringOrPlaintext(cred.url, vaultKey)
           : undefined;
 
         if (!cancelled) {
-          setDecrypted({ username, url });
+          setDecrypted({ title, username, url });
         }
       } catch (error) {
         console.error("Failed to decrypt credential:", error);
 
         if (!cancelled) {
-          setDecrypted({ username: "" });
+          setDecrypted({ title: "Unable to decrypt", username: "" });
         }
       }
     };
@@ -109,13 +113,13 @@ const DecryptedCredential = ({
                 }
               />
               <AvatarFallback className="text-sm font-medium capitalize">
-                {cred.title[0]}
+                {decrypted.title[0]}
               </AvatarFallback>
             </Avatar>
 
             <div className="flex min-w-0 flex-col gap-y-1 text-left">
               <div className="flex items-center gap-2">
-                <p className="truncate font-medium">{cred.title}</p>
+                <p className="truncate font-medium">{decrypted.title}</p>
                 <Badge
                   variant="secondary"
                   className="border-border bg-muted text-muted-foreground text-[10px] capitalize"
@@ -173,7 +177,6 @@ const ItemsList = ({
       type,
       isFavorite,
       isDeleted,
-      search,
     }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -203,11 +206,61 @@ const ItemsList = ({
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const credentials = React.useMemo(
+    () => data?.pages.flatMap((page) => page.items) ?? [],
+    [data],
+  );
+
+  const [matchedIds, setMatchedIds] = React.useState<Set<string> | null>(null);
+
+  React.useEffect(() => {
+    if (!search || !vaultKey) {
+      setMatchedIds(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const run = async () => {
+      const ids = new Set<string>();
+      const needle = search.toLowerCase();
+
+      for (const cred of credentials) {
+        try {
+          const title = cred.title
+            ? await decryptStringOrPlaintext(cred.title, vaultKey)
+            : "";
+          const username = cred.username
+            ? await decryptStringOrPlaintext(cred.username, vaultKey)
+            : "";
+
+          if (`${title} ${username}`.toLowerCase().includes(needle)) {
+            ids.add(cred.id);
+          }
+        } catch {
+          // Ignore rows that cannot be decrypted.
+        }
+      }
+
+      if (!cancelled) {
+        setMatchedIds(ids);
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [search, vaultKey, credentials]);
+
+  const visibleCredentials = matchedIds
+    ? credentials.filter((cred) => matchedIds.has(cred.id))
+    : credentials;
+
   if (isLocked) {
     return null;
   }
-
-  const credentials = data?.pages.flatMap((page) => page.items) ?? [];
 
   const typeLabels = {
     login: "logins",
@@ -270,13 +323,13 @@ const ItemsList = ({
             <CredentialRowSkeleton key={i} />
           ))}
         </div>
-      ) : credentials.length === 0 ? (
+      ) : visibleCredentials.length === 0 ? (
         <div className="flex h-full w-full flex-col items-center justify-center">
           <EmptyList title={emptyCopy.title} subtitle={emptyCopy.subtitle} />
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
-          {credentials.map((cred) => (
+          {visibleCredentials.map((cred) => (
             <DecryptedCredential
               key={cred.id}
               cred={cred}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { getAuthClient } from "@/lib/auth";
 import { KeyRoundIcon, Loader2Icon } from "lucide-react";
 
+import { deriveKeys } from "@repo/crypto";
 import { Button } from "@repo/ui/components/button";
 
 interface LoginScreenProps {
@@ -21,9 +22,10 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
 
     try {
       const authClient = getAuthClient(apiBaseUrl);
+      const { passwordHash } = await deriveKeys(password, email);
       const result = await authClient.signIn.email({
         email,
-        password,
+        password: passwordHash,
       });
 
       if (result.error) {

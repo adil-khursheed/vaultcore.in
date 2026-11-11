@@ -60,6 +60,10 @@ const AddItemButton = () => {
           otp?: string;
         };
 
+      const encryptedTitle = await encryptString(title, vaultKey);
+      const encryptedNote =
+        note !== undefined ? await encryptString(note, vaultKey) : undefined;
+
       const encryptedData: Record<string, string | undefined> = {};
       let username = "";
       let password = "";
@@ -87,9 +91,9 @@ const AddItemButton = () => {
       }
 
       await createMutate({
-        title,
+        title: encryptedTitle,
         type,
-        note,
+        note: encryptedNote,
         organizationId: session.session.activeOrganizationId,
         username: username || undefined,
         password: password || undefined,

@@ -1,25 +1,24 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { and, desc, eq, ilike, lt, or } from "@repo/db";
+import { and, desc, eq, lt } from "@repo/db";
 import { credential } from "@repo/db/schema";
 
-import { orgMemberProcedure } from "../trpc";
 import { logAuditEvent } from "../lib/audit";
+import { orgVaultProcedure } from "../trpc";
 
 export const credentialRouter = {
   /**
    * Fetch credentials for the current user's organization.
-   * Org membership is verified by the orgMemberProcedure middleware.
+   * Org membership and active vault access are verified by the orgVaultProcedure middleware.
    */
-  getCredentials: orgMemberProcedure
+  getCredentials: orgVaultProcedure
     .input(
       z.object({
         organizationId: z.string().min(1),
         type: z
           .enum(["login", "card", "identity", "note", "ssh_key"])
           .optional(),
-        search: z.string().nullish(),
         isFavorite: z.boolean().optional(),
         isDeleted: z.boolean().default(false),
         limit: z.number().min(1).max(100).default(50),
@@ -29,27 +28,14 @@ export const credentialRouter = {
     .query(async ({ ctx, input }) => {
       const { db } = ctx;
 
-      const {
-        organizationId,
-        type,
-        search,
-        limit,
-        cursor,
-        isFavorite,
-        isDeleted,
-      } = input;
+      const { organizationId, type, limit, cursor, isFavorite, isDeleted } =
+        input;
 
       const whereClause = and(
         eq(credential.organizationId, organizationId),
         eq(credential.isDeleted, isDeleted),
         type ? eq(credential.type, type) : undefined,
         isFavorite != null ? eq(credential.isFavorite, isFavorite) : undefined,
-        search
-          ? or(
-              ilike(credential.title, `%${search}%`),
-              ilike(credential.username, `%${search}%`),
-            )
-          : undefined,
         cursor ? lt(credential.id, cursor) : undefined,
       );
 
@@ -73,9 +59,9 @@ export const credentialRouter = {
 
   /**
    * Create a new credential.
-   * Org membership is verified by the orgMemberProcedure middleware.
+   * Org membership and active vault access are verified by the orgVaultProcedure middleware.
    */
-  create: orgMemberProcedure
+  create: orgVaultProcedure
     .input(
       z.object({
         title: z.string().min(1),
@@ -114,9 +100,9 @@ export const credentialRouter = {
 
   /**
    * Update an existing credential.
-   * Org membership is verified by the orgMemberProcedure middleware.
+   * Org membership and active vault access are verified by the orgVaultProcedure middleware.
    */
-  update: orgMemberProcedure
+  update: orgVaultProcedure
     .input(
       z.object({
         id: z.uuid().min(1),
@@ -169,9 +155,9 @@ export const credentialRouter = {
 
   /**
    * Batch create credentials.
-   * Org membership is verified by the orgMemberProcedure middleware.
+   * Org membership and active vault access are verified by the orgVaultProcedure middleware.
    */
-  batchCreate: orgMemberProcedure
+  batchCreate: orgVaultProcedure
     .input(
       z.object({
         organizationId: z.string().min(1),

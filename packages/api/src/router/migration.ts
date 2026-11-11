@@ -1,11 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 
-import { eq, and, inArray } from "@repo/db";
+import { and, eq, inArray } from "@repo/db";
 import { member, memberVaultKey, user, vaultKey } from "@repo/db/schema";
 
-import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { logAuditEvent } from "../lib/audit";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 
 export const migrationRouter = createTRPCRouter({
   /**
@@ -46,7 +46,7 @@ export const migrationRouter = createTRPCRouter({
 
   /**
    * Retrieves all legacy AES-GCM vault keys from the deprecated `vaultKey` table
-   * for organizations the user is a member of.
+   * for organizations the user administers.
    */
   getLegacyVaultKeys: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
@@ -61,7 +61,12 @@ export const migrationRouter = createTRPCRouter({
       })
       .from(vaultKey)
       .innerJoin(member, eq(vaultKey.organizationId, member.organizationId))
-      .where(eq(member.userId, userId));
+      .where(
+        and(
+          eq(member.userId, userId),
+          inArray(member.role, ["owner", "admin"]),
+        ),
+      );
 
     return { success: true, legacyKeys };
   }),
@@ -88,24 +93,25 @@ export const migrationRouter = createTRPCRouter({
 
       if (keys.length === 0) return { success: true };
 
-      // Verify the user is actually a member of these organizations
+      // Verify the user administers these organizations
       const orgIds = keys.map((k) => k.organizationId);
       const memberships = await ctx.db.query.member.findMany({
         where: and(
           eq(member.userId, userId),
           inArray(member.organizationId, orgIds),
+          inArray(member.role, ["owner", "admin"]),
         ),
       });
 
       const memberOrgIds = new Set(memberships.map((m) => m.organizationId));
 
-      // Filter to only orgs they are a member of
+      // Filter to only orgs they administer
       const validKeys = keys.filter((k) => memberOrgIds.has(k.organizationId));
 
       if (validKeys.length === 0) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You are not a member of any of the specified organizations",
+          message: "You do not administer any of the specified organizations",
         });
       }
 

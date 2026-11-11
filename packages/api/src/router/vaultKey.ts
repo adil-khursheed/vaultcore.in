@@ -119,6 +119,14 @@ export const vaultKeyRouter = {
         });
       }
 
+      if (memberRecord.role !== "owner" && memberRecord.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message:
+            "Only organization owners or admins can grant vault access to themselves",
+        });
+      }
+
       const vaultKeyData = await ctx.db
         .insert(memberVaultKey)
         .values({

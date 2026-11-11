@@ -117,6 +117,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@lucasmarkes/hairline':
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.4)
       '@next/third-parties':
         specifier: ^16.4.3
         version: 16.4.3(next@16.0.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
@@ -2036,6 +2039,14 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@lucasmarkes/hairline@0.5.1':
+    resolution: {integrity: sha512-zjY3bdMC3As/+enKitZ1X+D1HjpesQiAKzG1sbCFsOrb5xIuJEoepkJTBIO4jmFh6JXOQlGGylhV71nr9ipNpQ==}
+    peerDependencies:
+      react: '>=18'
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   '@mongodb-js/saslprep@1.4.6':
     resolution: {integrity: sha512-y+x3H1xBZd38n10NZF/rEBlvDOOMQ6LKUTHqr8R9VkJ+mmQOYtJFxIlkkK8fZrtOiL6VixbOBWMbZGBdal3Z1g==}
@@ -8896,6 +8907,10 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@lucasmarkes/hairline@0.5.1(react@19.2.4)':
+    optionalDependencies:
+      react: 19.2.4
 
   '@mongodb-js/saslprep@1.4.6':
     dependencies:
