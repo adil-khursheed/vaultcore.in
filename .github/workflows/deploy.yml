@@ -1,0 +1,123 @@
+name: Deploy VaultCore
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: vaultcore-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  WEB_APP_URL: https://vaultcore.in
+  NEXT_PUBLIC_WEB_APP_URL: https://vaultcore.in
+  VITE_WEB_APP_URL: https://vaultcore.in
+  BETTER_AUTH_SECRET: build-only-placeholder-not-used-at-runtime
+  SKIP_ENV_VALIDATION: "1"
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web app, worker packages, and Chrome extension
+        run: pnpm build
+
+      - name: Upload Chrome extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vaultcore-chrome-extension
+          path: apps/chrome-extension/dist
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Package deployment artifact
+        run: |
+          tar -czf deploy.tar.gz \
+            --exclude=.git \
+            --exclude=.env \
+            --exclude=.env.* \
+            --exclude=node_modules \
+            --exclude=.next/cache \
+            --exclude=.turbo \
+            --exclude=.vercel \
+            --exclude=apps/chrome-extension/dist \
+            --exclude=deploy.tar.gz \
+            .
+
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vaultcore-web
+          path: deploy.tar.gz
+          retention-days: 3
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+
+    steps:
+      - name: Download deployment artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vaultcore-web
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Add EC2 host key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.EC2_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy release
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          RELEASE: ${{ github.sha }}
+        run: |
+          ssh "$EC2_USER@$EC2_HOST" "mkdir -p /var/www/vaultcore/releases/$RELEASE"
+          scp deploy.tar.gz "$EC2_USER@$EC2_HOST:/tmp/vaultcore-$RELEASE.tar.gz"
+          ssh "$EC2_USER@$EC2_HOST" "
+            set -euo pipefail
+            umask 022
+            cd /var/www/vaultcore/releases/$RELEASE
+            tar -xzf /tmp/vaultcore-$RELEASE.tar.gz
+            rm -f /tmp/vaultcore-$RELEASE.tar.gz
+            ln -sfn /var/www/vaultcore/shared/.env .env
+            pnpm install --frozen-lockfile --prefer-offline
+            if [ -d apps/web/.next ]; then chmod -R g+w apps/web/.next; fi
+            ln -sfn /var/www/vaultcore/releases/$RELEASE /var/www/vaultcore/current
+            sudo /usr/bin/systemctl restart vaultcore-web vaultcore-worker
+            ls -1dt /var/www/vaultcore/releases/* | tail -n +6 | xargs -r rm -rf
+          "

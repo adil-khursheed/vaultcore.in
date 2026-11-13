@@ -29,10 +29,14 @@
   },
   "globalEnv": [
     "DATABASE_URL",
+    "DATABASE_POOL_MAX",
     "BETTER_AUTH_SECRET",
 
     "WEB_APP_URL",
     "NEXT_PUBLIC_WEB_APP_URL",
+    "NEXT_PUBLIC_GA_ID",
+    "NEXT_PUBLIC_GTM_ID",
+    "VITE_WEB_APP_URL",
 
     "RESEND_API_KEY",
     "EMAIL_FROM",
@@ -56,9 +60,7 @@
   "globalPassThroughEnv": [
     "NODE_ENV",
     "CI",
-    "VERCEL",
-    "VERCEL_ENV",
-    "VERCEL_URL",
+    "SKIP_ENV_VALIDATION",
     "npm_lifecycle_event"
   ]
 }

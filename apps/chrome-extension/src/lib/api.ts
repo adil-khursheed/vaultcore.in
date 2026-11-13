@@ -25,7 +25,8 @@ export function getTrpcClient(apiBaseUrl?: string): ReturnType<typeof createTRPC
   if (!baseUrl) {
     // Synchronous fallback — create with default URL
     // Callers should prefer passing apiBaseUrl for guaranteed correctness
-    const defaultUrl = "http://localhost:3000";
+    const defaultUrl =
+      import.meta.env.VITE_WEB_APP_URL ?? "http://localhost:3000";
     return createClient(defaultUrl);
   }
 

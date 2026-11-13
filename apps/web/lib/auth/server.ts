@@ -11,12 +11,7 @@ import { eq } from "@repo/db";
 import { db } from "@repo/db/client";
 import { organization } from "@repo/db/schema";
 
-const baseUrl =
-  env.VERCEL_ENV === "production"
-    ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : env.VERCEL_ENV === "preview"
-      ? `https://${env.VERCEL_URL}`
-      : "http://localhost:3000";
+const baseUrl = env.WEB_APP_URL.replace(/\/+$/, "");
 
 export const auth = initAuth({
   baseUrl,

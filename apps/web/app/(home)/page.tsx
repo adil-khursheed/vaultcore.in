@@ -46,7 +46,7 @@ const structuredData = {
       "@id": `${site.url}/#organization`,
       name: site.name,
       url: site.url,
-      logo: absoluteUrl("/icon.png"),
+      logo: absoluteUrl("/favicon.ico"),
     },
     {
       "@type": "WebSite",

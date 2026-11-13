@@ -1,5 +1,3 @@
-import { waitUntil } from "@vercel/functions";
-
 import { db } from "@repo/db/client";
 import { auditLog } from "@repo/db/schema";
 
@@ -30,35 +28,28 @@ interface AuditEventParams {
 }
 
 /**
- * Log an audit event to the database asynchronously via `waitUntil`.
+ * Log an audit event without blocking the response.
  *
- * Uses Vercel's `waitUntil()` to schedule the DB insert after the
- * response is sent. This gives us:
- *
- * - **Zero added latency** — the response is returned immediately
- * - **Guaranteed delivery** — unlike fire-and-forget, `waitUntil`
- *   extends the serverless function lifetime until the promise
- *   resolves, so the insert always completes
- * - **No infrastructure overhead** — no Redis/BullMQ/pg-boss needed
+ * VaultCore runs on a long-lived Node.js process on EC2, so the insert
+ * continues after the response is sent. On serverless platforms, replace
+ * this with the platform's request-lifetime extension API.
  *
  * Errors are caught internally to prevent audit failures from
  * surfacing as unhandled rejections.
  */
 export function logAuditEvent(params: AuditEventParams): void {
-  waitUntil(
-    db
-      .insert(auditLog)
-      .values({
-        organizationId: params.organizationId ?? null,
-        actorUserId: params.actorUserId ?? null,
-        targetUserId: params.targetUserId ?? null,
-        action: params.action,
-        metadata: params.metadata ?? {},
-        ipAddress: params.ipAddress ?? null,
-        userAgent: params.userAgent ?? null,
-      })
-      .catch((error) => {
-        console.error("[AUDIT] Failed to log event:", params.action, error);
-      }),
-  );
+  void db
+    .insert(auditLog)
+    .values({
+      organizationId: params.organizationId ?? null,
+      actorUserId: params.actorUserId ?? null,
+      targetUserId: params.targetUserId ?? null,
+      action: params.action,
+      metadata: params.metadata ?? {},
+      ipAddress: params.ipAddress ?? null,
+      userAgent: params.userAgent ?? null,
+    })
+    .catch((error) => {
+      console.error("[AUDIT] Failed to log event:", params.action, error);
+    });
 }

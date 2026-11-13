@@ -2,6 +2,8 @@
 
 VaultCore is a zero-knowledge password manager and digital vault for logins, cards, identities, secure notes, and SSH keys, with organization-based sharing, per-member vault key access, audit logging, and key rotation. Everything is encrypted client-side before it reaches the server. This repository is structured as a Turborepo containing the core Next.js web application and the companion Chrome extension.
 
+For the production AWS deployment, see [deployment.md](./deployment.md).
+
 ## 📦 What's inside?
 
 This monorepo utilizes [Turborepo](https://turborepo.org) to manage multiple applications and shared packages efficiently.
@@ -17,7 +19,7 @@ The core business logic and configurations are decoupled into shared internal pa
 
 - **`@repo/api`**: tRPC router definitions and backend API logic.
 - **`@repo/auth`**: Authentication logic integrating Better Auth.
-- **`@repo/database`**: Prisma schema, migrations, and database client instances.
+- **`@repo/db`**: Drizzle schema, migrations, and database client instances.
 - **`@repo/store`**: Shared Zustand state management (e.g., managing the active vault lock state and derived keys).
 - **`@repo/ui`**: Shared React components based on Shadcn UI and Tailwind CSS v4.
 - **`@repo/email`**: Transactional email templates and Resend configurations.
@@ -28,7 +30,7 @@ The core business logic and configurations are decoupled into shared internal pa
 
 ### 1. Prerequisites
 
-- [Node.js](https://nodejs.org/en/) (v18+)
+- [Node.js](https://nodejs.org/en/) (v22 recommended; Next.js 16 requires v20.9+)
 - [pnpm](https://pnpm.io/) (Package manager)
 - [PostgreSQL](https://www.postgresql.org/) database
 - [Redis](https://redis.io/) instance
@@ -38,13 +40,16 @@ The core business logic and configurations are decoupled into shared internal pa
 Create `.env` files based on `.env.example` in the root directory.
 
 #### Core Settings
+
 - `DATABASE_URL`: Your PostgreSQL connection string.
 - `REDIS_URL` / `REDIS_PUBLIC_URL`: Your Redis connection string (used for ratelimiting/caching).
 - `JWT_SECRET`: A secure random string for JWT signing.
 - `BETTER_AUTH_SECRET`: A secure random string for Better Auth sessions.
 - `WEB_APP_URL` / `NEXT_PUBLIC_WEB_APP_URL`: The URL where your Next.js app will be hosted (e.g., `http://localhost:3000`).
+- `VITE_WEB_APP_URL`: The web app URL compiled into the Chrome extension build.
 
 #### External Integrations
+
 - `RESEND_API_KEY`: API key for transaction emails via [Resend](https://resend.com).
 - `EMAIL_FROM`: The verified sender address (e.g., `VaultCore <onboarding@resend.dev>`).
 - Polar.sh (Payments & Subscriptions)
@@ -64,10 +69,10 @@ pnpm install
 
 ### 4. Database Setup
 
-Push the Prisma database schema to your configured Postgres database:
+Push the Drizzle database schema to your configured Postgres database:
 
 ```bash
-pnpm --filter database db:push
+pnpm --filter @repo/db push
 ```
 
 ### 5. Running the Development Server

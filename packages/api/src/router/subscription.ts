@@ -109,9 +109,6 @@ export const subscriptionRouter = {
       // Since we are in a tRPC procedure, we can return the URL for the frontend to redirect to.
       // The Better Auth Polar plugin expects a POST to /checkout with the slug.
 
-      const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
       // We can generate the checkout URL using the Polar SDK directly if needed,
       // but the Better Auth plugin handles linking the customer to the user.
 

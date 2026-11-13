@@ -1,6 +1,7 @@
 const API_BASE_URL_KEY = "vaultcore_api_base_url";
 const ACTIVE_ORG_KEY = "vaultcore_active_org_id";
-const DEFAULT_API_URL = "http://localhost:3000";
+const DEFAULT_API_URL =
+  import.meta.env.VITE_WEB_APP_URL ?? "http://localhost:3000";
 
 export async function getApiBaseUrl(): Promise<string> {
   const result = await chrome.storage.local.get(API_BASE_URL_KEY);
