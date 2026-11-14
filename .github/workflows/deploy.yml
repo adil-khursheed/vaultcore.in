@@ -61,7 +61,9 @@ jobs:
 
       - name: Package deployment artifact
         run: |
-          tar -czf deploy.tar.gz \
+          # Write outside the workspace: a tarball created inside the tree it
+          # archives changes "." while tar reads it and tar exits 1.
+          tar -czf "$RUNNER_TEMP/deploy.tar.gz" \
             --exclude=.git \
             --exclude=.env \
             --exclude=.env.* \
@@ -71,8 +73,8 @@ jobs:
             --exclude=.vercel \
             --exclude=apps/marketing \
             --exclude=apps/chrome-extension/dist \
-            --exclude=deploy.tar.gz \
             .
+          mv "$RUNNER_TEMP/deploy.tar.gz" deploy.tar.gz
 
       - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
