@@ -15,6 +15,6 @@ export const theme = {
   appName: "VaultCore",
   baseUrl:
     process.env.NODE_ENV === "production"
-      ? "https://vaultcore.in"
+      ? "https://dash.vaultcore.in"
       : "http://localhost:3000",
 };

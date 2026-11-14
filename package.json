@@ -8,6 +8,7 @@
     "db:studio": "turbo -F @repo/db studio",
     "dev": "turbo watch dev --continue",
     "dev:web": "turbo watch dev -F web...",
+    "dev:marketing": "turbo watch dev -F marketing...",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",

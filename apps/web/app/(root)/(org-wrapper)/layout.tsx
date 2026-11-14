@@ -1,5 +1,6 @@
 import React from "react";
-import Navbar from "@/components/shared/navbar";
+
+import Navbar from "@repo/site/components/navbar";
 
 const OrgWrapperLayout = ({ children }: { children: React.ReactNode }) => {
   return (

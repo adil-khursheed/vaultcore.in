@@ -24,8 +24,6 @@ const fontMono = Geist_Mono({
 
 const description = site.description;
 
-const isProduction = process.env.NODE_ENV === "production";
-
 export const metadata: Metadata = {
   title: {
     default: site.title,
@@ -62,21 +60,10 @@ export const metadata: Metadata = {
     site: site.twitterHandle,
     images: [twitterImage],
   },
-  robots: isProduction
-    ? {
-        index: true,
-        follow: true,
-        googleBot: {
-          index: true,
-          follow: true,
-          "max-image-preview": "large",
-          "max-snippet": -1,
-        },
-      }
-    : {
-        index: false,
-        follow: false,
-      },
+  robots: {
+    index: false,
+    follow: false,
+  },
   formatDetection: {
     telephone: false,
     email: false,

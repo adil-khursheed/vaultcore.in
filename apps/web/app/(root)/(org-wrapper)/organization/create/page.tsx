@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import React from "react";
 import CreateOrgForm from "@/app/(root)/_components/create-org-form";
 import LogoutButton from "@/app/(root)/[organization_slug]/_components/logout-button";
-import BGPattern from "@/components/shared/bg-pattern";
-import SectionContainer from "@/components/shared/section-container";
 import { getSession } from "@/lib/auth/server";
 import { Building2Icon } from "lucide-react";
 
+import BGPattern from "@repo/site/components/bg-pattern";
+import SectionContainer from "@repo/site/components/section-container";
 import {
   Card,
   CardContent,
@@ -26,9 +26,15 @@ const Page = async () => {
 
   return (
     <SectionContainer>
-      <div className="flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center gap-3 px-4 py-10">
-        <BGPattern />
-        <Card className="mx-auto w-full max-w-md">
+      <div className="relative flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center px-4 py-16">
+        <div className="pointer-events-none absolute inset-x-0 top-0">
+          <BGPattern />
+        </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0">
+          <BGPattern />
+        </div>
+
+        <Card className="bg-card border-border relative mx-auto w-full shadow-sm md:max-w-md">
           <CardHeader className="text-center">
             <div className="bg-primary/10 mx-auto mb-4 flex size-12 items-center justify-center rounded-full">
               <Building2Icon className="text-primary size-6" />
@@ -57,7 +63,6 @@ const Page = async () => {
             <LogoutButton />
           </CardFooter>
         </Card>
-        <BGPattern />
       </div>
     </SectionContainer>
   );

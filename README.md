@@ -1,6 +1,8 @@
 # VaultCore
 
-VaultCore is a zero-knowledge password manager and digital vault for logins, cards, identities, secure notes, and SSH keys, with organization-based sharing, per-member vault key access, audit logging, and key rotation. Everything is encrypted client-side before it reaches the server. This repository is structured as a Turborepo containing the core Next.js web application and the companion Chrome extension.
+VaultCore is a zero-knowledge password manager and digital vault for logins, cards, identities, secure notes, and SSH keys, with organization-based sharing, per-member vault key access, audit logging, and key rotation. Everything is encrypted client-side before it reaches the server. This repository is a Turborepo containing two Next.js sites (marketing and product) plus the companion Chrome extension.
+
+The marketing site is served from `vaultcore.in` on Vercel. The product app is served from `dash.vaultcore.in` on a single EC2 instance. They are separate deployments that share code through `packages/*`.
 
 For the production AWS deployment, see [deployment.md](./deployment.md).
 
@@ -10,7 +12,8 @@ This monorepo utilizes [Turborepo](https://turborepo.org) to manage multiple app
 
 ### Applications
 
-- **`apps/web`**: The main VaultCore web application. Built with Next.js, featuring the primary user dashboard for managing credentials, notes, and vault settings.
+- **`apps/web`**: The product app served from `dash.vaultcore.in`. Next.js dashboard for managing credentials, notes, and vault settings, plus all auth pages (`/login`, `/signup`, `/verify`, `/accept-invitation`) because Better Auth needs the API on the same origin. Always `noindex`.
+- **`apps/marketing`**: The public site served from `vaultcore.in`. Next.js, statically rendered, SEO/AEO friendly: home page, pricing, `robots.txt`, `sitemap.xml`, and redirects for `/login`, `/signup`, and `/app` to the product app. Deployed on Vercel with root directory `apps/marketing`.
 - **`apps/chrome-extension`**: The companion browser extension built with React and Vite. Interfaces securely with the web app to autofill passwords directly into the browser.
 
 ### Shared Packages (`/packages/*`)
@@ -22,6 +25,7 @@ The core business logic and configurations are decoupled into shared internal pa
 - **`@repo/db`**: Drizzle schema, migrations, and database client instances.
 - **`@repo/store`**: Shared Zustand state management (e.g., managing the active vault lock state and derived keys).
 - **`@repo/ui`**: Shared React components based on Shadcn UI and Tailwind CSS v4.
+- **`@repo/site`**: Site chrome shared by both apps: `Navbar`, `Footer`, `Logo`, `SectionContainer`, `BGPattern`, and `config.ts` (`siteUrl` from `NEXT_PUBLIC_SITE_URL`, `appUrl` from `NEXT_PUBLIC_WEB_APP_URL`).
 - **`@repo/email`**: Transactional email templates and Resend configurations.
 - **`@repo/jobs`**: Background jobs and queue logic processing.
 - Build/Config packages: **`@repo/eslint-config`**, **`@repo/prettier-config`**, **`@repo/typescript-config`**.
@@ -45,7 +49,8 @@ Create `.env` files based on `.env.example` in the root directory.
 - `REDIS_URL` / `REDIS_PUBLIC_URL`: Your Redis connection string (used for ratelimiting/caching).
 - `JWT_SECRET`: A secure random string for JWT signing.
 - `BETTER_AUTH_SECRET`: A secure random string for Better Auth sessions.
-- `WEB_APP_URL` / `NEXT_PUBLIC_WEB_APP_URL`: The URL where your Next.js app will be hosted (e.g., `http://localhost:3000`).
+- `WEB_APP_URL` / `NEXT_PUBLIC_WEB_APP_URL`: The product app URL (e.g., `http://localhost:3000`, production `https://dash.vaultcore.in`).
+- `NEXT_PUBLIC_SITE_URL`: The marketing site URL (e.g., `http://localhost:3001`, production `https://vaultcore.in`).
 - `VITE_WEB_APP_URL`: The web app URL compiled into the Chrome extension build.
 
 #### External Integrations
@@ -83,8 +88,16 @@ To start all applications and packages in development mode simultaneously:
 pnpm dev
 ```
 
-- Web App runs on: `http://localhost:3000`
+- Product app runs on: `http://localhost:3000`
+- Marketing site runs on: `http://localhost:3001`
 - The Chrome Extension will be built in watch mode in `apps/chrome-extension/dist`. See "Loading the Extension" to test it natively in Chrome.
+
+To run just one Next.js site:
+
+```bash
+pnpm dev:web        # product app only
+pnpm dev:marketing  # marketing site only
+```
 
 ## 🧩 Loading the Chrome Extension locally
 
@@ -100,6 +113,8 @@ pnpm dev
 We use `turbo` to map commands across the entire workspace safely.
 
 - `pnpm build`: Build all apps and packages for production.
+- `pnpm --filter marketing build`: Build only the marketing site (what Vercel runs).
+- `pnpm --filter web build`: Build only the product app (what the EC2 workflow builds).
 - `pnpm dev`: Start development mode for all apps.
 - `pnpm lint`: Run ESLint across the repository.
 - `pnpm format`: Format codebase using Prettier.

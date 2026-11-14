@@ -115,6 +115,67 @@ importers:
         specifier: ^6.3.5
         version: 6.4.1(@types/node@22.19.13)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0)
 
+  apps/marketing:
+    dependencies:
+      '@next/third-parties':
+        specifier: ^16.4.3
+        version: 16.4.3(next@16.0.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      '@number-flow/react':
+        specifier: ^0.5.10
+        version: 0.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@repo/site':
+        specifier: workspace:*
+        version: link:../../packages/site
+      '@repo/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@tabler/icons-react':
+        specifier: ^3.35.0
+        version: 3.38.0(react@19.2.4)
+      lucide-react:
+        specifier: ^0.554.0
+        version: 0.554.0(react@19.2.4)
+      motion:
+        specifier: ^12.23.25
+        version: 12.35.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next:
+        specifier: 16.0.10
+        version: 16.0.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: ^19.2.1
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.2.1
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@repo/prettier-config':
+        specifier: workspace:*
+        version: link:../../packages/prettier-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.19.13
+      '@types/react':
+        specifier: 19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: 19.2.2
+        version: 19.2.2(@types/react@19.2.2)
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.3(jiti@2.6.1)
+      prettier:
+        specifier: ^3.6.2
+        version: 3.8.1
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+
   apps/web:
     dependencies:
       '@lucasmarkes/hairline':
@@ -147,6 +208,9 @@ importers:
       '@repo/email':
         specifier: workspace:*
         version: link:../../packages/email
+      '@repo/site':
+        specifier: workspace:*
+        version: link:../../packages/site
       '@repo/store':
         specifier: workspace:*
         version: link:../../packages/store
@@ -539,6 +603,40 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/site:
+    dependencies:
+      '@repo/ui':
+        specifier: workspace:*
+        version: link:../ui
+      lucide-react:
+        specifier: ^0.554.0
+        version: 0.554.0(react@19.2.4)
+      next:
+        specifier: 16.0.10
+        version: 16.0.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: ^19.2.1
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.2.1
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@repo/prettier-config':
+        specifier: workspace:*
+        version: link:../prettier-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/react':
+        specifier: 19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: 19.2.2
+        version: 19.2.2(@types/react@19.2.2)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
 
   packages/store:
     dependencies:
@@ -5082,6 +5180,7 @@ packages:
   eslint@9.39.3:
     resolution: {integrity: sha512-VmQ+sifHUbI/IcSopBCF/HO3YiHQx/AVd3UVyYL6weuwW+HvON9VYn5l6Zl1WZzPWXPNZrSQpxwkkZ/VuvJZzg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'

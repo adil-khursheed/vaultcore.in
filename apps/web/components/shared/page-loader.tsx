@@ -1,8 +1,7 @@
 import React from "react";
 
+import SectionContainer from "@repo/site/components/section-container";
 import { Spinner } from "@repo/ui/components/spinner";
-
-import SectionContainer from "./section-container";
 
 const PageLoader = () => {
   return (

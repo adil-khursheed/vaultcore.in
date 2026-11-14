@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CheckCircle2, ChevronRight, LayoutDashboard } from "lucide-react";
 import * as motion from "motion/react-client";
 
+import { siteUrl } from "@repo/site/config";
 import { Button } from "@repo/ui/components/button";
 
 const SuccessPage = () => {
@@ -67,7 +68,7 @@ const SuccessPage = () => {
             size="lg"
             className="h-12 px-8 text-base transition-all hover:scale-105 active:scale-95"
           >
-            <Link href="/" className="flex items-center gap-2">
+            <Link href={siteUrl} className="flex items-center gap-2">
               <LayoutDashboard className="size-5" />
               Go to Dashboard
               <ChevronRight className="size-4" />

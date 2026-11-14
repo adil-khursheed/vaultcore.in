@@ -3,11 +3,11 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import Logo from "@/components/shared/logo";
 import { authClient } from "@/lib/auth/client";
 import { IconBuilding, IconPlus } from "@tabler/icons-react";
 import { ChevronDown } from "lucide-react";
 
+import Logo from "@repo/site/components/logo";
 import {
   Avatar,
   AvatarFallback,

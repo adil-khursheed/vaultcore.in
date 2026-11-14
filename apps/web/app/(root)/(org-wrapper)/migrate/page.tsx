@@ -1,6 +1,7 @@
 import React from "react";
-import MigrationWizard from "./_components/migration-wizard";
 import { Metadata } from "next";
+
+import MigrationWizard from "./_components/migration-wizard";
 
 export const metadata: Metadata = {
   title: "Security Upgrade | VaultCore",

@@ -1,5 +1,7 @@
 import { env } from "@/env";
 
+import { siteUrl as marketingUrl } from "@repo/site/config";
+
 export const siteUrl = env.NEXT_PUBLIC_WEB_APP_URL.replace(/\/+$/, "");
 export const gaId = env.NEXT_PUBLIC_GA_ID;
 export const gtmId = env.NEXT_PUBLIC_GTM_ID;
@@ -15,7 +17,7 @@ export const site = {
 } as const;
 
 export const ogImage = {
-  url: "/og-image.png",
+  url: `${marketingUrl}/og-image.png`,
   width: 1200,
   height: 630,
   type: "image/png",
@@ -23,12 +25,9 @@ export const ogImage = {
 } as const;
 
 export const twitterImage = {
-  url: "/twitter-image.png",
+  url: `${marketingUrl}/twitter-image.png`,
   width: 1200,
   height: 630,
   type: "image/png",
   alt: "VaultCore — the quiet vault for your passwords",
 } as const;
-
-export const absoluteUrl = (path = "/") =>
-  path === "/" ? siteUrl : new URL(path, `${siteUrl}/`).toString();

@@ -1,0 +1,25 @@
+{
+  "name": "@repo/site",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./config": "./src/config.ts",
+    "./components/*": "./src/components/*.tsx"
+  },
+  "dependencies": {
+    "@repo/ui": "workspace:*",
+    "lucide-react": "^0.554.0",
+    "next": "16.0.10",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  },
+  "devDependencies": {
+    "@repo/prettier-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "typescript": "5.9.2"
+  },
+  "prettier": "@repo/prettier-config"
+}

@@ -23,6 +23,7 @@
     "@repo/crypto": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/email": "workspace:*",
+    "@repo/site": "workspace:*",
     "@repo/store": "workspace:*",
     "@repo/ui": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.8",
