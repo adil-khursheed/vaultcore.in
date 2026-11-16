@@ -2,10 +2,7 @@ import type { CredentialType, TCredential } from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
 import { getTrpcClient } from "@/lib/api";
 import { getAuthClient } from "@/lib/auth";
-import {
-  getActiveOrganizationId,
-  setActiveOrganizationId,
-} from "@/lib/storage";
+import { resolveActiveOrganizationId } from "@/lib/storage";
 import { AlertTriangleIcon, Loader2Icon, LogOutIcon, PlusIcon } from "lucide-react";
 
 import { decryptStringOrPlaintext } from "@repo/crypto";
@@ -81,26 +78,11 @@ export function CredentialListScreen({
 
         setLoading(true);
 
-        // Try to get organization ID
-        let orgId = await getActiveOrganizationId();
-
+        const orgId = await resolveActiveOrganizationId(apiBaseUrl);
         if (!orgId) {
-          // Try to get org from the auth session
-          const authClient = getAuthClient(apiBaseUrl);
-          const { data: session } = await authClient.getSession();
-
-          // The organization plugin adds activeOrganizationId to the session
-          const activeOrgId = (session?.session as Record<string, unknown>)
-            ?.activeOrganizationId as string | undefined;
-
-          if (activeOrgId) {
-            orgId = activeOrgId;
-            await setActiveOrganizationId(orgId);
-          }
-        }
-
-        if (!orgId) {
-          setError("No organization found. Please set up your vault first.");
+          setError(
+            "No organization found. Please set up your vault in the web app.",
+          );
           setLoading(false);
           return;
         }
@@ -187,6 +169,23 @@ export function CredentialListScreen({
   const handleAutofill = () => {
     const cred = matchingCredentials[0];
     if (!cred) return;
+
+    // Multiple matches: show them all instead of guessing one
+    if (matchingCredentials.length > 1) {
+      setActiveFilter("login");
+      setSearch(
+        currentTabUrl
+          ? (() => {
+              try {
+                return new URL(currentTabUrl).hostname;
+              } catch {
+                return "";
+              }
+            })()
+          : "",
+      );
+      return;
+    }
 
     chrome.tabs?.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {

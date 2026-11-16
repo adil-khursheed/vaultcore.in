@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { getTrpcClient } from "@/lib/api";
 import { getAuthClient } from "@/lib/auth";
-import { getActiveOrganizationId, getApiBaseUrl } from "@/lib/storage";
+import { resolveActiveOrganizationId } from "@/lib/storage";
 import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon, LogOutIcon } from "lucide-react";
 
 import {
@@ -76,9 +76,12 @@ export function VaultUnlockScreen({
       );
 
       // 3. Fetch and unwrap the vault key with the private key
-      const orgId = await getActiveOrganizationId();
+      const orgId = await resolveActiveOrganizationId(apiBaseUrl);
       if (!orgId) {
-        throw new Error("No active organization. Please select one.");
+        setError(
+          "No organization found. Please set up your vault in the web app.",
+        );
+        return;
       }
 
       const trpc = getTrpcClient(apiBaseUrl);

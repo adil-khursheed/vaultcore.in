@@ -66,13 +66,8 @@ export default function App() {
         return (
           <LoginScreen
             apiBaseUrl={apiBaseUrl}
-            onLogin={() => {
-              if (!vaultKey) {
-                navigate("lock");
-              } else {
-                navigate("list");
-              }
-            }}
+            // Login derives and unlocks the vault in one step — no lock screen
+            onLogin={() => navigate("list")}
           />
         );
 

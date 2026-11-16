@@ -1,8 +1,20 @@
 import { useState } from "react";
+import { getTrpcClient } from "@/lib/api";
 import { getAuthClient } from "@/lib/auth";
-import { KeyRoundIcon, Loader2Icon, LockIcon, MailIcon } from "lucide-react";
+import { setActiveOrganizationId } from "@/lib/storage";
+import {
+  KeyRoundIcon,
+  Loader2Icon,
+  LockIcon,
+  MailIcon,
+} from "lucide-react";
 
-import { deriveKeys } from "@repo/crypto";
+import {
+  decryptPrivateKey,
+  deriveKeys,
+  unwrapVaultKeyFromMember,
+} from "@repo/crypto";
+import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
 import {
   InputGroup,
@@ -21,13 +33,15 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const { setMasterKey, setVaultKey, setPrivateKey } = useVaultStore();
+
   const handleLogin = async () => {
     setLoading(true);
     setError("");
 
     try {
       const authClient = getAuthClient(apiBaseUrl);
-      const { passwordHash } = await deriveKeys(password, email);
+      const { masterKey, passwordHash } = await deriveKeys(password, email);
       const result = await authClient.signIn.email({
         email,
         password: passwordHash,
@@ -35,11 +49,62 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
 
       if (result.error) {
         setError(result.error.message || "Login failed");
-      } else {
-        onLogin();
+        return;
       }
+
+      const user = result.data.user;
+
+      // Same flow as the web login: master password also unlocks the vault
+      if (!user.encryptedPrivateKey || !user.privateKeyIv) {
+        setError(
+          "Your account needs key migration. Open the VaultCore web app to complete it.",
+        );
+        return;
+      }
+
+      const privateKey = await decryptPrivateKey(
+        {
+          encryptedPrivateKey: user.encryptedPrivateKey,
+          iv: user.privateKeyIv,
+        },
+        masterKey,
+      );
+
+      // Activate the personal organization, like the web login does
+      const activeOrg = await authClient.organization.setActive({
+        organizationSlug: user.id,
+      });
+      const orgId = activeOrg?.data?.id;
+      if (!orgId) {
+        throw new Error("No organization found. Please set up your vault first.");
+      }
+      await setActiveOrganizationId(orgId);
+
+      // Unwrap the vault key and land directly in the vault
+      const trpc = getTrpcClient(apiBaseUrl);
+      const vaultResult = await trpc.vault.getMyVaultKey.query({
+        organizationId: orgId,
+      });
+      const vaultKey = await unwrapVaultKeyFromMember(
+        vaultResult.vaultKeyData.encryptedKey,
+        privateKey,
+      );
+
+      // Keys live only in memory — cleared on lock/auto-lock/logout
+      setPrivateKey(privateKey);
+      setMasterKey(masterKey);
+      setVaultKey(vaultKey);
+
+      setPassword("");
+      onLogin();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const message =
+        err instanceof Error ? err.message : "Login failed";
+      setError(
+        message.includes("decrypt") || message.includes("operation")
+          ? "Failed to unlock your vault. Check your master password."
+          : message,
+      );
     } finally {
       setLoading(false);
     }
@@ -72,6 +137,7 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           />
         </InputGroup>
         <InputGroup className="h-11">
