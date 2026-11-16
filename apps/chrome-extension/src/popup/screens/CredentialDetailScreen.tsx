@@ -1,21 +1,12 @@
-import type { CredentialType, TCredential } from "@/lib/types";
+import type { TCredential } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { getTrpcClient } from "@/lib/api";
 import { getActiveOrganizationId } from "@/lib/storage";
-import {
-  ArrowLeftIcon,
-  CreditCardIcon,
-  ExternalLinkIcon,
-  FileTextIcon,
-  GlobeIcon,
-  KeyIcon,
-  StarIcon,
-  UserIcon,
-  ZapIcon,
-} from "lucide-react";
+import { ArrowLeftIcon, ExternalLinkIcon, StarIcon, ZapIcon } from "lucide-react";
 
 import { decryptStringOrPlaintext } from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
+import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar";
 import { Button } from "@repo/ui/components/button";
 
 import { CopyButton } from "../components/CopyButton";
@@ -26,30 +17,6 @@ interface CredentialDetailScreenProps {
   onBack: () => void;
   apiBaseUrl: string;
 }
-
-const typeIcons: Record<CredentialType, React.ReactNode> = {
-  login: <GlobeIcon className="h-5 w-5" />,
-  card: <CreditCardIcon className="h-5 w-5" />,
-  identity: <UserIcon className="h-5 w-5" />,
-  note: <FileTextIcon className="h-5 w-5" />,
-  ssh_key: <KeyIcon className="h-5 w-5" />,
-};
-
-const typeLabels: Record<CredentialType, string> = {
-  login: "Login",
-  card: "Credit Card",
-  identity: "Identity",
-  note: "Secure Note",
-  ssh_key: "SSH Key",
-};
-
-const typeColors: Record<CredentialType, string> = {
-  login: "bg-blue-500/10 text-blue-400",
-  card: "bg-amber-500/10 text-amber-400",
-  identity: "bg-violet-500/10 text-violet-400",
-  note: "bg-emerald-500/10 text-emerald-400",
-  ssh_key: "bg-rose-500/10 text-rose-400",
-};
 
 export function CredentialDetailScreen({
   credentialId,
@@ -78,34 +45,31 @@ export function CredentialDetailScreen({
           isDeleted: false,
         });
 
-        const found = result.items.find((c: any) => c.id === credentialId) as
-          | TCredential
-          | undefined;
+        const found = result.items.find((c) => c.id === credentialId);
 
         if (!vaultKey) {
           throw new Error("Vault is locked");
         }
 
         if (found) {
+          const dec = async (v: string | null) => {
+            if (!v) return null;
+            try {
+              return await decryptStringOrPlaintext(v, vaultKey);
+            } catch {
+              return null;
+            }
+          };
           const decrypted = {
             ...found,
-            title: found.title
-              ? await decryptStringOrPlaintext(found.title, vaultKey)
-              : null,
-            username: found.username
-              ? await decryptStringOrPlaintext(found.username, vaultKey)
-              : null,
-            password: found.password
-              ? await decryptStringOrPlaintext(found.password, vaultKey)
-              : null,
-            url: found.url
-              ? await decryptStringOrPlaintext(found.url, vaultKey)
-              : null,
-            note: found.note
-              ? await decryptStringOrPlaintext(found.note, vaultKey)
-              : null,
+            title: (await dec(found.title)) ?? "",
+            username: await dec(found.username),
+            password: await dec(found.password),
+            url: await dec(found.url),
+            note: await dec(found.note),
+            otp: await dec(found.otp),
           };
-          setCredential(decrypted as TCredential);
+          setCredential(decrypted);
         } else {
           setError("Credential not found");
         }
@@ -126,20 +90,28 @@ export function CredentialDetailScreen({
 
     chrome.tabs?.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          type: "AUTOFILL",
-          payload: {
-            username: credential.username || "",
-            password: credential.password || "",
+        chrome.tabs.sendMessage(
+          tabs[0].id,
+          {
+            type: "AUTOFILL",
+            payload: {
+              username: credential.username || "",
+              password: credential.password || "",
+            },
           },
-        });
+          (response) => {
+            if (response?.success) {
+              window.close();
+            }
+          },
+        );
       }
     });
   };
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center" role="status">
         <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     );
@@ -151,18 +123,27 @@ export function CredentialDetailScreen({
         <div className="border-border flex items-center border-b px-3 py-3">
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             onClick={onBack}
-            className="text-muted-foreground h-8 w-8"
+            className="text-muted-foreground"
           >
-            <ArrowLeftIcon className="h-4 w-4" />
+            <ArrowLeftIcon className="size-4" />
           </Button>
         </div>
         <div className="flex flex-1 items-center justify-center px-4">
-          <p className="text-destructive text-sm">{error || "Not found"}</p>
+          <p className="text-muted-foreground text-sm">{error || "Not found"}</p>
         </div>
       </div>
     );
+  }
+
+  let faviconUrl: string | undefined;
+  if (credential.type === "login" && credential.url) {
+    try {
+      faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(credential.url).hostname}&sz=64`;
+    } catch {
+      faviconUrl = undefined;
+    }
   }
 
   return (
@@ -171,11 +152,11 @@ export function CredentialDetailScreen({
       <div className="border-border flex items-center gap-2 border-b px-3 py-3">
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           onClick={onBack}
-          className="text-muted-foreground h-8 w-8"
+          className="text-muted-foreground"
         >
-          <ArrowLeftIcon className="h-4 w-4" />
+          <ArrowLeftIcon className="size-4" />
         </Button>
         <span className="text-foreground text-sm font-medium">Details</span>
       </div>
@@ -184,22 +165,23 @@ export function CredentialDetailScreen({
       <div className="flex-1 overflow-y-auto">
         {/* Title section */}
         <div className="border-border flex items-center gap-3 border-b px-4 py-4">
-          <div
-            className={`flex h-11 w-11 items-center justify-center rounded-xl ${typeColors[credential.type]}`}
-          >
-            {typeIcons[credential.type]}
-          </div>
+          <Avatar>
+            <AvatarImage src={faviconUrl} />
+            <AvatarFallback className="text-sm font-medium capitalize">
+              {credential.title[0]}
+            </AvatarFallback>
+          </Avatar>
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex items-center gap-1.5">
               <h2 className="text-foreground truncate text-base font-semibold">
                 {credential.title}
               </h2>
               {credential.isFavorite && (
-                <StarIcon className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
+                <StarIcon className="fill-primary text-primary size-4 shrink-0" />
               )}
             </div>
-            <span className="text-muted-foreground text-xs">
-              {typeLabels[credential.type]}
+            <span className="text-muted-foreground text-xs capitalize">
+              {credential.type.replace("_", " ")}
             </span>
           </div>
         </div>
@@ -209,7 +191,7 @@ export function CredentialDetailScreen({
           (credential.username || credential.password) && (
             <div className="border-border border-b px-4 py-3">
               <Button onClick={handleAutofill} className="w-full">
-                <ZapIcon className="mr-2 h-4 w-4" />
+                <ZapIcon className="size-4" />
                 Auto-fill on this page
               </Button>
             </div>
@@ -227,7 +209,7 @@ export function CredentialDetailScreen({
                 <span className="text-foreground truncate text-sm">
                   {credential.username}
                 </span>
-                <CopyButton text={credential.username} />
+                <CopyButton text={credential.username} label="Username" />
               </div>
             </div>
           )}
@@ -248,17 +230,17 @@ export function CredentialDetailScreen({
               <span className="text-muted-foreground text-xs font-medium">
                 Website
               </span>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <a
                   href={credential.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary flex items-center gap-1 truncate text-sm hover:underline"
+                  className="text-foreground flex min-w-0 items-center gap-1 truncate text-sm hover:underline"
                 >
-                  {credential.url}
-                  <ExternalLinkIcon className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{credential.url}</span>
+                  <ExternalLinkIcon className="shrink-0" />
                 </a>
-                <CopyButton text={credential.url} />
+                <CopyButton text={credential.url} label="URL" />
               </div>
             </div>
           )}
@@ -269,11 +251,11 @@ export function CredentialDetailScreen({
               <span className="text-muted-foreground text-xs font-medium">
                 OTP / 2FA Secret
               </span>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-foreground truncate font-mono text-sm">
                   {credential.otp}
                 </span>
-                <CopyButton text={credential.otp} />
+                <CopyButton text={credential.otp} label="OTP" />
               </div>
             </div>
           )}

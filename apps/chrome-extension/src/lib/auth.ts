@@ -1,10 +1,12 @@
-import { organizationClient } from "better-auth/client/plugins";
+import { inferAdditionalFields, organizationClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
+
+import type { Auth } from "@repo/auth";
 
 export function getAuthClient(baseUrl: string) {
   const authClientInstance = createAuthClient({
     baseURL: baseUrl,
-    plugins: [organizationClient()],
+    plugins: [organizationClient(), inferAdditionalFields<Auth>()],
     fetchOptions: {
       credentials: "include",
     },
@@ -12,7 +14,3 @@ export function getAuthClient(baseUrl: string) {
 
   return authClientInstance;
 }
-
-// export function resetAuthClient() {
-//   authClientInstance = null;
-// }

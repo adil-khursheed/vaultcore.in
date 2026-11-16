@@ -47,9 +47,19 @@ const CREDENTIAL_TYPES: { label: string; value: CredentialType }[] = [
 function generatePassword(length = 20): string {
   const charset =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
-  const array = new Uint8Array(length);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => charset[byte % charset.length]).join("");
+  // Rejection sampling keeps every character equally likely
+  const limit = Math.floor(256 / charset.length) * charset.length;
+  const bytes = new Uint8Array(length * 2);
+  let password = "";
+  while (password.length < length) {
+    crypto.getRandomValues(bytes);
+    for (const byte of bytes) {
+      if (byte >= limit) continue;
+      password += charset[byte % charset.length];
+      if (password.length === length) break;
+    }
+  }
+  return password;
 }
 
 const AddCredentialSchema = z.object({
@@ -221,7 +231,7 @@ export function AddCredentialScreen({
                         Title *
                       </FieldLabel>
                     </FieldContent>
-                    <InputGroup className="h-10">
+                    <InputGroup className="h-9">
                       <InputGroupInput
                         id={field.name}
                         name={field.name}
@@ -252,7 +262,7 @@ export function AddCredentialScreen({
                           {type === "identity" ? "Name" : "Username / Email"}
                         </FieldLabel>
                       </FieldContent>
-                      <InputGroup className="h-10">
+                      <InputGroup className="h-9">
                         <InputGroupInput
                           id={field.name}
                           name={field.name}
@@ -285,7 +295,7 @@ export function AddCredentialScreen({
                         </FieldLabel>
                       </FieldContent>
                       <div className="flex gap-2">
-                        <InputGroup className="h-10 flex-1">
+                        <InputGroup className="h-9 flex-1">
                           <InputGroupInput
                             id={field.name}
                             name={field.name}
@@ -314,7 +324,7 @@ export function AddCredentialScreen({
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="text-muted-foreground h-10 px-2.5 text-xs"
+                          className="text-muted-foreground h-9 px-2.5 text-xs"
                           onClick={() => {
                             field.handleChange(generatePassword());
                             setShowPassword(true);
@@ -343,7 +353,7 @@ export function AddCredentialScreen({
                           Website URL
                         </FieldLabel>
                       </FieldContent>
-                      <InputGroup className="h-10">
+                      <InputGroup className="h-9">
                         <InputGroupInput
                           id={field.name}
                           name={field.name}

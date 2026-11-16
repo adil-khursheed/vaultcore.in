@@ -1,9 +1,9 @@
 import { SearchIcon, XIcon } from "lucide-react";
 
-import { Button } from "@repo/ui/components/button";
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
 } from "@repo/ui/components/input-group";
 
@@ -16,14 +16,15 @@ interface SearchBarProps {
 export function SearchBar({
   value,
   onChange,
-  placeholder = "Search credentials...",
+  placeholder = "Search vault...",
 }: SearchBarProps) {
   return (
-    <InputGroup className="bg-muted/50 h-9 w-full rounded-lg transition-colors">
+    <InputGroup>
       <InputGroupAddon>
-        <SearchIcon className="text-muted-foreground size-4" />
+        <SearchIcon aria-hidden="true" />
       </InputGroupAddon>
       <InputGroupInput
+        aria-label="Search vault"
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -31,14 +32,14 @@ export function SearchBar({
       />
       {value && (
         <InputGroupAddon align="inline-end">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-5"
+          <InputGroupButton
+            size="icon-sm"
+            aria-label="Clear search"
+            title="Clear search"
             onClick={() => onChange("")}
           >
-            <XIcon className="size-3.5" />
-          </Button>
+            <XIcon aria-hidden="true" />
+          </InputGroupButton>
         </InputGroupAddon>
       )}
     </InputGroup>

@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { getAuthClient } from "@/lib/auth";
-import { KeyRoundIcon, Loader2Icon } from "lucide-react";
+import { KeyRoundIcon, Loader2Icon, LockIcon, MailIcon } from "lucide-react";
 
 import { deriveKeys } from "@repo/crypto";
 import { Button } from "@repo/ui/components/button";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@repo/ui/components/input-group";
 
 interface LoginScreenProps {
   apiBaseUrl: string;
@@ -43,35 +48,45 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6 px-6">
       <div className="flex flex-col items-center gap-2">
-        <KeyRoundIcon className="text-primary size-10" />
-        <h1 className="text-lg font-semibold">VaultCore</h1>
+        <KeyRoundIcon className="text-primary size-8" />
+        <h1 className="text-lg font-semibold tracking-tight">VaultCore</h1>
         <p className="text-muted-foreground text-center text-xs">
           Sign in to access your credentials
         </p>
       </div>
 
       {error && (
-        <div className="border-destructive/30 bg-destructive/10 text-destructive w-full rounded-md border px-3 py-2 text-xs">
+        <div className="text-destructive w-full rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs">
           {error}
         </div>
       )}
 
       <div className="flex w-full flex-col gap-3">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="border-input bg-background h-10 w-full rounded-md border px-3 text-sm"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-          className="border-input bg-background h-10 w-full rounded-md border px-3 text-sm"
-        />
+        <InputGroup className="h-11">
+          <InputGroupAddon>
+            <MailIcon className="text-muted-foreground" />
+          </InputGroupAddon>
+          <InputGroupInput
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </InputGroup>
+        <InputGroup className="h-11">
+          <InputGroupAddon>
+            <LockIcon className="text-muted-foreground" />
+          </InputGroupAddon>
+          <InputGroupInput
+            type="password"
+            autoComplete="current-password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+          />
+        </InputGroup>
         <Button onClick={handleLogin} disabled={loading} className="w-full">
           {loading ? (
             <Loader2Icon className="size-4 animate-spin" />

@@ -6,7 +6,7 @@ import {
   getActiveOrganizationId,
   setActiveOrganizationId,
 } from "@/lib/storage";
-import { LogOutIcon, PlusIcon, ShieldIcon } from "lucide-react";
+import { AlertTriangleIcon, Loader2Icon, LogOutIcon, PlusIcon } from "lucide-react";
 
 import { decryptStringOrPlaintext } from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
@@ -32,6 +32,16 @@ const FILTER_TABS: { label: string; value: CredentialType | "all" }[] = [
   { label: "Identity", value: "identity" },
 ];
 
+// Decrypt one field; a row that cannot be decrypted stays usable (like the web app)
+async function safeDecrypt(value: string | null, vaultKey: CryptoKey) {
+  if (!value) return null;
+  try {
+    return await decryptStringOrPlaintext(value, vaultKey);
+  } catch {
+    return null;
+  }
+}
+
 export function CredentialListScreen({
   onSelectCredential,
   onAddCredential,
@@ -46,7 +56,6 @@ export function CredentialListScreen({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentTabUrl, setCurrentTabUrl] = useState<string | null>(null);
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   const { vaultKey } = useVaultStore();
 
@@ -96,8 +105,6 @@ export function CredentialListScreen({
           return;
         }
 
-        setOrganizationId(orgId);
-
         const trpc = getTrpcClient(apiBaseUrl);
         const result = await trpc.credential.getCredentials.query({
           organizationId: orgId,
@@ -105,29 +112,21 @@ export function CredentialListScreen({
           isDeleted: false,
         });
 
-        // Decrypt all fields
+        // Decrypt all fields client-side; the server only ever sees ciphertext
         const decryptedItems = await Promise.all(
-          result.items.map(async (item: any) => ({
+          result.items.map(async (item: TCredential) => ({
             ...item,
             title: item.title
-              ? await decryptStringOrPlaintext(item.title, vaultKey)
+              ? (await safeDecrypt(item.title, vaultKey)) ?? ""
               : "",
-            username: item.username
-              ? await decryptStringOrPlaintext(item.username, vaultKey)
-              : null,
-            password: item.password
-              ? await decryptStringOrPlaintext(item.password, vaultKey)
-              : null,
-            url: item.url
-              ? await decryptStringOrPlaintext(item.url, vaultKey)
-              : null,
-            note: item.note
-              ? await decryptStringOrPlaintext(item.note, vaultKey)
-              : null,
+            username: await safeDecrypt(item.username, vaultKey),
+            password: await safeDecrypt(item.password, vaultKey),
+            url: await safeDecrypt(item.url, vaultKey),
+            note: await safeDecrypt(item.note, vaultKey),
           })),
         );
 
-        setCredentials(decryptedItems as TCredential[]);
+        setCredentials(decryptedItems);
       } catch (err: unknown) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to load credentials";
@@ -138,7 +137,7 @@ export function CredentialListScreen({
     }
 
     loadData();
-  }, [apiBaseUrl, vaultKey]);
+  }, [apiBaseUrl, vaultKey, navigate]);
 
   // Filter and search credentials
   const filteredCredentials = useMemo(() => {
@@ -154,7 +153,7 @@ export function CredentialListScreen({
       const q = search.toLowerCase();
       filtered = filtered.filter(
         (c) =>
-          c.title.toLowerCase().includes(q) ||
+          (c.title ?? "").toLowerCase().includes(q) ||
           c.username?.toLowerCase().includes(q),
       );
     }
@@ -186,35 +185,29 @@ export function CredentialListScreen({
   }, [credentials, currentTabUrl]);
 
   const handleAutofill = () => {
-    if (matchingCredentials.length === 1) {
-      // Auto-fill directly
-      const cred = matchingCredentials[0];
-      chrome.tabs?.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]?.id) {
-          chrome.tabs.sendMessage(tabs[0].id, {
+    const cred = matchingCredentials[0];
+    if (!cred) return;
+
+    chrome.tabs?.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(
+          tabs[0].id,
+          {
             type: "AUTOFILL",
             payload: {
-              username: cred?.username || "",
-              password: cred?.password || "",
+              username: cred.username || "",
+              password: cred.password || "",
             },
-          });
-        }
-      });
-    } else if (matchingCredentials.length > 1) {
-      // Show the matching credentials
-      setActiveFilter("login");
-      setSearch(
-        currentTabUrl
-          ? (() => {
-              try {
-                return new URL(currentTabUrl).hostname;
-              } catch {
-                return "";
-              }
-            })()
-          : "",
-      );
-    }
+          },
+          (response) => {
+            if (response?.success) {
+              // Password-manager convention: close the popup once filled
+              window.close();
+            }
+          },
+        );
+      }
+    });
   };
 
   const handleLogout = async () => {
@@ -230,29 +223,39 @@ export function CredentialListScreen({
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-border flex items-center justify-between border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <ShieldIcon className="text-primary h-5 w-5" />
-          <h1 className="text-foreground text-sm font-semibold">VaultCore</h1>
+      <div className="border-border flex h-12 items-center justify-between border-b px-4">
+        <span className="text-foreground text-sm font-semibold tracking-tight">
+          VaultCore
+        </span>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onAddCredential}
+            className="text-muted-foreground"
+            title="Add credential"
+          >
+            <PlusIcon className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleLogout}
+            className="text-muted-foreground"
+            title="Sign out"
+          >
+            <LogOutIcon className="size-4" />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleLogout}
-          className="text-muted-foreground h-8 w-8"
-          title="Sign out"
-        >
-          <LogOutIcon className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* Search */}
-      <div className="px-3 pt-3 pb-2">
+      <div className="p-3 pb-0">
         <SearchBar value={search} onChange={setSearch} />
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 px-3 pb-2">
+      <div className="flex gap-1 px-3 py-2">
         {FILTER_TABS.map((tab) => (
           <Button
             key={tab.value}
@@ -273,19 +276,26 @@ export function CredentialListScreen({
       />
 
       {/* Credential list */}
-      <div className="flex-1 overflow-y-auto px-2 pb-16">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 pt-0">
         {loading ? (
-          <div className="flex h-40 items-center justify-center">
-            <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+          <div className="flex h-40 items-center justify-center" role="status">
+            <Loader2Icon className="text-primary size-5 animate-spin" />
           </div>
         ) : error ? (
-          <div className="flex h-40 flex-col items-center justify-center gap-2 px-4">
-            <p className="text-destructive text-center text-sm">{error}</p>
+          <div className="flex h-40 flex-col items-center justify-center gap-2 px-4 text-center">
+            <AlertTriangleIcon
+              className="text-muted-foreground size-6"
+              aria-hidden="true"
+            />
+            <p className="text-muted-foreground text-sm">
+              Couldn&apos;t load your items.
+            </p>
+            <p className="text-destructive text-xs">{error}</p>
           </div>
         ) : filteredCredentials.length === 0 ? (
           <div className="flex h-40 flex-col items-center justify-center gap-2">
             <p className="text-muted-foreground text-sm">
-              {search ? "No credentials found" : "No credentials yet"}
+              {search ? "No results for your search." : "No items found."}
             </p>
             {!search && (
               <Button
@@ -294,36 +304,22 @@ export function CredentialListScreen({
                 onClick={onAddCredential}
                 className="text-primary h-auto p-0 text-xs"
               >
-                Add your first credential
+                Create a new credential to get started.
               </Button>
             )}
           </div>
         ) : (
-          <div className="flex flex-col gap-0.5">
-            {filteredCredentials.map((credential) => (
-              <CredentialListItem
-                key={credential.id}
-                credential={credential}
-                onClick={() => onSelectCredential(credential.id)}
-                isMatching={matchingCredentials.some(
-                  (m) => m.id === credential.id,
-                )}
-              />
-            ))}
-          </div>
+          filteredCredentials.map((credential) => (
+            <CredentialListItem
+              key={credential.id}
+              credential={credential}
+              onClick={() => onSelectCredential(credential.id)}
+              isMatching={matchingCredentials.some(
+                (m) => m.id === credential.id,
+              )}
+            />
+          ))
         )}
-      </div>
-
-      {/* Add button */}
-      <div className="absolute right-4 bottom-4">
-        <Button
-          size="icon"
-          onClick={onAddCredential}
-          className="h-12 w-12 rounded-full shadow-lg transition-all hover:shadow-xl active:scale-95"
-          title="Add credential"
-        >
-          <PlusIcon className="h-5 w-5" />
-        </Button>
       </div>
     </div>
   );

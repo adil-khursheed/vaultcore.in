@@ -2,11 +2,21 @@ import { useState } from "react";
 import { getTrpcClient } from "@/lib/api";
 import { getAuthClient } from "@/lib/auth";
 import { getActiveOrganizationId, getApiBaseUrl } from "@/lib/storage";
-import { Loader2Icon, LockKeyholeIcon, LogOutIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon, LogOutIcon } from "lucide-react";
 
-import { deriveMasterKey } from "@repo/crypto";
+import {
+  decryptPrivateKey,
+  deriveMasterKey,
+  unwrapVaultKeyFromMember,
+} from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
 import { Button } from "@repo/ui/components/button";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@repo/ui/components/input-group";
 
 interface VaultUnlockScreenProps {
   apiBaseUrl: string;
@@ -20,16 +30,19 @@ export function VaultUnlockScreen({
   onLogout,
 }: VaultUnlockScreenProps) {
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { setMasterKey, setVaultKey } = useVaultStore();
+  const { setMasterKey, setVaultKey, setPrivateKey } = useVaultStore();
 
   const authClient = getAuthClient(apiBaseUrl);
   const { data } = authClient.useSession();
 
   const handleUnlock = async () => {
-    if (!data) {
+    const user = data?.user;
+
+    if (!user) {
       setError("User is not authenticated. Please login first.");
       return;
     }
@@ -43,11 +56,26 @@ export function VaultUnlockScreen({
     setError("");
 
     try {
-      // 1. Derive master key from password
-      const masterKey = await deriveMasterKey(password, data?.user.email);
-      setMasterKey(masterKey);
+      // 1. Derive the master key from the master password (client-side only)
+      const masterKey = await deriveMasterKey(password, user.email);
 
-      // 2. Fetch the user's encrypted vault key
+      // 2. Decrypt the user's RSA private key with the master key
+      if (!user.encryptedPrivateKey || !user.privateKeyIv) {
+        setError(
+          "Your account needs key migration. Open the VaultCore web app to complete it.",
+        );
+        return;
+      }
+
+      const privateKey = await decryptPrivateKey(
+        {
+          encryptedPrivateKey: user.encryptedPrivateKey,
+          iv: user.privateKeyIv,
+        },
+        masterKey,
+      );
+
+      // 3. Fetch and unwrap the vault key with the private key
       const orgId = await getActiveOrganizationId();
       if (!orgId) {
         throw new Error("No active organization. Please select one.");
@@ -62,42 +90,85 @@ export function VaultUnlockScreen({
         throw new Error("Vault key not found for this organization.");
       }
 
-      // TODO: Unwrap the vault key with the user's RSA private key
-      // For now, mark as unlocked — full RSA flow requires private key from session
+      const vaultKey = await unwrapVaultKeyFromMember(
+        result.vaultKeyData.encryptedKey,
+        privateKey,
+      );
+
+      // Keys live only in memory — cleared on lock/auto-lock/logout
+      setPrivateKey(privateKey);
+      setMasterKey(masterKey);
+      setVaultKey(vaultKey);
+
+      setPassword("");
       onUnlock();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to unlock vault");
+      const message =
+        err instanceof Error ? err.message : "Failed to unlock vault";
+      setError(
+        message.includes("decrypt") || message.includes("operation")
+          ? "Failed to unlock your vault. Check your master password."
+          : message,
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const openWebApp = () => {
+    chrome.tabs.create({ url: apiBaseUrl });
+  };
+
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6 px-6">
       <div className="flex flex-col items-center gap-2">
-        <LockKeyholeIcon className="text-primary size-10" />
-        <h1 className="text-lg font-semibold">Unlock Vault</h1>
+        <LockIcon className="text-primary size-8" />
+        <h1 className="text-lg font-semibold tracking-tight">Unlock Vault</h1>
         <p className="text-muted-foreground text-center text-xs">
           Enter your master password to unlock
         </p>
       </div>
 
       {error && (
-        <div className="border-destructive/30 bg-destructive/10 text-destructive w-full rounded-md border px-3 py-2 text-xs">
+        <div className="text-destructive w-full rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs">
           {error}
+          {error.includes("migration") && (
+            <Button
+              variant="link"
+              size="sm"
+              onClick={openWebApp}
+              className="text-primary mt-1 h-auto p-0 text-xs"
+            >
+              Open the web app
+            </Button>
+          )}
         </div>
       )}
 
       <div className="flex w-full flex-col gap-3">
-        <input
-          type="password"
-          placeholder="Master Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-          className="border-input bg-background h-10 w-full rounded-md border px-3 text-sm"
-          autoFocus
-        />
+        <InputGroup className="h-11">
+          <InputGroupAddon>
+            <LockIcon className="text-muted-foreground" />
+          </InputGroupAddon>
+          <InputGroupInput
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter your master password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+            autoFocus
+          />
+          <InputGroupAddon align="inline-end">
+            <InputGroupButton
+              variant="ghost"
+              size="icon-sm"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </InputGroupButton>
+          </InputGroupAddon>
+        </InputGroup>
         <Button onClick={handleUnlock} disabled={loading} className="w-full">
           {loading ? <Loader2Icon className="size-4 animate-spin" /> : "Unlock"}
         </Button>
@@ -105,9 +176,9 @@ export function VaultUnlockScreen({
           variant="ghost"
           size="sm"
           onClick={onLogout}
-          className="text-muted-foreground text-xs"
+          className="text-muted-foreground h-8 text-xs"
         >
-          <LogOutIcon className="mr-1 size-3" /> Sign Out
+          <LogOutIcon className="size-3" /> Sign Out
         </Button>
       </div>
     </div>

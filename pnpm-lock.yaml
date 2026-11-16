@@ -38,6 +38,9 @@ importers:
       '@repo/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@repo/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
       '@repo/crypto':
         specifier: workspace:*
         version: link:../../packages/crypto
