@@ -25,14 +25,28 @@ export function proxy(request: NextRequest) {
   }
 
   const isProd = process.env.NODE_ENV === "production";
-  response.cookies.set(hintCookie, hasSessionCookie ? "1" : "", {
-    // host-only in dev (localhost), shared across subdomains in prod
-    ...(isProd ? { domain: ".vaultcore.in" } : {}),
-    path: "/",
-    sameSite: "lax",
-    secure: isProd,
-    maxAge: hasSessionCookie ? 60 * 60 * 24 * 30 : 0,
-  });
+  if (hasSessionCookie) {
+    // Only set when absent: re-setting on every request would fight the
+    // logout action's delete on the same response.
+    if (!request.cookies.has(hintCookie)) {
+      response.cookies.set(hintCookie, "1", {
+        // host-only in dev (localhost), shared across subdomains in prod
+        ...(isProd ? { domain: ".vaultcore.in" } : {}),
+        path: "/",
+        sameSite: "lax",
+        secure: isProd,
+        maxAge: 60 * 60 * 24 * 30,
+      });
+    }
+  } else {
+    response.cookies.set(hintCookie, "", {
+      ...(isProd ? { domain: ".vaultcore.in" } : {}),
+      path: "/",
+      sameSite: "lax",
+      secure: isProd,
+      maxAge: 0,
+    });
+  }
 
   return response;
 }
