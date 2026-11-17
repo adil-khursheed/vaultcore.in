@@ -201,7 +201,7 @@ const AcceptInvitationCard = ({
               aria-hidden="true"
             />
           </div>
-          <h1 className="text-foreground text-xl font-semibold md:text-2xl">
+          <h1 className="text-foreground text-xl font-semibold wrap-break-word md:text-2xl">
             You&apos;ve joined {organizationName}
           </h1>
           <CardDescription className="text-base leading-relaxed">
@@ -231,10 +231,10 @@ const AcceptInvitationCard = ({
         <p className="text-muted-foreground text-[11px] font-medium tracking-[0.1em] uppercase">
           Organization invitation
         </p>
-        <h1 className="text-foreground text-xl font-semibold md:text-2xl">
+        <h1 className="text-foreground text-xl font-semibold wrap-break-word md:text-2xl">
           Join {organizationName}
         </h1>
-        <CardDescription className="text-base leading-relaxed">
+        <CardDescription className="text-base leading-relaxed wrap-break-word">
           {inviterName} invited you to collaborate in the {organizationName}{" "}
           vault.
         </CardDescription>
@@ -291,7 +291,7 @@ const AcceptInvitationCard = ({
               ) : null}
               Accept invitation
             </Button>
-            <p className="text-muted-foreground text-center text-xs">
+            <p className="text-muted-foreground text-center text-xs wrap-break-word">
               Signed in as {currentUserEmail}
             </p>
           </div>
@@ -300,7 +300,7 @@ const AcceptInvitationCard = ({
         {isAuthenticated && !isRecipient ? (
           <div className="flex flex-col gap-3">
             <div className="border-border bg-muted/40 rounded-lg border p-4">
-              <p className="text-sm font-medium">
+              <p className="text-sm font-medium wrap-break-word">
                 Signed in as {currentUserEmail}
               </p>
               <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
@@ -330,7 +330,7 @@ const AcceptInvitationCard = ({
             <Button asChild className="h-11 w-full">
               <Link href={loginHref}>Log in to accept</Link>
             </Button>
-            <p className="text-muted-foreground text-center text-xs">
+            <p className="text-muted-foreground text-center text-xs wrap-break-word">
               Use the account for {invitedEmail}.
             </p>
           </div>
@@ -341,7 +341,7 @@ const AcceptInvitationCard = ({
             <Button asChild className="h-11 w-full">
               <Link href={signupHref}>Create your account</Link>
             </Button>
-            <p className="text-muted-foreground text-center text-xs leading-relaxed">
+            <p className="text-muted-foreground text-center text-xs leading-relaxed wrap-break-word">
               You&apos;ll create a personal vault first, then join{" "}
               {organizationName}.
             </p>
@@ -350,10 +350,12 @@ const AcceptInvitationCard = ({
       </CardContent>
 
       <CardFooter>
-        <p className="text-muted-foreground flex items-start gap-2 text-xs leading-relaxed">
+        <p className="text-muted-foreground flex items-start gap-2 text-xs leading-relaxed wrap-break-word">
           <MailIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-          This invitation is unique to {invitedEmail}
-          {expiry ? ` and expires on ${expiry}` : ""}.
+          <span className="min-w-0">
+            This invitation is unique to {invitedEmail}
+            {expiry ? ` and expires on ${expiry}` : ""}.
+          </span>
         </p>
       </CardFooter>
     </Card>

@@ -105,7 +105,7 @@ const NewAccountForm = ({
                   </InputGroupAddon>
                 </InputGroup>
                 {invitedEmail ? (
-                  <FieldDescription>
+                  <FieldDescription className="wrap-break-word">
                     This invitation is for {invitedEmail}.
                   </FieldDescription>
                 ) : null}

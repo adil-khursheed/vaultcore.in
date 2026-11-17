@@ -61,7 +61,7 @@ const Page = async ({
 
   return (
     <SectionContainer>
-      <div className="relative flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center px-4 py-16">
+      <div className="relative flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center px-4 py-24">
         <div className="pointer-events-none absolute inset-x-0 top-0">
           <BGPattern />
         </div>
@@ -71,7 +71,7 @@ const Page = async ({
 
         <Card className="bg-card border-border relative mx-auto w-full shadow-sm md:max-w-md">
           <CardHeader className="gap-2">
-            <h1 className="text-foreground text-xl font-semibold md:text-2xl">
+            <h1 className="text-foreground text-xl font-semibold wrap-break-word md:text-2xl">
               {pendingInvitation
                 ? `Join ${pendingInvitation.organization.name}`
                 : `Create your ${planName.toLowerCase()} account`}
@@ -96,10 +96,10 @@ const Page = async ({
           <CardContent className="flex flex-col gap-5">
             {pendingInvitation ? (
               <div className="border-border bg-muted/50 rounded-lg border p-4">
-                <p className="text-sm font-medium">
+                <p className="text-sm font-medium wrap-break-word">
                   Invitation for {pendingInvitation.email}
                 </p>
-                <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                <p className="text-muted-foreground mt-1 text-xs leading-relaxed wrap-break-word">
                   You&apos;ll join {pendingInvitation.organization.name} after
                   your account is ready. An admin will grant vault access
                   separately.

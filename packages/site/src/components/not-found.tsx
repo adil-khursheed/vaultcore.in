@@ -15,7 +15,7 @@ const NotFound = () => {
       <Navbar />
       <main className="w-full overflow-x-hidden px-3">
         <SectionContainer>
-          <div className="relative flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center px-4 py-16">
+          <div className="relative flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center px-4 py-24">
             <div className="pointer-events-none absolute inset-x-0 top-0">
               <BGPattern />
             </div>
@@ -26,7 +26,7 @@ const NotFound = () => {
             <div className="relative flex flex-col items-center text-center">
               <span
                 aria-hidden
-                className="text-foreground/[0.08] font-serif text-[clamp(6rem,22vw,12rem)] leading-none font-extrabold tracking-tight select-none"
+                className="text-foreground/8 font-serif text-[clamp(6rem,22vw,12rem)] leading-none font-extrabold tracking-tight select-none"
               >
                 404
               </span>

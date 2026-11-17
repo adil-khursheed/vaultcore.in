@@ -37,7 +37,7 @@ const Page = async () => {
 
   return (
     <SectionContainer>
-      <div className="relative flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center px-4 py-16">
+      <div className="relative flex min-h-[calc(100dvh-60px)] flex-col items-center justify-center px-4 py-24">
         <div className="pointer-events-none absolute inset-x-0 top-0">
           <BGPattern />
         </div>
