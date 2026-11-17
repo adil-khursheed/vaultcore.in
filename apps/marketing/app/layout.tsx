@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Outfit, Source_Serif_4 } from "next/font/google";
-import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 
 import "@repo/ui/globals.css";
 
 import { ogImage, site, twitterImage } from "@/lib/seo";
 
+import ConsentBanner from "@repo/site/components/consent-banner";
 import ThemeProvider from "@repo/ui/components/providers/theme-providers";
 
 const fontSans = Outfit({
@@ -35,11 +35,20 @@ export const metadata: Metadata = {
   category: "security",
   keywords: [
     "password manager",
-    "zero-knowledge vault",
+    "best password manager",
+    "free password manager",
+    "password manager app",
+    "zero-knowledge password manager",
     "encrypted password storage",
+    "password generator",
+    "password autofill",
+    "password manager for families",
+    "1Password alternative",
+    "Bitwarden alternative",
+    "LastPass alternative",
     "secure notes",
     "SSH key storage",
-    "password generator",
+    "password vault",
   ],
   authors: [{ name: site.name }],
   creator: site.name,
@@ -101,9 +110,10 @@ export default function RootLayout({
       <body
         className={`${fontSans.variable} ${fontSerif.variable} ${fontMono.variable} min-h-screen w-screen antialiased`}
       >
-        {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
+        {gtmId || gaId ? (
+          <ConsentBanner gaId={gaId} gtmId={gtmId} />
+        ) : null}
         <ThemeProvider>{children}</ThemeProvider>
-        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
     </html>
   );

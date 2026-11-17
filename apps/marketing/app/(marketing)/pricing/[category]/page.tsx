@@ -33,6 +33,11 @@ export const generateMetadata = async ({
   return {
     title,
     description,
+    keywords: [
+      "password manager pricing",
+      "free password manager plan",
+      "password manager for families",
+    ],
     alternates: {
       canonical: canonicalPath,
     },

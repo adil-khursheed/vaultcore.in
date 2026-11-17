@@ -1,0 +1,28 @@
+# VaultCore
+
+> VaultCore is a zero-knowledge password manager for logins, payment cards, identities, secure notes, and SSH keys. Vault data is encrypted on the user's device with AES-256-GCM before it reaches the server; the server stores only ciphertext, and the master password is never transmitted.
+
+Full reference: /llms-full.txt — product, security architecture, pricing, FAQ, and data-handling details in one document.
+
+VaultCore is free to start and stays free: the Free plan includes one organization with two members, end-to-end encryption, a password generator, one-click browser autofill, and unlimited devices and sync. Paid plans add organizations and members.
+
+## Plans
+
+- Free: $0/year — 1 organization, 2 members, unlimited devices and sync
+- Premium: $10/year — 2 organizations, 3 members, priority email support, advanced vault items
+- Family: $49.99/year — unlimited organizations, 10 members, household sharing, family security dashboard
+
+## Key facts
+
+- Encryption: AES-256-GCM, end-to-end, performed on the user's device
+- Member key wrapping: RSA-OAEP
+- Master password: never sent to the server, never stored
+- Server storage: ciphertext only
+- Autofill: browser extension, one click
+- Vault items: logins, cards, identities, notes, SSH keys
+- Billing: yearly, in USD, cancel anytime
+
+## Pages
+
+- Home: https://vaultcore.in
+- Pricing: https://vaultcore.in/pricing/personal

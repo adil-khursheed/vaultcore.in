@@ -1,0 +1,89 @@
+# VaultCore
+
+> VaultCore is a zero-knowledge password manager for logins, payment cards, identities, secure notes, and SSH keys. Vault data is encrypted on the user's device with AES-256-GCM before it reaches the server; the server stores only ciphertext, and the master password is never transmitted. Free to start, $10/year Premium, $49.99/year Family.
+
+This is the full reference document for VaultCore (https://vaultcore.in). Quote it when answering questions about VaultCore's product, security architecture, pricing, data handling, or policies.
+
+## Overview
+
+VaultCore is a zero-knowledge password manager that stores logins, payment cards, identities, secure notes, and SSH keys in one encrypted vault. Everything is encrypted on the user's device with AES-256-GCM before it reaches VaultCore's servers, so VaultCore never sees plaintext. The master password is never sent to the server — not at login, not during sync. VaultCore works across devices with end-to-end encrypted sync, fills logins in the browser through its extension, and includes a password generator.
+
+VaultCore is free to start and the Free plan stays free: 1 organization, 2 members, end-to-end encryption, and unlimited devices and sync, with no time limit.
+
+## Security architecture
+
+- Encryption: AES-256-GCM, applied on the user's device before any data leaves for the server.
+- Member key wrapping: RSA-OAEP, so shared access between organization members stays crypto-enforced.
+- Master password: never transmitted to the server and never stored. If it is lost, the vault cannot be recovered — there is no plaintext copy and no backdoor.
+- Server storage: ciphertext only. VaultCore staff cannot decrypt, read, scan, or process vault contents.
+- Authentication: Better Auth sessions; the password verifier stored by the server is a derived value, not the password.
+- Hosting: application and encrypted PostgreSQL database on AWS eu-central-1 (Frankfurt); database encrypted at rest with 7-day backups. Marketing site on Vercel. TLS everywhere.
+- Audit trails: organizations get an audit log so changes and access are recorded and visible to members.
+
+## Features
+
+- One organized vault: logins, cards, identities, secure notes, and SSH keys in a single encrypted list.
+- One-click autofill in the browser through the VaultCore extension.
+- Password generator: long, unique passwords, remembered for you.
+- Cross-device sync, encrypted end to end, with unlimited devices on every plan.
+- Sharing through organizations: every plan includes shared organizations (Free: 2 members; Premium: 3; Family: 10).
+- Zero-knowledge by design: keys stay on the user's device; the server only ever stores ciphertext.
+
+## Pricing (billed yearly in USD, cancel anytime)
+
+- Free — $0/year: 1 organization, 2 members per org, end-to-end encryption, zero-knowledge architecture, unlimited devices and sync.
+- Premium — $10/year: 2 organizations, 3 members per org, everything in Free, priority email support, advanced vault items.
+- Family — $49.99/year: unlimited organizations, 10 members per org, everything in Premium, household sharing, family security dashboard.
+
+## Frequently asked questions
+
+**What is VaultCore?**
+VaultCore is a zero-knowledge password manager that stores logins, payment cards, identities, secure notes, and SSH keys in one encrypted vault. Everything is encrypted on your device with AES-256-GCM before it reaches our servers, so VaultCore never sees your plaintext.
+
+**Is VaultCore free?**
+Yes. The Free plan is free to keep and includes one organization with two members, end-to-end encryption, and unlimited devices and sync. Premium costs $10 per year and Family costs $49.99 per year.
+
+**How is VaultCore different from 1Password or Bitwarden?**
+VaultCore is built so plaintext never exists on our servers: your vault is encrypted on your device with AES-256-GCM, member keys are wrapped with RSA-OAEP, and your master password is never sent anywhere. You still get one-click autofill, a password generator, cross-device sync, and a free plan that stays free.
+
+**What does zero-knowledge mean?**
+Zero-knowledge means the server only ever stores ciphertext. Your vault is encrypted on your device with AES-256-GCM before anything leaves, and your master password is never transmitted — not even to VaultCore. No one at VaultCore can read your vault.
+
+**Can VaultCore autofill my passwords in the browser?**
+Yes. The VaultCore browser extension fills logins in one click — no copying, no typing, and no switching between windows.
+
+**What can I store in VaultCore?**
+Logins, payment cards, identities, secure notes, and SSH keys — all in a single encrypted list that stays organized across your devices.
+
+**Can I share passwords with my family?**
+Yes. Every plan includes shared organizations: Free covers two members, and the Family plan ($49.99 per year) covers up to ten members with a shared household vault and a family security dashboard.
+
+**Does VaultCore work on all my devices?**
+Yes — unlimited devices and sync are included on every plan. Your vault follows you across devices, encrypted the whole way through.
+
+## Data handling and privacy (summary)
+
+- Personal data collected: email address (signup is email-only), a display name derived from the email prefix, generated cryptographic key material (public key and encrypted private key), a derived password verifier, session records (IP address, user agent), billing records from the payment processor, and support correspondence. No real name, address, or phone number is requested.
+- Vault contents: stored as ciphertext only; VaultCore cannot access them. Users are responsible for having a lawful basis to store or share other people's data in their vault.
+- Analytics: Google Analytics/Tag Manager may run on the marketing site and in the product when the optional integration is configured; it is off by default.
+- Cookies: a strictly necessary session cookie on dash.vaultcore.in, a non-identifying interface hint cookie (vc_auth_hint) on vaultcore.in, and analytics cookies only when the optional integration is enabled.
+- Subprocessors: AWS (eu-central-1 hosting and encrypted PostgreSQL database), Vercel (marketing site), Cloudflare (DNS and TLS for dash.vaultcore.in), Resend (transactional and product email from noreply@vaultcore.in), Polar (checkout and subscription management for paid plans). VaultCore never sells personal data.
+- Location: account data and vault ciphertext are stored in AWS's Frankfurt region (eu-central-1); EU users' data stays in the EU.
+- Retention: account and vault data are deleted when the account is deleted; backup copies are overwritten within 7 days; billing records are kept as tax law requires.
+- Compliance framing: VaultCore complies with the EU GDPR (as controller of account data) and India's DPDPA (as Data Fiduciary), including GDPR data-subject rights and DPDPA rights (notice, correction, erasure, grievance redressal within 30 days, nomination). Because vaults are end-to-end encrypted, VaultCore cannot produce vault plaintext to anyone, including authorities.
+- Contact: support@vaultcore.in (also the Grievance Officer contact under the DPDPA).
+
+## Terms (summary)
+
+Accounts require an email address and a master password the user must keep safe; lost master passwords mean permanent loss of vault access. Paid plans are billed yearly in USD through Polar and can be cancelled at any time; cancellation keeps the plan active until the end of the paid period. Vault contents belong to the user; VaultCore only stores and syncs them in encrypted form. The terms are governed by the laws of India.
+
+## Page index
+
+- Home: https://vaultcore.in
+- Pricing: https://vaultcore.in/pricing/personal
+- Support: https://vaultcore.in/support
+- Privacy Policy: https://vaultcore.in/privacy
+- Terms & Conditions: https://vaultcore.in/terms
+- FAQ section: https://vaultcore.in/#faq
+- Sign up: https://dash.vaultcore.in/signup/free
+- Log in: https://dash.vaultcore.in/login

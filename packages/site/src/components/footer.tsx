@@ -11,6 +11,7 @@ const footerLinks = [
       { label: "Features", href: `${siteUrl}/#features` },
       { label: "Security", href: `${siteUrl}/#security` },
       { label: "Pricing", href: `${siteUrl}/pricing/personal` },
+      { label: "FAQ", href: `${siteUrl}/#faq` },
     ],
   },
   {
@@ -18,6 +19,14 @@ const footerLinks = [
     links: [
       { label: "Log in", href: `${appUrl}/login` },
       { label: "Create an account", href: `${appUrl}/signup/free` },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "Support", href: `${siteUrl}/support` },
+      { label: "Privacy policy", href: `${siteUrl}/privacy` },
+      { label: "Terms & conditions", href: `${siteUrl}/terms` },
     ],
   },
 ];
@@ -29,7 +38,7 @@ const Footer = () => {
   return (
     <footer className="px-3">
       <div className="bg-background relative mx-auto w-full max-w-6xl overflow-hidden border-r border-l">
-        <div className="relative z-10 grid gap-10 px-6 py-12 md:grid-cols-[1.6fr_1fr_1fr] md:px-10 md:py-16">
+        <div className="relative z-10 grid gap-10 px-6 py-12 md:grid-cols-[1.6fr_1fr_1fr_1fr] md:px-10 md:py-16">
           <div className="flex max-w-sm flex-col gap-4">
             <Link
               href={siteUrl}

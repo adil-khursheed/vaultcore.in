@@ -22,7 +22,7 @@ import { cn } from "@repo/ui/lib/utils";
 import { appUrl, siteUrl } from "../config";
 import Logo from "./logo";
 
-const Navbar = () => {
+const Navbar = ({ signedIn = false }: { signedIn?: boolean }) => {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -83,17 +83,27 @@ const Navbar = () => {
                   </Link>
                 </Button>
 
-                <Button asChild variant="ghost">
-                  <Link href={`${appUrl}/login`}>
-                    <span>Log in</span>
-                  </Link>
-                </Button>
+                {signedIn ? (
+                  <Button asChild className="ml-3">
+                    <Link href={appUrl}>
+                      <span>Go to dashboard</span>
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button asChild variant="ghost">
+                      <Link href={`${appUrl}/login`}>
+                        <span>Log in</span>
+                      </Link>
+                    </Button>
 
-                <Button asChild className="ml-3">
-                  <Link href={`${siteUrl}/pricing/personal`}>
-                    <span>Get started free</span>
-                  </Link>
-                </Button>
+                    <Button asChild className="ml-3">
+                      <Link href={`${siteUrl}/pricing/personal`}>
+                        <span>Get started free</span>
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </>
             )}
           </nav>
@@ -145,20 +155,30 @@ const Navbar = () => {
                       <p className="text-muted-foreground px-1 pb-2 text-xs">
                         Zero-knowledge encryption, on every plan.
                       </p>
-                      <Button
-                        asChild
-                        variant="outline"
-                        onClick={() => setOpen(false)}
-                      >
-                        <Link href={`${appUrl}/login`}>
-                          <span>Log in</span>
-                        </Link>
-                      </Button>
-                      <Button asChild onClick={() => setOpen(false)}>
-                        <Link href={`${siteUrl}/pricing/personal`}>
-                          <span>Get started free</span>
-                        </Link>
-                      </Button>
+                      {signedIn ? (
+                        <Button asChild onClick={() => setOpen(false)}>
+                          <Link href={appUrl}>
+                            <span>Go to dashboard</span>
+                          </Link>
+                        </Button>
+                      ) : (
+                        <>
+                          <Button
+                            asChild
+                            variant="outline"
+                            onClick={() => setOpen(false)}
+                          >
+                            <Link href={`${appUrl}/login`}>
+                              <span>Log in</span>
+                            </Link>
+                          </Button>
+                          <Button asChild onClick={() => setOpen(false)}>
+                            <Link href={`${siteUrl}/pricing/personal`}>
+                              <span>Get started free</span>
+                            </Link>
+                          </Button>
+                        </>
+                      )}
                     </SheetFooter>
                   </nav>
                 </SheetContent>
