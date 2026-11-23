@@ -2,7 +2,11 @@ import type { CredentialType, TCredential } from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
 import { getTrpcClient } from "@/lib/api";
 import { getAuthClient } from "@/lib/auth";
-import { resolveActiveOrganizationId } from "@/lib/storage";
+import {
+  cacheCredentials,
+  getCachedCredentials,
+  resolveActiveOrganizationId,
+} from "@/lib/storage";
 import { AlertTriangleIcon, Loader2Icon, LogOutIcon, PlusIcon } from "lucide-react";
 
 import { decryptStringOrPlaintext } from "@repo/crypto";
@@ -39,6 +43,22 @@ async function safeDecrypt(value: string | null, vaultKey: CryptoKey) {
   }
 }
 
+async function decryptItems(items: TCredential[], vaultKey: CryptoKey) {
+  return Promise.all(
+    items.map(async (item) => ({
+      ...item,
+      title: item.title
+        ? ((await safeDecrypt(item.title, vaultKey)) ?? "")
+        : "",
+      username: await safeDecrypt(item.username, vaultKey),
+      password: await safeDecrypt(item.password, vaultKey),
+      url: await safeDecrypt(item.url, vaultKey),
+      note: await safeDecrypt(item.note, vaultKey),
+      otp: await safeDecrypt(item.otp, vaultKey),
+    })),
+  );
+}
+
 export function CredentialListScreen({
   onSelectCredential,
   onAddCredential,
@@ -52,6 +72,7 @@ export function CredentialListScreen({
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [offline, setOffline] = useState(false);
   const [currentTabUrl, setCurrentTabUrl] = useState<string | null>(null);
 
   const { vaultKey } = useVaultStore();
@@ -70,20 +91,23 @@ export function CredentialListScreen({
   // Get active organization and fetch credentials
   useEffect(() => {
     async function loadData() {
+      if (!vaultKey) {
+        navigate("lock");
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+      setOffline(false);
+
+      let orgId: string | null = null;
+
       try {
-        if (!vaultKey) {
-          navigate("lock");
-          return;
-        }
-
-        setLoading(true);
-
-        const orgId = await resolveActiveOrganizationId(apiBaseUrl);
+        orgId = await resolveActiveOrganizationId(apiBaseUrl);
         if (!orgId) {
           setError(
             "No organization found. Please set up your vault in the web app.",
           );
-          setLoading(false);
           return;
         }
 
@@ -94,25 +118,25 @@ export function CredentialListScreen({
           isDeleted: false,
         });
 
-        // Decrypt all fields client-side; the server only ever sees ciphertext
-        const decryptedItems = await Promise.all(
-          result.items.map(async (item: TCredential) => ({
-            ...item,
-            title: item.title
-              ? (await safeDecrypt(item.title, vaultKey)) ?? ""
-              : "",
-            username: await safeDecrypt(item.username, vaultKey),
-            password: await safeDecrypt(item.password, vaultKey),
-            url: await safeDecrypt(item.url, vaultKey),
-            note: await safeDecrypt(item.note, vaultKey),
-          })),
-        );
+        // Keep an encrypted copy so the popup still works offline.
+        await cacheCredentials(orgId, result.items);
 
-        setCredentials(decryptedItems);
+        // Decrypt all fields client-side; the server only ever sees ciphertext
+        setCredentials(await decryptItems(result.items as TCredential[], vaultKey));
       } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load credentials";
-        setError(errorMessage);
+        // Network/server failure: fall back to the last encrypted snapshot.
+        const cached = orgId
+          ? await getCachedCredentials<TCredential>(orgId)
+          : null;
+
+        if (cached && cached.length > 0) {
+          setCredentials(await decryptItems(cached, vaultKey));
+          setOffline(true);
+        } else {
+          const errorMessage =
+            err instanceof Error ? err.message : "Failed to load credentials";
+          setError(errorMessage);
+        }
       } finally {
         setLoading(false);
       }
@@ -120,6 +144,27 @@ export function CredentialListScreen({
 
     loadData();
   }, [apiBaseUrl, vaultKey, navigate]);
+
+  // Tell the service worker which hosts have credentials so it can render a
+  // badge count on the toolbar without ever seeing decrypted data.
+  useEffect(() => {
+    const hosts: Record<string, number> = {};
+
+    for (const credential of credentials) {
+      if (!credential.url) continue;
+      try {
+        const hostname = new URL(credential.url).hostname.replace(/^www\./, "");
+        hosts[hostname] = (hosts[hostname] ?? 0) + 1;
+      } catch {
+        // Ignore malformed URLs.
+      }
+    }
+
+    chrome.runtime?.sendMessage?.({
+      type: "SET_CREDENTIAL_HOSTS",
+      payload: { hosts },
+    });
+  }, [credentials]);
 
   // Filter and search credentials
   const filteredCredentials = useMemo(() => {
@@ -136,7 +181,9 @@ export function CredentialListScreen({
       filtered = filtered.filter(
         (c) =>
           (c.title ?? "").toLowerCase().includes(q) ||
-          c.username?.toLowerCase().includes(q),
+          (c.username ?? "").toLowerCase().includes(q) ||
+          (c.url ?? "").toLowerCase().includes(q) ||
+          (c.note ?? "").toLowerCase().includes(q),
       );
     }
 
@@ -273,6 +320,13 @@ export function CredentialListScreen({
         count={matchingCredentials.length}
         onAutofill={handleAutofill}
       />
+
+      {/* Offline banner */}
+      {offline && (
+        <div className="border-border bg-muted/50 text-muted-foreground mx-3 mb-2 rounded-md border px-3 py-2 text-xs">
+          Offline — showing cached items.
+        </div>
+      )}
 
       {/* Credential list */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 pt-0">

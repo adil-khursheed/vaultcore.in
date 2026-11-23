@@ -3,6 +3,7 @@ import SuperJSON from "superjson";
 
 import type { AppRouter } from "@repo/api";
 
+import { getSessionToken } from "./auth";
 import { getApiBaseUrl } from "./storage";
 
 let trpcClient: ReturnType<typeof createTRPCClient<AppRouter>> | null = null;
@@ -48,9 +49,17 @@ function createClient(baseUrl: string) {
       httpBatchLink({
         url: `${baseUrl}/api/trpc`,
         transformer: SuperJSON,
-        fetch(url, options) {
+        fetch: async (url, options) => {
+          const token = await getSessionToken();
+          const headers = new Headers(options?.headers);
+
+          if (token) {
+            headers.set("Authorization", `Bearer ${token}`);
+          }
+
           return fetch(url, {
             ...options,
+            headers,
             credentials: "include",
           });
         },

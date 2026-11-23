@@ -29,9 +29,12 @@ import {
 import { useSidebar } from "@repo/ui/components/sidebar";
 import { cn } from "@repo/ui/lib/utils";
 
+import { TotpField } from "@/components/shared/totp-field";
+
 import DeleteCredential from "./delete-credential";
 import EditCredential from "./edit-credential";
 import MarkFavorite from "./mark-favorite";
+import PermanentlyDeleteCredential from "./permanently-delete-credential";
 import RestoreCredential from "./restore-credential";
 
 const CopyableField = ({
@@ -299,7 +302,12 @@ function SelectedCredential({
         {/* Actions */}
         <div className="flex shrink-0 items-center gap-1">
           {selectedCredential.isDeleted ? (
-            <RestoreCredential />
+            <>
+              <RestoreCredential />
+              <PermanentlyDeleteCredential
+                title={decryptedFields.title ?? selectedCredential.title}
+              />
+            </>
           ) : (
             <>
               <MarkFavorite />
@@ -339,11 +347,7 @@ function SelectedCredential({
                   value={decryptedFields.url}
                   mono
                 />
-                <CopyableField
-                  label="Authenticator (OTP)"
-                  value={decryptedFields.otp}
-                  mono
-                />
+                <TotpField secret={decryptedFields.otp} />
               </>
             )}
 

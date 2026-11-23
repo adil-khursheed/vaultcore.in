@@ -3,7 +3,6 @@ import {
   checkout,
   polar,
   portal,
-  usage,
   webhooks,
 } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
@@ -14,7 +13,10 @@ import {
   createAuthMiddleware,
   getSessionFromCtx,
 } from "better-auth/api";
-import { organization as organizationPlugin } from "better-auth/plugins";
+import {
+  bearer,
+  organization as organizationPlugin,
+} from "better-auth/plugins";
 
 import { and, eq, gt } from "@repo/db";
 import { db } from "@repo/db/client";
@@ -273,6 +275,74 @@ export function initAuth<
               })
               .onConflictDoNothing();
           },
+          afterRemoveMember: async ({ member, organization }) => {
+            // Revoke the member's wrapped vault key immediately. Without this,
+            // a removed user could still decrypt anything they had cached.
+            await db
+              .delete(memberVaultKey)
+              .where(
+                and(
+                  eq(memberVaultKey.organizationId, organization.id),
+                  eq(memberVaultKey.userId, member.userId),
+                ),
+              );
+
+            await db
+              .insert(auditLog)
+              .values({
+                targetUserId: member.userId,
+                organizationId: organization.id,
+                action: "member_removed",
+                metadata: { role: member.role },
+              })
+              .catch((error: unknown) => {
+                console.error(
+                  "[AUTH] Failed to log member_removed audit event",
+                  error,
+                );
+              });
+          },
+          afterUpdateMemberRole: async ({
+            member,
+            previousRole,
+            organization,
+          }) => {
+            await db
+              .insert(auditLog)
+              .values({
+                targetUserId: member.userId,
+                organizationId: organization.id,
+                action: "member_role_updated",
+                metadata: { previousRole, newRole: member.role },
+              })
+              .catch((error: unknown) => {
+                console.error(
+                  "[AUTH] Failed to log member_role_updated audit event",
+                  error,
+                );
+              });
+          },
+          beforeDeleteOrganization: async ({ organization, user }) => {
+            // Log before the row disappears; the audit row keeps a null
+            // organizationId afterwards via the FK's onDelete: set null.
+            await db
+              .insert(auditLog)
+              .values({
+                actorUserId: user.id,
+                organizationId: organization.id,
+                action: "organization_deleted",
+                metadata: {
+                  name: organization.name,
+                  slug: organization.slug,
+                },
+              })
+              .catch((error: unknown) => {
+                console.error(
+                  "[AUTH] Failed to log organization_deleted audit event",
+                  error,
+                );
+              });
+          },
           afterCreateInvitation: async ({
             invitation,
             inviter,
@@ -335,6 +405,9 @@ export function initAuth<
       }),
       vaultVerificationPlugin(),
       subscriptionLimitsPlugin(),
+      // Allows clients (the browser extension) to authenticate with a bearer
+      // token instead of relying on third-party cookies.
+      bearer(),
       polar({
         client: polarClient,
         createCustomerOnSignUp: false,
@@ -358,7 +431,6 @@ export function initAuth<
             authenticatedUsersOnly: true,
           }),
           portal(),
-          usage(),
           webhooks({
             secret: env.POLAR_WEBHOOK_SECRET,
             async onSubscriptionCreated(subscription) {

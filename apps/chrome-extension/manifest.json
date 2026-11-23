@@ -31,7 +31,8 @@
   "permissions": [
     "storage",
     "activeTab",
-    "tabs"
+    "tabs",
+    "favicon"
   ],
   "host_permissions": [
     "<all_urls>"

@@ -2,9 +2,12 @@ import type { Job } from "bullmq";
 import { Worker } from "bullmq";
 
 import { resend, sendEmail } from "@repo/email";
+import { and, eq, lt } from "@repo/db";
+import { db } from "@repo/db/client";
+import { credential } from "@repo/db/schema";
 
 import type { JobDataMap, JobName } from "./registry.ts";
-import { connection } from "./index.ts";
+import { connection, getMainQueue } from "./index.ts";
 import { JobNames } from "./registry.ts";
 
 /**
@@ -33,6 +36,28 @@ const jobHandlers: {
       text: data.text ?? undefined,
       html: data.html ?? undefined,
     } as any);
+  },
+  [JobNames.PURGE_TRASH]: async (data) => {
+    const retentionDays = data.retentionDays ?? 30;
+    const cutoff = new Date(
+      Date.now() - retentionDays * 24 * 60 * 60 * 1000,
+    );
+
+    const deleted = await db
+      .delete(credential)
+      .where(
+        and(
+          eq(credential.isDeleted, true),
+          lt(credential.updatedAt, cutoff),
+        ),
+      )
+      .returning({ id: credential.id });
+
+    console.log(
+      `[Worker] Purged ${deleted.length} trashed credentials older than ${retentionDays} days`,
+    );
+
+    return { deletedCount: deleted.length };
   },
 };
 
@@ -65,3 +90,18 @@ mainWorker.on("failed", (job, err) => {
 });
 
 console.log("[Worker] Started and listening for jobs...");
+
+// Keep the trash from growing forever: purge items that have been deleted for
+// longer than the retention window. BullMQ de-duplicates the repeatable job.
+void getMainQueue()
+  .add(
+    JobNames.PURGE_TRASH,
+    { retentionDays: 30 },
+    {
+      repeat: { pattern: "0 3 * * *" },
+      jobId: "purge-trash-daily",
+    },
+  )
+  .catch((error: unknown) => {
+    console.error("[Worker] Failed to schedule trash purge job", error);
+  });

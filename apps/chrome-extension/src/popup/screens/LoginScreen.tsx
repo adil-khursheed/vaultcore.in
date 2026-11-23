@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { getTrpcClient } from "@/lib/api";
-import { getAuthClient } from "@/lib/auth";
-import { setActiveOrganizationId } from "@/lib/storage";
+import { getAuthClient, setSessionToken } from "@/lib/auth";
+import {
+  savePinWrappedKey,
+  setActiveOrganizationId,
+  touchActivity,
+} from "@/lib/storage";
 import {
   KeyRoundIcon,
   Loader2Icon,
@@ -30,6 +34,7 @@ interface LoginScreenProps {
 export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -50,6 +55,15 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
       if (result.error) {
         setError(result.error.message || "Login failed");
         return;
+      }
+
+      // Persist the bearer token for clients that block third-party cookies.
+      // The bearer plugin usually exposes it via the `set-auth-token` response
+      // header (captured in `extensionFetch`); older versions return it in the
+      // response body instead, so keep this fallback.
+      const issuedToken = (result.data as { token?: string } | undefined)?.token;
+      if (issuedToken) {
+        await setSessionToken(issuedToken);
       }
 
       const user = result.data.user;
@@ -95,7 +109,16 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
       setMasterKey(masterKey);
       setVaultKey(vaultKey);
 
+      // Optional convenience: wrap the vault key with a PIN so the next
+      // popup open can unlock without the full master password. Six digits
+      // is the minimum that is not trivially brute-forceable offline.
+      if (pin.trim().length >= 6) {
+        await savePinWrappedKey(vaultKey, pin.trim());
+      }
+      await touchActivity();
+
       setPassword("");
+      setPin("");
       onLogin();
     } catch (err: unknown) {
       const message =
@@ -150,6 +173,20 @@ export function LoginScreen({ apiBaseUrl, onLogin }: LoginScreenProps) {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+          />
+        </InputGroup>
+        <InputGroup className="h-11">
+          <InputGroupAddon>
+            <KeyRoundIcon className="text-muted-foreground" />
+          </InputGroupAddon>
+          <InputGroupInput
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder="Optional 6+ digit PIN for quick unlock"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           />
         </InputGroup>

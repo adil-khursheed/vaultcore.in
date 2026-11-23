@@ -1,8 +1,17 @@
 import type { TCredential } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getTrpcClient } from "@/lib/api";
-import { getActiveOrganizationId } from "@/lib/storage";
-import { ArrowLeftIcon, ExternalLinkIcon, StarIcon, ZapIcon } from "lucide-react";
+import { getFaviconUrl } from "@/lib/favicon";
+import { resolveActiveOrganizationId } from "@/lib/storage";
+import {
+  ArrowLeftIcon,
+  ExternalLinkIcon,
+  Loader2Icon,
+  PencilIcon,
+  StarIcon,
+  Trash2Icon,
+  ZapIcon,
+} from "lucide-react";
 
 import { decryptStringOrPlaintext } from "@repo/crypto";
 import { useVaultStore } from "@repo/store";
@@ -11,6 +20,8 @@ import { Button } from "@repo/ui/components/button";
 
 import { CopyButton } from "../components/CopyButton";
 import { PasswordField } from "../components/PasswordField";
+import { TotpCode } from "../components/TotpCode";
+import { AddCredentialScreen } from "./AddCredentialScreen";
 
 interface CredentialDetailScreenProps {
   credentialId: string;
@@ -26,64 +37,102 @@ export function CredentialDetailScreen({
   const [credential, setCredential] = useState<TCredential | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { vaultKey } = useVaultStore();
 
-  useEffect(() => {
-    async function loadCredential() {
-      try {
-        const orgId = await getActiveOrganizationId();
-        if (!orgId) {
-          setError("No organization found");
-          return;
-        }
+  const loadCredential = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        const trpc = getTrpcClient(apiBaseUrl);
-        const result = await trpc.credential.getCredentials.query({
-          organizationId: orgId,
-          limit: 100,
-          isDeleted: false,
-        });
-
-        const found = result.items.find((c) => c.id === credentialId);
-
-        if (!vaultKey) {
-          throw new Error("Vault is locked");
-        }
-
-        if (found) {
-          const dec = async (v: string | null) => {
-            if (!v) return null;
-            try {
-              return await decryptStringOrPlaintext(v, vaultKey);
-            } catch {
-              return null;
-            }
-          };
-          const decrypted = {
-            ...found,
-            title: (await dec(found.title)) ?? "",
-            username: await dec(found.username),
-            password: await dec(found.password),
-            url: await dec(found.url),
-            note: await dec(found.note),
-            otp: await dec(found.otp),
-          };
-          setCredential(decrypted);
-        } else {
-          setError("Credential not found");
-        }
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load credential";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
+      const orgId = await resolveActiveOrganizationId(apiBaseUrl);
+      if (!orgId) {
+        setError("No organization found");
+        return;
       }
-    }
 
-    loadCredential();
+      const trpc = getTrpcClient(apiBaseUrl);
+      const result = await trpc.credential.getCredentials.query({
+        organizationId: orgId,
+        limit: 100,
+        isDeleted: false,
+      });
+
+      const found = result.items.find((c) => c.id === credentialId);
+
+      if (!vaultKey) {
+        throw new Error("Vault is locked");
+      }
+
+      if (found) {
+        const dec = async (v: string | null) => {
+          if (!v) return null;
+          try {
+            return await decryptStringOrPlaintext(v, vaultKey);
+          } catch {
+            return null;
+          }
+        };
+        const decrypted = {
+          ...found,
+          title: (await dec(found.title)) ?? "",
+          username: await dec(found.username),
+          password: await dec(found.password),
+          url: await dec(found.url),
+          note: await dec(found.note),
+          otp: await dec(found.otp),
+        };
+        setCredential(decrypted);
+      } else {
+        setError("Credential not found");
+      }
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load credential";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   }, [credentialId, apiBaseUrl, vaultKey]);
+
+  useEffect(() => {
+    void loadCredential();
+  }, [loadCredential]);
+
+  const handleDelete = async () => {
+    if (!credential) return;
+
+    setDeleting(true);
+
+    try {
+      const trpc = getTrpcClient(apiBaseUrl);
+      await trpc.credential.update.mutate({
+        id: credential.id,
+        organizationId: credential.organizationId,
+        isDeleted: true,
+      });
+      onBack();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete item");
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (editing && credential) {
+    return (
+      <AddCredentialScreen
+        apiBaseUrl={apiBaseUrl}
+        credential={credential}
+        onBack={() => setEditing(false)}
+        onSaved={() => void loadCredential()}
+      />
+    );
+  }
 
   const handleAutofill = () => {
     if (!credential?.username && !credential?.password) return;
@@ -137,14 +186,8 @@ export function CredentialDetailScreen({
     );
   }
 
-  let faviconUrl: string | undefined;
-  if (credential.type === "login" && credential.url) {
-    try {
-      faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(credential.url).hostname}&sz=64`;
-    } catch {
-      faviconUrl = undefined;
-    }
-  }
+  const faviconUrl =
+    credential.type === "login" ? getFaviconUrl(credential.url) : undefined;
 
   return (
     <div className="flex h-full flex-col">
@@ -159,7 +202,58 @@ export function CredentialDetailScreen({
           <ArrowLeftIcon className="size-4" />
         </Button>
         <span className="text-foreground text-sm font-medium">Details</span>
+
+        <div className="ml-auto flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setEditing(true)}
+            className="text-muted-foreground"
+            title="Edit"
+          >
+            <PencilIcon className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setConfirmDelete(true)}
+            className="text-destructive"
+            title="Move to trash"
+          >
+            <Trash2Icon className="size-4" />
+          </Button>
+        </div>
       </div>
+
+      {confirmDelete && (
+        <div className="border-destructive/30 bg-destructive/10 flex items-center justify-between gap-2 border-b px-4 py-2">
+          <span className="text-foreground text-xs">Move to trash?</span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs"
+              onClick={() => setConfirmDelete(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-7 text-xs"
+              onClick={() => void handleDelete()}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <Loader2Icon className="size-3.5 animate-spin" />
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
@@ -249,14 +343,9 @@ export function CredentialDetailScreen({
           {credential.otp && (
             <div className="flex flex-col gap-1 px-4 py-3">
               <span className="text-muted-foreground text-xs font-medium">
-                OTP / 2FA Secret
+                Authenticator code
               </span>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-foreground truncate font-mono text-sm">
-                  {credential.otp}
-                </span>
-                <CopyButton text={credential.otp} label="OTP" />
-              </div>
+              <TotpCode secret={credential.otp} />
             </div>
           )}
 

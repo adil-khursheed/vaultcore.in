@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react";
-import { getAuthClient } from "@/lib/auth";
-import { getApiBaseUrl } from "@/lib/storage";
+import { useEffect, useRef, useState } from "react";
+import { getAuthClient, setSessionToken } from "@/lib/auth";
+import {
+  clearPinWrappedKey,
+  getApiBaseUrl,
+  getLastActivity,
+  touchActivity,
+} from "@/lib/storage";
 
-import { useVaultStore } from "@repo/store";
+import { AUTO_LOCK_TIMEOUT_MS, useVaultStore } from "@repo/store";
 import { Spinner } from "@repo/ui/components/spinner";
 
 import { useRouter } from "./router";
@@ -19,14 +24,32 @@ export default function App() {
     string | null
   >(null);
   const [apiBaseUrl, setApiBaseUrl] = useState<string>("");
+  const lastTouchRef = useRef(0);
 
   const { vaultKey } = useVaultStore();
+
+  const handleLogout = async () => {
+    useVaultStore.getState().clearKeys();
+    await clearPinWrappedKey();
+    await setSessionToken(null);
+    navigate("login");
+  };
 
   useEffect(() => {
     async function init() {
       try {
         const baseUrl = await getApiBaseUrl();
         setApiBaseUrl(baseUrl);
+
+        // If the popup hasn't been used for a while, forget the PIN so a
+        // quick-unlock shortcut can't be reused indefinitely.
+        const lastActivity = await getLastActivity();
+        if (
+          lastActivity &&
+          Date.now() - lastActivity > AUTO_LOCK_TIMEOUT_MS
+        ) {
+          await clearPinWrappedKey();
+        }
 
         const authClient = getAuthClient(baseUrl);
         const { data: session } = await authClient.getSession();
@@ -52,6 +75,42 @@ export default function App() {
     init();
   }, [navigate, vaultKey]);
 
+  // Refresh activity while the popup is open and enforce auto-lock.
+  useEffect(() => {
+    const markActivity = () => {
+      const now = Date.now();
+      useVaultStore.getState().refreshActivity();
+
+      if (now - lastTouchRef.current > 30_000) {
+        lastTouchRef.current = now;
+        void touchActivity();
+      }
+    };
+
+    const events = ["pointerdown", "keydown", "touchstart", "scroll"] as const;
+    for (const event of events) {
+      window.addEventListener(event, markActivity, { passive: true });
+    }
+
+    const interval = setInterval(() => {
+      const state = useVaultStore.getState();
+      if (
+        !state.isLocked &&
+        Date.now() - state.lastActivity > AUTO_LOCK_TIMEOUT_MS
+      ) {
+        state.clearKeys();
+        navigate("lock");
+      }
+    }, 30_000);
+
+    return () => {
+      for (const event of events) {
+        window.removeEventListener(event, markActivity);
+      }
+      clearInterval(interval);
+    };
+  }, [navigate]);
+
   if (loading) {
     return (
       <div className="bg-background flex h-[550px] w-[375px] items-center justify-center">
@@ -76,10 +135,7 @@ export default function App() {
           <VaultUnlockScreen
             apiBaseUrl={apiBaseUrl}
             onUnlock={() => navigate("list")}
-            onLogout={() => {
-              useVaultStore.getState().clearKeys();
-              navigate("login");
-            }}
+            onLogout={handleLogout}
           />
         );
 
@@ -92,10 +148,7 @@ export default function App() {
               navigate("detail");
             }}
             onAddCredential={() => navigate("add")}
-            onLogout={() => {
-              useVaultStore.getState().clearKeys();
-              navigate("login");
-            }}
+            onLogout={handleLogout}
           />
         );
 

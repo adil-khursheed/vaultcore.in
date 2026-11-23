@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getTrpcClient } from "@/lib/api";
 import { getAuthClient } from "@/lib/auth";
-import { resolveActiveOrganizationId } from "@/lib/storage";
+import {
+  hasPinWrappedKey,
+  resolveActiveOrganizationId,
+  touchActivity,
+  unwrapKeyWithPin,
+} from "@/lib/storage";
 import { EyeIcon, EyeOffIcon, Loader2Icon, LockIcon, LogOutIcon } from "lucide-react";
 
 import {
@@ -30,14 +35,53 @@ export function VaultUnlockScreen({
   onLogout,
 }: VaultUnlockScreenProps) {
   const [password, setPassword] = useState("");
+  const [pin, setPin] = useState("");
+  const [pinAvailable, setPinAvailable] = useState(false);
+  const [usePin, setUsePin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { setMasterKey, setVaultKey, setPrivateKey } = useVaultStore();
+  const { setMasterKey, setVaultKey, setPrivateKey, unlockWithVaultKey } =
+    useVaultStore();
 
   const authClient = getAuthClient(apiBaseUrl);
   const { data } = authClient.useSession();
+
+  useEffect(() => {
+    let cancelled = false;
+    void hasPinWrappedKey().then((available) => {
+      if (!cancelled) {
+        setPinAvailable(available);
+        setUsePin(available);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handlePinUnlock = async () => {
+    if (!pin.trim()) {
+      setError("Enter your PIN");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const vaultKey = await unwrapKeyWithPin(pin.trim());
+      unlockWithVaultKey(vaultKey);
+      await touchActivity();
+      setPin("");
+      onUnlock();
+    } catch {
+      setError("That PIN didn't work. Try your master password instead.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUnlock = async () => {
     const user = data?.user;
@@ -102,6 +146,7 @@ export function VaultUnlockScreen({
       setPrivateKey(privateKey);
       setMasterKey(masterKey);
       setVaultKey(vaultKey);
+      await touchActivity();
 
       setPassword("");
       onUnlock();
@@ -128,7 +173,9 @@ export function VaultUnlockScreen({
         <LockIcon className="text-primary size-8" />
         <h1 className="text-lg font-semibold tracking-tight">Unlock Vault</h1>
         <p className="text-muted-foreground text-center text-xs">
-          Enter your master password to unlock
+          {usePin
+            ? "Enter your PIN to unlock"
+            : "Enter your master password to unlock"}
         </p>
       </div>
 
@@ -149,32 +196,76 @@ export function VaultUnlockScreen({
       )}
 
       <div className="flex w-full flex-col gap-3">
-        <InputGroup className="h-11">
-          <InputGroupAddon>
-            <LockIcon className="text-muted-foreground" />
-          </InputGroupAddon>
-          <InputGroupInput
-            type={showPassword ? "text" : "password"}
-            placeholder="Enter your master password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-            autoFocus
-          />
-          <InputGroupAddon align="inline-end">
-            <InputGroupButton
-              variant="ghost"
-              size="icon-sm"
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-            </InputGroupButton>
-          </InputGroupAddon>
-        </InputGroup>
-        <Button onClick={handleUnlock} disabled={loading} className="w-full">
-          {loading ? <Loader2Icon className="size-4 animate-spin" /> : "Unlock"}
+        {usePin ? (
+          <InputGroup className="h-11">
+            <InputGroupAddon>
+              <LockIcon className="text-muted-foreground" />
+            </InputGroupAddon>
+            <InputGroupInput
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="Enter your PIN"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handlePinUnlock()}
+              autoFocus
+            />
+          </InputGroup>
+        ) : (
+          <InputGroup className="h-11">
+            <InputGroupAddon>
+              <LockIcon className="text-muted-foreground" />
+            </InputGroupAddon>
+            <InputGroupInput
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter your master password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+              autoFocus
+            />
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                variant="ghost"
+                size="icon-sm"
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+        )}
+
+        <Button
+          onClick={usePin ? handlePinUnlock : handleUnlock}
+          disabled={loading}
+          className="w-full"
+        >
+          {loading ? (
+            <Loader2Icon className="size-4 animate-spin" />
+          ) : usePin ? (
+            "Unlock with PIN"
+          ) : (
+            "Unlock"
+          )}
         </Button>
+
+        {pinAvailable ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setUsePin(!usePin);
+              setError("");
+            }}
+            className="text-muted-foreground h-8 text-xs"
+          >
+            {usePin ? "Use master password" : "Use PIN"}
+          </Button>
+        ) : null}
+
         <Button
           variant="ghost"
           size="sm"

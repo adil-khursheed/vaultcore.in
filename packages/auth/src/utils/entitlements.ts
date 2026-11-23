@@ -51,21 +51,6 @@ export async function getOrgPlan(organizationId: string): Promise<Plan> {
 }
 
 /**
- * Check if an org can add another member (enforces maxMembersPerOrg)
- */
-export async function canAddMember(organizationId: string): Promise<boolean> {
-  const plan = await getOrgPlan(organizationId);
-  if (plan.maxMembersPerOrg === null) return true;
-
-  const currentMembers = await db
-    .select({ value: count() })
-    .from(member)
-    .where(eq(member.organizationId, organizationId));
-
-  return (currentMembers[0]?.value ?? 0) < plan.maxMembersPerOrg;
-}
-
-/**
  * Check if an org can create another invitation.
  * Counts current members plus unexpired pending invitations so a plan cannot
  * be exceeded by sending more invites than there are open seats.
@@ -122,21 +107,4 @@ export async function canCreateOrg(userId: string): Promise<boolean> {
   }
 
   return ownedOrgs.length < (highestLimit ?? 1);
-}
-
-/**
- * Convenience: resolve plan limits directly
- */
-export async function getOrgLimits(organizationId: string) {
-  const plan = await getOrgPlan(organizationId);
-  const subscription = await db.query.organizationSubscriptions.findFirst({
-    where: eq(organizationSubscriptions.organizationId, organizationId),
-  });
-
-  return {
-    maxMembersPerOrg: plan.maxMembersPerOrg,
-    maxOrgsPerUser: plan.maxOrgsPerUser,
-    planId: plan.id,
-    status: subscription?.status ?? "free",
-  };
 }

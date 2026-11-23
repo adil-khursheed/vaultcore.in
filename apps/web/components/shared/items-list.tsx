@@ -173,7 +173,8 @@ const ItemsList = ({
   } = useInfiniteQuery({
     ...trpc.credential.getCredentials.infiniteQueryOptions({
       organizationId: session?.session.activeOrganizationId as string,
-      limit: 20,
+      // While searching we want the whole vault in as few pages as possible.
+      limit: search ? 100 : 20,
       type,
       isFavorite,
       isDeleted,
@@ -212,29 +213,54 @@ const ItemsList = ({
   );
 
   const [matchedIds, setMatchedIds] = React.useState<Set<string> | null>(null);
+  const [isSearching, setIsSearching] = React.useState(false);
+
+  // Searching only sees what has been loaded, so pull every remaining page
+  // while a search is active.
+  React.useEffect(() => {
+    if (!search || !hasNextPage || isFetchingNextPage) return;
+    void fetchNextPage();
+  }, [search, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   React.useEffect(() => {
     if (!search || !vaultKey) {
       setMatchedIds(null);
+      setIsSearching(false);
       return;
     }
 
     let cancelled = false;
 
     const run = async () => {
+      setIsSearching(true);
       const ids = new Set<string>();
-      const needle = search.toLowerCase();
+      const needle = search.trim().toLowerCase();
 
       for (const cred of credentials) {
         try {
-          const title = cred.title
-            ? await decryptStringOrPlaintext(cred.title, vaultKey)
-            : "";
-          const username = cred.username
-            ? await decryptStringOrPlaintext(cred.username, vaultKey)
-            : "";
+          const fields: string[] = [];
 
-          if (`${title} ${username}`.toLowerCase().includes(needle)) {
+          const addField = async (value: string | null) => {
+            if (!value) return;
+            fields.push(await decryptStringOrPlaintext(value, vaultKey));
+          };
+
+          await addField(cred.title);
+          await addField(cred.username);
+          await addField(cred.url);
+          await addField(cred.note);
+
+          if (cred.data && typeof cred.data === "object") {
+            for (const value of Object.values(
+              cred.data as Record<string, unknown>,
+            )) {
+              if (typeof value === "string") {
+                await addField(value);
+              }
+            }
+          }
+
+          if (fields.join(" ").toLowerCase().includes(needle)) {
             ids.add(cred.id);
           }
         } catch {
@@ -244,6 +270,7 @@ const ItemsList = ({
 
       if (!cancelled) {
         setMatchedIds(ids);
+        setIsSearching(false);
       }
     };
 
@@ -257,6 +284,12 @@ const ItemsList = ({
   const visibleCredentials = matchedIds
     ? credentials.filter((cred) => matchedIds.has(cred.id))
     : credentials;
+
+  // A search isn't finished until every page is loaded and every field is
+  // decrypted. Avoid showing "no results" while that work is still running.
+  const searchPending =
+    !!search &&
+    (isSearching || isFetchingNextPage || (hasNextPage ?? false));
 
   if (isLocked) {
     return null;
@@ -323,12 +356,19 @@ const ItemsList = ({
             <CredentialRowSkeleton key={i} />
           ))}
         </div>
-      ) : visibleCredentials.length === 0 ? (
+      ) : visibleCredentials.length === 0 && !searchPending ? (
         <div className="flex h-full w-full flex-col items-center justify-center">
           <EmptyList title={emptyCopy.title} subtitle={emptyCopy.subtitle} />
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
+          {searchPending && (
+            <div className="text-muted-foreground flex items-center gap-2 px-1 text-xs">
+              <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+              Searching all items…
+            </div>
+          )}
+
           {visibleCredentials.map((cred) => (
             <DecryptedCredential
               key={cred.id}

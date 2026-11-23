@@ -154,6 +154,76 @@ export const credentialRouter = {
     }),
 
   /**
+   * Permanently delete a credential that is already in the trash.
+   * This cannot be undone.
+   */
+  permanentDelete: orgVaultProcedure
+    .input(
+      z.object({
+        id: z.uuid(),
+        organizationId: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, organizationId } = input;
+
+      const [deleted] = await ctx.db
+        .delete(credential)
+        .where(
+          and(
+            eq(credential.id, id),
+            eq(credential.organizationId, organizationId),
+            eq(credential.isDeleted, true),
+          ),
+        )
+        .returning({ id: credential.id });
+
+      if (!deleted) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Item not found in trash",
+        });
+      }
+
+      logAuditEvent({
+        actorUserId: ctx.session.user.id,
+        organizationId,
+        action: "credential_deleted",
+        metadata: { credentialId: id, permanent: true },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Permanently delete everything in an organization's trash.
+   */
+  emptyTrash: orgVaultProcedure
+    .input(z.object({ organizationId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const { organizationId } = input;
+
+      const deleted = await ctx.db
+        .delete(credential)
+        .where(
+          and(
+            eq(credential.organizationId, organizationId),
+            eq(credential.isDeleted, true),
+          ),
+        )
+        .returning({ id: credential.id });
+
+      logAuditEvent({
+        actorUserId: ctx.session.user.id,
+        organizationId,
+        action: "credential_deleted",
+        metadata: { count: deleted.length, emptyTrash: true },
+      });
+
+      return { success: true, deletedCount: deleted.length };
+    }),
+
+  /**
    * Batch create credentials.
    * Org membership and active vault access are verified by the orgVaultProcedure middleware.
    */

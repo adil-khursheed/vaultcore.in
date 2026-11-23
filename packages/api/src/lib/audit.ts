@@ -8,6 +8,8 @@ export type AuditAction =
   | "member_invited"
   | "member_accepted"
   | "member_removed"
+  | "member_role_updated"
+  | "organization_deleted"
   | "credential_created"
   | "credential_updated"
   | "credential_deleted"

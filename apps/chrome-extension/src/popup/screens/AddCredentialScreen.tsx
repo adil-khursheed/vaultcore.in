@@ -1,4 +1,4 @@
-import type { CredentialType } from "@/lib/types";
+import type { CredentialType, TCredential } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { getTrpcClient } from "@/lib/api";
 import { getActiveOrganizationId } from "@/lib/storage";
@@ -34,6 +34,9 @@ import { Textarea } from "@repo/ui/components/textarea";
 interface AddCredentialScreenProps {
   onBack: () => void;
   apiBaseUrl: string;
+  /** When provided the screen edits an existing (already decrypted) item. */
+  credential?: TCredential | null;
+  onSaved?: () => void;
 }
 
 const CREDENTIAL_TYPES: { label: string; value: CredentialType }[] = [
@@ -67,14 +70,18 @@ const AddCredentialSchema = z.object({
   username: z.string(),
   password: z.string(),
   url: z.string(),
+  otp: z.string(),
   note: z.string(),
 });
 
 export function AddCredentialScreen({
   onBack,
   apiBaseUrl,
+  credential,
+  onSaved,
 }: AddCredentialScreenProps) {
-  const [type, setType] = useState<CredentialType>("login");
+  const isEditing = !!credential;
+  const [type, setType] = useState<CredentialType>(credential?.type ?? "login");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
@@ -82,11 +89,12 @@ export function AddCredentialScreen({
 
   const form = useForm({
     defaultValues: {
-      title: "",
-      username: "",
-      password: "",
-      url: "",
-      note: "",
+      title: credential?.title ?? "",
+      username: credential?.username ?? "",
+      password: credential?.password ?? "",
+      url: credential?.url ?? "",
+      otp: credential?.otp ?? "",
+      note: credential?.note ?? "",
     },
     validators: {
       onSubmit: AddCredentialSchema,
@@ -125,17 +133,38 @@ export function AddCredentialScreen({
           ? await encryptString(value.note, vaultKey)
           : undefined;
 
-        const trpc = getTrpcClient(apiBaseUrl);
-        await trpc.credential.create.mutate({
-          organizationId: orgId,
-          title: encryptedTitle,
-          type,
-          username: encryptedUsername,
-          password: encryptedPassword,
-          url: encryptedUrl,
-          note: encryptedNote,
-        });
+        const encryptedOtp = value.otp
+          ? await encryptString(value.otp, vaultKey)
+          : undefined;
 
+        const trpc = getTrpcClient(apiBaseUrl);
+
+        if (credential) {
+          await trpc.credential.update.mutate({
+            id: credential.id,
+            organizationId: orgId,
+            title: encryptedTitle,
+            type,
+            username: encryptedUsername,
+            password: encryptedPassword,
+            url: encryptedUrl,
+            note: encryptedNote,
+            otp: encryptedOtp,
+          });
+        } else {
+          await trpc.credential.create.mutate({
+            organizationId: orgId,
+            title: encryptedTitle,
+            type,
+            username: encryptedUsername,
+            password: encryptedPassword,
+            url: encryptedUrl,
+            note: encryptedNote,
+            otp: encryptedOtp,
+          });
+        }
+
+        onSaved?.();
         onBack();
       } catch (err: unknown) {
         console.error(err);
@@ -146,8 +175,10 @@ export function AddCredentialScreen({
     },
   });
 
-  // Pre-fill URL and title from current tab
+  // Pre-fill URL and title from current tab when creating a new item
   useEffect(() => {
+    if (credential) return;
+
     chrome.tabs?.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.url && !tabs[0].url.startsWith("chrome")) {
         form.setFieldValue("url", tabs[0].url);
@@ -165,7 +196,7 @@ export function AddCredentialScreen({
         }
       }
     });
-  }, [form]);
+  }, [form, credential]);
 
   return (
     <div className="flex h-full flex-col">
@@ -180,7 +211,7 @@ export function AddCredentialScreen({
           <ArrowLeftIcon className="h-5 w-5" />
         </Button>
         <span className="text-foreground text-sm font-medium">
-          Add Credential
+          {isEditing ? "Edit Credential" : "Add Credential"}
         </span>
       </div>
 
@@ -370,6 +401,34 @@ export function AddCredentialScreen({
               />
             )}
 
+            {/* OTP secret */}
+            {type === "login" && (
+              <form.Field
+                name="otp"
+                children={(field) => {
+                  return (
+                    <Field>
+                      <FieldContent>
+                        <FieldLabel htmlFor={field.name} className="text-xs">
+                          Authenticator secret (optional)
+                        </FieldLabel>
+                      </FieldContent>
+                      <InputGroup className="h-9">
+                        <InputGroupInput
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          onBlur={field.handleBlur}
+                          placeholder="Base32 secret or otpauth:// URI"
+                        />
+                      </InputGroup>
+                    </Field>
+                  );
+                }}
+              />
+            )}
+
             {/* Notes */}
             <form.Field
               name="note"
@@ -412,7 +471,7 @@ export function AddCredentialScreen({
                     ) : (
                       <>
                         <SaveIcon className="mr-2 h-4 w-4" />
-                        Save Credential
+                        {isEditing ? "Save Changes" : "Save Credential"}
                       </>
                     )}
                   </Button>

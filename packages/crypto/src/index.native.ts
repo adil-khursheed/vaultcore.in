@@ -12,6 +12,7 @@ export * from "./strings";
 export * from "./vault";
 export * from "./rsa";
 export * from "./rotation";
+export * from "./totp";
 
 // Auto-initialize with React Native backend
 import { setCryptoBackend } from "./config";

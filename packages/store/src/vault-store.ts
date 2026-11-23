@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-const AUTO_LOCK_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+export const AUTO_LOCK_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 const AUTO_LOCK_CHECK_INTERVAL_MS = 60 * 1000; // check every 60s
 
 interface VaultState {
@@ -12,6 +12,11 @@ interface VaultState {
   setMasterKey: (masterKey: CryptoKey) => void;
   setVaultKey: (vaultKey: CryptoKey) => void;
   setPrivateKey: (privateKey: CryptoKey) => void;
+  /**
+   * Unlock the vault with an already-derived vault key (for example after a
+   * PIN unlock in the browser extension, where the master key is not needed).
+   */
+  unlockWithVaultKey: (vaultKey: CryptoKey) => void;
   getMasterKey: () => CryptoKey | null;
   getVaultKey: () => CryptoKey | null;
   getPrivateKey: () => CryptoKey | null;
@@ -52,6 +57,10 @@ const useVaultStore = create<VaultState>((set, get) => ({
   },
   setVaultKey: (vaultKey: CryptoKey) => set({ vaultKey }),
   setPrivateKey: (privateKey: CryptoKey) => set({ privateKey }),
+  unlockWithVaultKey: (vaultKey: CryptoKey) => {
+    set({ vaultKey, isLocked: false, lastActivity: Date.now() });
+    startAutoLockTimer(get);
+  },
 
   getMasterKey: () => {
     if (!get().masterKey) {

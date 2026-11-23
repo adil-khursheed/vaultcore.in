@@ -8,3 +8,4 @@ export * from "./strings";
 export * from "./vault";
 export * from "./rsa";
 export * from "./rotation";
+export * from "./totp";

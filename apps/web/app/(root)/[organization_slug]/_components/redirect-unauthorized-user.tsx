@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useActivityTracker } from "@/hooks/use-activity-tracker";
 
 import { useVaultStore } from "@repo/store";
 
@@ -12,6 +13,9 @@ const RedirectUnauthorizedUser = ({
 }) => {
   const router = useRouter();
   const hasVaultKey = useVaultStore((state) => state.vaultKey !== null);
+
+  // Refresh the auto-lock timer on real user activity.
+  useActivityTracker();
 
   useEffect(() => {
     if (!hasVaultKey) {

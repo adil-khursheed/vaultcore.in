@@ -1,16 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
+import { leaveOrganization } from "@/lib/auth/organization-actions";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  DoorOpenIcon,
   Loader2Icon,
   MailIcon,
   MoreHorizontalIcon,
   SendIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
+  ShieldIcon,
+  UserMinusIcon,
   UserPlusIcon,
   UsersIcon,
   XIcon,
@@ -31,12 +36,24 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/ui/components/dropdown-menu";
 import { Skeleton } from "@repo/ui/components/skeleton";
 
 import ConfirmDialog from "../../../_components/confirm-dialog";
 import InviteMemberDialog from "./invite-member-dialog";
+
+type MemberRow = {
+  id: string;
+  userId: string;
+  role: string;
+  user: {
+    name: string;
+    email: string;
+    image?: string | null;
+  };
+};
 
 type PendingMember = {
   id: string;
@@ -101,6 +118,7 @@ const isPendingInvitation = (invitation: InvitationRow) =>
 
 export default function MembersList() {
   const trpc = useTRPC();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const {
     data: activeOrg,
@@ -120,16 +138,24 @@ export default function MembersList() {
   const [cancelingId, setCancelingId] = useState<string | null>(null);
   const [invitationToCancel, setInvitationToCancel] =
     useState<InvitationToCancel | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<MemberRow | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const currentMember = activeOrg?.members.find(
     (member) => member.userId === session?.user.id,
   );
-  const isAdmin = (currentMember?.role ?? "")
+  const currentRoles = (currentMember?.role ?? "")
     .split(",")
-    .map((role) => role.trim())
-    .some((role) => role === "owner" || role === "admin");
+    .map((role) => role.trim());
+  const isAdmin = currentRoles.some(
+    (role) => role === "owner" || role === "admin",
+  );
+  const isOwner = currentRoles.includes("owner");
 
-  const members = activeOrg?.members ?? [];
+  const members = (activeOrg?.members ?? []) as MemberRow[];
   const pendingInvitations = ((activeOrg?.invitations ?? []) as InvitationRow[])
     .filter(isPendingInvitation)
     .sort(
@@ -283,6 +309,93 @@ export default function MembersList() {
       toast.error("Couldn't cancel the invitation. Please try again.");
     } finally {
       setCancelingId(null);
+    }
+  };
+
+  const handleUpdateRole = async (
+    member: MemberRow,
+    role: "admin" | "member",
+  ) => {
+    if (!activeOrg?.id) return;
+
+    setUpdatingRoleId(member.id);
+
+    try {
+      const { error } = await authClient.organization.updateMemberRole({
+        memberId: member.id,
+        role,
+        organizationId: activeOrg.id,
+      });
+
+      if (error) {
+        toast.error(error.message || "Couldn't change the member's role.");
+        return;
+      }
+
+      toast.success(
+        role === "admin"
+          ? `${member.user.name} is now an admin`
+          : `${member.user.name} is now a member`,
+      );
+      void refetchOrg();
+    } catch (error) {
+      console.error("Failed to update member role", error);
+      toast.error("Couldn't change the member's role. Please try again.");
+    } finally {
+      setUpdatingRoleId(null);
+    }
+  };
+
+  const handleRemoveMember = async () => {
+    if (!memberToRemove || !activeOrg?.id) return;
+
+    setRemovingId(memberToRemove.id);
+
+    try {
+      const { error } = await authClient.organization.removeMember({
+        memberIdOrEmail: memberToRemove.id,
+        organizationId: activeOrg.id,
+      });
+
+      if (error) {
+        toast.error(error.message || "Couldn't remove the member.");
+        return;
+      }
+
+      toast.success(`${memberToRemove.user.name} was removed`);
+      setMemberToRemove(null);
+      void refetchOrg();
+      void pendingMembersQuery.refetch();
+      void activeMembersQuery.refetch();
+    } catch (error) {
+      console.error("Failed to remove member", error);
+      toast.error("Couldn't remove the member. Please try again.");
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const handleLeaveOrganization = async () => {
+    if (!activeOrg?.id) return;
+
+    setLeaving(true);
+
+    try {
+      await leaveOrganization(activeOrg.id);
+
+      toast.success(`You left ${activeOrg.name}`);
+      setLeaveOpen(false);
+      router.push("/app");
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to leave organization", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Couldn't leave the organization. Please try again.",
+      );
+    } finally {
+      setLeaving(false);
     }
   };
 
@@ -480,6 +593,71 @@ export default function MembersList() {
                       <Badge variant="secondary">
                         {formatRole(member.role)}
                       </Badge>
+
+                      {(isAdmin && !isSelf && member.role !== "owner") ||
+                      (isSelf && !isOwner) ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`Manage ${member.user.name}`}
+                            >
+                              <MoreHorizontalIcon aria-hidden="true" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {isAdmin && !isSelf && member.role !== "owner" ? (
+                              <>
+                                <DropdownMenuItem
+                                  onSelect={() =>
+                                    void handleUpdateRole(
+                                      member,
+                                      member.role === "admin"
+                                        ? "member"
+                                        : "admin",
+                                    )
+                                  }
+                                  disabled={updatingRoleId === member.id}
+                                >
+                                  {updatingRoleId === member.id ? (
+                                    <Loader2Icon
+                                      className="animate-spin"
+                                      aria-hidden="true"
+                                    />
+                                  ) : member.role === "admin" ? (
+                                    <ShieldIcon aria-hidden="true" />
+                                  ) : (
+                                    <ShieldCheckIcon aria-hidden="true" />
+                                  )}
+                                  {member.role === "admin"
+                                    ? "Make member"
+                                    : "Make admin"}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onSelect={() => setMemberToRemove(member)}
+                                  disabled={removingId === member.id}
+                                >
+                                  <UserMinusIcon aria-hidden="true" />
+                                  Remove from organization
+                                </DropdownMenuItem>
+                              </>
+                            ) : null}
+
+                            {isSelf && !isOwner ? (
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onSelect={() => setLeaveOpen(true)}
+                              >
+                                <DoorOpenIcon aria-hidden="true" />
+                                Leave organization
+                              </DropdownMenuItem>
+                            ) : null}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : null}
                     </div>
                   </div>
                 );
@@ -731,6 +909,38 @@ export default function MembersList() {
         destructive
         isPending={cancelingId === invitationToCancel?.id}
         onConfirm={handleCancelInvitation}
+      />
+
+      <ConfirmDialog
+        open={!!memberToRemove}
+        onOpenChange={(open) => {
+          if (!open) setMemberToRemove(null);
+        }}
+        title="Remove member?"
+        description={
+          memberToRemove
+            ? `${memberToRemove.user.name} will lose access to this organization and its vault immediately.`
+            : ""
+        }
+        confirmLabel="Remove member"
+        destructive
+        isPending={removingId === memberToRemove?.id}
+        onConfirm={handleRemoveMember}
+      />
+
+      <ConfirmDialog
+        open={leaveOpen}
+        onOpenChange={setLeaveOpen}
+        title="Leave organization?"
+        description={
+          activeOrg
+            ? `You will lose access to ${activeOrg.name} and its vault. An admin will need to invite you again to rejoin.`
+            : ""
+        }
+        confirmLabel="Leave organization"
+        destructive
+        isPending={leaving}
+        onConfirm={handleLeaveOrganization}
       />
     </>
   );

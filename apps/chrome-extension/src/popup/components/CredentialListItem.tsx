@@ -1,4 +1,5 @@
 import type { CredentialType, TCredential } from "@/lib/types";
+import { getFaviconUrl } from "@/lib/favicon";
 import { ChevronRightIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@repo/ui/components/avatar";
@@ -25,14 +26,8 @@ export function CredentialListItem({
   onClick,
   isMatching,
 }: CredentialListItemProps) {
-  let faviconUrl: string | undefined;
-  if (credential.type === "login" && credential.url) {
-    try {
-      faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(credential.url).hostname}&sz=64`;
-    } catch {
-      faviconUrl = undefined;
-    }
-  }
+  const faviconUrl =
+    credential.type === "login" ? getFaviconUrl(credential.url) : undefined;
 
   return (
     <Button

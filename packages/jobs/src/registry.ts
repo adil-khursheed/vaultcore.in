@@ -5,7 +5,7 @@ import z from "zod";
  */
 export const JobNames = {
   SEND_EMAIL: "SEND_EMAIL",
-  // Add more job names as needed
+  PURGE_TRASH: "PURGE_TRASH",
 } as const;
 
 export type JobName = keyof typeof JobNames;
@@ -20,6 +20,9 @@ export const JobSchemas = {
     text: z.string().optional(),
     html: z.string().optional(),
     props: z.record(z.string(), z.any()).optional(), // For @repo/email template props
+  }),
+  [JobNames.PURGE_TRASH]: z.object({
+    retentionDays: z.number().int().min(1).max(365).default(30),
   }),
 };
 
