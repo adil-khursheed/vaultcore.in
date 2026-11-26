@@ -23,7 +23,9 @@ import { db } from "@repo/db/client";
 import {
   auditLog,
   invitation,
+  member,
   memberVaultKey,
+  organizationSecurity,
   organizationSubscriptions,
   payments,
   plans,
@@ -119,6 +121,80 @@ const polarClient = new Polar({
   server: env.NODE_ENV === "production" ? "production" : "sandbox",
 });
 
+/**
+ * Remember that a member left, so admins are prompted to rotate the vault
+ * key. Rotation itself must run in an unlocked browser (zero-knowledge).
+ */
+async function markKeyRotationRequired(
+  organizationId: string,
+  requestedBy: string | null,
+) {
+  const now = new Date();
+
+  await db
+    .insert(organizationSecurity)
+    .values({ organizationId, keyRotationRequiredAt: now, requestedBy })
+    .onConflictDoUpdate({
+      target: organizationSecurity.organizationId,
+      set: { keyRotationRequiredAt: now, requestedBy },
+    });
+}
+
+/**
+ * Cancel the organization's Polar subscription before the org row (and its
+ * subscription row) is deleted. Throws so the deletion is blocked when Polar
+ * cannot be reached — a deleted org must never keep billing.
+ */
+async function cancelPolarSubscription(organizationId: string) {
+  const subscription = await db.query.organizationSubscriptions.findFirst({
+    where: eq(organizationSubscriptions.organizationId, organizationId),
+  });
+
+  const subscriptionIds: string[] = [];
+
+  if (subscription) {
+    if (
+      !subscription.id.startsWith("free_") &&
+      subscription.status !== "canceled"
+    ) {
+      subscriptionIds.push(subscription.id);
+    }
+  } else {
+    // Webhook lag: the subscription can exist in Polar without a local row.
+    const pages = await polarClient.subscriptions.list({
+      metadata: { referenceId: organizationId },
+      active: true,
+      limit: 100,
+    });
+
+    for await (const page of pages) {
+      for (const item of page.result.items) {
+        if (item.status !== "canceled") subscriptionIds.push(item.id);
+      }
+    }
+  }
+
+  for (const id of subscriptionIds) {
+    try {
+      await polarClient.subscriptions.revoke({ id });
+    } catch (error) {
+      const statusCode =
+        typeof error === "object" && error !== null && "statusCode" in error
+          ? (error as { statusCode?: number }).statusCode
+          : undefined;
+
+      // Already gone on Polar's side is fine.
+      if (statusCode === 404) continue;
+
+      console.error("[AUTH] Failed to cancel Polar subscription", error);
+      throw new APIError("INTERNAL_SERVER_ERROR", {
+        message:
+          "We couldn't cancel the billing subscription, so the organization was not deleted. Please try again.",
+      });
+    }
+  }
+}
+
 const subscriptionLimitsPlugin = () => {
   return {
     id: "subscription-limits",
@@ -197,6 +273,76 @@ const subscriptionLimitsPlugin = () => {
             }
 
             return { context: ctx };
+          }),
+        },
+      ],
+    },
+  } satisfies BetterAuthPlugin;
+};
+
+/**
+ * Better Auth has no leave hook, so clean up after /organization/leave here.
+ * Without this the leaver keeps a wrapped key row and no admin is prompted to
+ * rotate the key.
+ */
+const memberLifecyclePlugin = () => {
+  return {
+    id: "member-lifecycle",
+    hooks: {
+      after: [
+        {
+          matcher: (ctx) => ctx.path === "/organization/leave",
+          handler: createAuthMiddleware(async (ctx) => {
+            const userId = ctx.context.session?.user.id;
+            const organizationId = (
+              ctx.body as { organizationId?: string } | undefined
+            )?.organizationId;
+
+            if (!userId || !organizationId) return;
+
+            // After hooks also run when the endpoint failed (e.g. the only
+            // owner cannot leave). Only clean up if the member is gone.
+            const stillMember = await db.query.member.findFirst({
+              where: and(
+                eq(member.organizationId, organizationId),
+                eq(member.userId, userId),
+              ),
+            });
+
+            if (stillMember) return;
+
+            await db
+              .delete(memberVaultKey)
+              .where(
+                and(
+                  eq(memberVaultKey.organizationId, organizationId),
+                  eq(memberVaultKey.userId, userId),
+                ),
+              );
+
+            await db
+              .insert(auditLog)
+              .values({
+                targetUserId: userId,
+                organizationId,
+                action: "member_removed",
+                metadata: { reason: "left" },
+              })
+              .catch((error: unknown) => {
+                console.error(
+                  "[AUTH] Failed to log member_removed audit event",
+                  error,
+                );
+              });
+
+            await markKeyRotationRequired(organizationId, userId).catch(
+              (error: unknown) => {
+                console.error(
+                  "[AUTH] Failed to mark key rotation as required",
+                  error,
+                );
+              },
+            );
           }),
         },
       ],
@@ -301,6 +447,15 @@ export function initAuth<
                   error,
                 );
               });
+
+            await markKeyRotationRequired(organization.id, null).catch(
+              (error: unknown) => {
+                console.error(
+                  "[AUTH] Failed to mark key rotation as required",
+                  error,
+                );
+              },
+            );
           },
           afterUpdateMemberRole: async ({
             member,
@@ -323,6 +478,9 @@ export function initAuth<
               });
           },
           beforeDeleteOrganization: async ({ organization, user }) => {
+            // Stop billing first. Throwing here blocks the deletion.
+            await cancelPolarSubscription(organization.id);
+
             // Log before the row disappears; the audit row keeps a null
             // organizationId afterwards via the FK's onDelete: set null.
             await db
@@ -405,6 +563,7 @@ export function initAuth<
       }),
       vaultVerificationPlugin(),
       subscriptionLimitsPlugin(),
+      memberLifecyclePlugin(),
       // Allows clients (the browser extension) to authenticate with a bearer
       // token instead of relying on third-party cookies.
       bearer(),

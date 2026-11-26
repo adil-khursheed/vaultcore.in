@@ -25,6 +25,17 @@ import {
 
 import ConfirmDialog from "../../../_components/confirm-dialog";
 
+type RotationCredential = {
+  id: string;
+  type: string;
+  username: string | null;
+  password: string | null;
+  url: string | null;
+  otp: string | null;
+  note: string | null;
+  data: unknown;
+};
+
 export default function VaultKeyRotation() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -84,12 +95,38 @@ export default function VaultKeyRotation() {
           publicKeyJwk: JSON.parse(atob(m.publicKey!)),
         }));
 
-      const credentialsRes = await queryClient.fetchQuery(
-        trpc.credential.getCredentials.queryOptions({
-          organizationId: activeOrg.id,
-          limit: 10000,
-        }),
-      );
+      const fetchAllCredentials = async (isDeleted: boolean) => {
+        const items: RotationCredential[] = [];
+        let cursor: string | null = null;
+
+        do {
+          const page: {
+            items: RotationCredential[];
+            nextCursor?: string | null;
+          } = await queryClient.fetchQuery(
+            trpc.credential.getCredentials.queryOptions({
+              organizationId: activeOrg.id,
+              limit: 100,
+              cursor,
+              isDeleted,
+            }),
+          );
+
+          items.push(...page.items);
+          cursor = page.nextCursor ?? null;
+        } while (cursor);
+
+        return items;
+      };
+
+      // Trashed items must be re-encrypted too, otherwise restoring one
+      // after rotation would produce undecryptable data.
+      toast.info("Loading credentials...");
+      const [activeCredentials, trashedCredentials] = await Promise.all([
+        fetchAllCredentials(false),
+        fetchAllCredentials(true),
+      ]);
+      const credentials = [...activeCredentials, ...trashedCredentials];
 
       const currentVaultKeyRes = await queryClient.fetchQuery(
         trpc.vault.getMyVaultKey.queryOptions({
@@ -105,7 +142,7 @@ export default function VaultKeyRotation() {
             currentVaultKeyRes.vaultKeyData.encryptedKey,
           userPrivateKey: privateKey,
           activeMembers,
-          credentials: credentialsRes.items.map((c) => ({
+          credentials: credentials.map((c) => ({
             id: c.id,
             type: c.type,
             username: c.username,
@@ -125,6 +162,15 @@ export default function VaultKeyRotation() {
       });
 
       useVaultStore.getState().setVaultKey(newVaultKey);
+
+      await queryClient.invalidateQueries(
+        trpc.vault.getRotationStatus.queryFilter({
+          organizationId: activeOrg.id,
+        }),
+      );
+      await queryClient.invalidateQueries({
+        queryKey: trpc.credential.getCredentials.pathKey(),
+      });
 
       toast.success("Vault key rotated successfully.");
     } catch (error) {

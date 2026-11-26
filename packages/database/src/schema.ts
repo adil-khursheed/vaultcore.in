@@ -80,6 +80,25 @@ export const memberVaultKey = pgTable(
   ],
 );
 
+/**
+ * Security state that is not part of Better Auth's organization model.
+ * Currently only tracks whether the vault key must be rotated after a
+ * departure.
+ */
+export const organizationSecurity = pgTable("organization_security", {
+  organizationId: text("organization_id")
+    .primaryKey()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  keyRotationRequiredAt: timestamp("key_rotation_required_at"),
+  requestedBy: text("requested_by").references(() => user.id, {
+    onDelete: "set null",
+  }),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
 export const credentialTypeEnum = pgEnum("credential_type", [
   "login",
   "card",

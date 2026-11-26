@@ -177,6 +177,13 @@ export default function MembersList() {
     ),
   );
 
+  const rotationStatusQuery = useQuery(
+    trpc.vault.getRotationStatus.queryOptions(
+      { organizationId: activeOrg?.id ?? "" },
+      { enabled: !!activeOrg?.id && isAdmin },
+    ),
+  );
+
   const pendingMembers = pendingMembersQuery.data?.pendingMembers ?? [];
   const pendingMemberIds = new Set(
     pendingMembers.map((member) => member.userId),
@@ -367,6 +374,7 @@ export default function MembersList() {
       void refetchOrg();
       void pendingMembersQuery.refetch();
       void activeMembersQuery.refetch();
+      void rotationStatusQuery.refetch();
     } catch (error) {
       console.error("Failed to remove member", error);
       toast.error("Couldn't remove the member. Please try again.");
@@ -496,6 +504,31 @@ export default function MembersList() {
             </Button>
           ) : null}
         </div>
+
+        {rotationStatusQuery.data?.keyRotationRequiredAt ? (
+          <Card className="border-destructive/40 bg-destructive/5 flex flex-row items-center gap-3 px-5 py-4">
+            <ShieldAlertIcon
+              className="text-destructive size-5 shrink-0"
+              aria-hidden="true"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">
+                Vault key rotation recommended
+              </p>
+              <p className="text-muted-foreground text-sm">
+                A member left this organization. Rotate the key so they
+                can&apos;t decrypt future changes.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/${activeOrg.slug}/settings`)}
+            >
+              Rotate
+            </Button>
+          </Card>
+        ) : null}
 
         <Card className="gap-0 overflow-hidden py-0">
           <div className="border-b px-5 py-5 sm:px-6">

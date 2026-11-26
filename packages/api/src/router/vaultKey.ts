@@ -6,6 +6,7 @@ import {
   credential,
   member,
   memberVaultKey,
+  organizationSecurity,
   user,
   vaultKeyRotationLog,
 } from "@repo/db/schema";
@@ -313,6 +314,23 @@ export const vaultKeyRouter = {
     }),
 
   /**
+   * Whether a member departure left the organization needing a key rotation.
+   * Only admins can see it (they are the ones who can rotate).
+   */
+  getRotationStatus: orgAdminProcedure
+    .input(z.object({ organizationId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const security = await ctx.db.query.organizationSecurity.findFirst({
+        where: eq(organizationSecurity.organizationId, input.organizationId),
+      });
+
+      return {
+        keyRotationRequiredAt: security?.keyRotationRequiredAt ?? null,
+        requestedBy: security?.requestedBy ?? null,
+      };
+    }),
+
+  /**
    * Rotate the organization's vault key.
    * This endpoint replaces all member vault keys and all credential data in a single transaction.
    * Only admins/owners can perform this action.
@@ -400,6 +418,12 @@ export const vaultKeyRouter = {
           newVersion: newVersion,
           membersRotated: newMemberKeys.length,
         });
+
+        // 5. The departure that required rotation has been handled.
+        await tx
+          .update(organizationSecurity)
+          .set({ keyRotationRequiredAt: null, requestedBy: null })
+          .where(eq(organizationSecurity.organizationId, organizationId));
       });
 
       // Non-blocking audit log
