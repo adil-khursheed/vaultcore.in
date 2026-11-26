@@ -5,7 +5,7 @@ export { siteUrl };
 export const site = {
   name: "VaultCore",
   url: siteUrl,
-  title: "VaultCore — Zero-knowledge password manager",
+  title: "VaultCore - Zero-knowledge password manager",
   description:
     "VaultCore is a zero-knowledge password manager for logins, cards, identities, notes, and SSH keys. Everything is encrypted on your device before it reaches our servers.",
   locale: "en_US",

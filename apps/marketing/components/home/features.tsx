@@ -15,70 +15,73 @@ import SectionContainer from "@repo/site/components/section-container";
 import { cn } from "@repo/ui/lib/utils";
 
 import {
-  AutofillIllustration,
-  EncryptionIllustration,
-  GeneratorIllustration,
-  SyncIllustration,
-  VaultIllustration,
-  ZeroKnowledgeIllustration,
-} from "./feature-illustrations";
+  AutofillVisual,
+  EncryptionVisual,
+  GeneratorVisual,
+  SyncVisual,
+  useReveal,
+  VaultVisual,
+  ZeroKnowledgeVisual,
+} from "./product-visuals";
 
-const draftGrid = {
-  backgroundImage:
-    "repeating-linear-gradient(60deg, var(--border) 0 1px, transparent 1px 24px), repeating-linear-gradient(-60deg, var(--border) 0 1px, transparent 1px 24px)",
-  maskImage: "radial-gradient(ellipse at 50% 42%, black 8%, transparent 74%)",
-  WebkitMaskImage:
-    "radial-gradient(ellipse at 50% 42%, black 8%, transparent 74%)",
+type FeatureVisual = React.ComponentType<{ seen: boolean; hovered?: boolean }>;
+
+type Feature = {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  className: string;
+  visual: FeatureVisual;
 };
 
-const features = [
+const features: Feature[] = [
   {
     title: "End-to-end encryption",
     description:
       "Encrypted on your device with AES-256-GCM before anything leaves for our servers.",
     icon: IconShieldLock,
-    className: "md:col-span-2",
-    illustration: <EncryptionIllustration />,
+    className: "sm:col-span-2",
+    visual: EncryptionVisual,
   },
   {
     title: "One-click autofill",
     description:
       "Fill logins in your browser with the VaultCore extension. No copying, no typing.",
     icon: IconKey,
-    className: "md:col-span-1",
-    illustration: <AutofillIllustration />,
+    className: "",
+    visual: AutofillVisual,
   },
   {
     title: "One organized vault",
     description:
       "Logins, cards, identities, notes, and SSH keys in a single encrypted list.",
     icon: IconLockSquareRounded,
-    className: "md:col-span-1",
-    illustration: <VaultIllustration />,
+    className: "",
+    visual: VaultVisual,
   },
   {
     title: "Passwords worth keeping",
     description:
       "Generate long, unique passwords and let VaultCore remember them for you.",
     icon: IconRefresh,
-    className: "md:col-span-1",
-    illustration: <GeneratorIllustration />,
+    className: "",
+    visual: GeneratorVisual,
   },
   {
     title: "In sync everywhere",
     description:
       "Your vault follows you across devices, encrypted the whole way through.",
     icon: IconDeviceDesktop,
-    className: "md:col-span-1",
-    illustration: <SyncIllustration />,
+    className: "",
+    visual: SyncVisual,
   },
   {
     title: "Zero-knowledge by design",
     description:
       "Your keys stay on your device. The server only ever stores ciphertext.",
     icon: IconSpyOff,
-    className: "md:col-span-2",
-    illustration: <ZeroKnowledgeIllustration />,
+    className: "sm:col-span-2",
+    visual: ZeroKnowledgeVisual,
   },
 ];
 
@@ -86,39 +89,34 @@ const FeatureCard = ({
   feature,
   index,
 }: {
-  feature: (typeof features)[0];
+  feature: Feature;
   index: number;
 }) => {
+  const [ref, seen] = useReveal(index * 90);
+  const [hovered, setHovered] = React.useState(false);
+
   return (
     <motion.div
+      ref={ref}
+      tabIndex={0}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocus={() => setHovered(true)}
+      onBlur={() => setHovered(false)}
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
       className={cn(
-        "group border-border bg-card relative flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-[transform,box-shadow] duration-300 ease-out hover:shadow-xl motion-safe:hover:-translate-y-1",
+        "group border-border bg-card focus-visible:ring-mint/60 relative flex flex-col overflow-hidden rounded-2xl border shadow-sm transition-[transform,box-shadow,border-color] duration-300 ease-out outline-none hover:shadow-xl focus-visible:ring-2 motion-safe:hover:-translate-y-1",
         feature.className,
       )}
     >
       <div
         aria-hidden
-        className="border-border bg-muted/20 relative h-64 w-full overflow-hidden border-b md:h-60"
+        className="border-border bg-muted/40 @container relative h-64 w-full overflow-hidden border-b lg:h-60"
       >
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.35]"
-          style={draftGrid}
-        />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_44%,var(--mint)_0%,transparent_68%)] opacity-[0.045]" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div
-            className={cn(
-              "h-full w-full",
-              feature.className.includes("md:col-span-1") && "lg:scale-125",
-            )}
-          >
-            {feature.illustration}
-          </div>
-        </div>
+        <feature.visual seen={seen} hovered={hovered} />
       </div>
 
       <div className="relative z-10 flex flex-col gap-2 p-5">
@@ -158,7 +156,7 @@ const FeaturesSection = () => {
 
         <MotionConfig reducedMotion="user">
           <div
-            className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4"
+            className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
             aria-labelledby="features-heading"
           >
             {features.map((feature, index) => (

@@ -11,6 +11,8 @@ import { motion, MotionConfig } from "motion/react";
 
 import SectionContainer from "@repo/site/components/section-container";
 
+import { VerifyKeyVisual } from "./product-visuals";
+
 const painPoints = [
   {
     title: "Reused passwords",
@@ -44,6 +46,33 @@ const protectionFacts: ProtectionFact[] = [
   { label: "Encryption", value: "AES-256-GCM", exact: true },
   { label: "Member key wrapping", value: "RSA-OAEP", exact: true },
   { label: "Master password", value: "Never sent", verified: true },
+];
+
+const securityDetails = [
+  {
+    tag: "RSA-OAEP-4096",
+    title: "Every member gets their own wrapped key",
+    description:
+      "Your vault key is wrapped with a 4096-bit RSA key for each person you share with. The server never holds a copy it can open.",
+  },
+  {
+    tag: "AES-256-GCM",
+    title: "Each field is its own ciphertext",
+    description:
+      "Every value is encrypted on its own before it leaves your device, so the vault never stores one shared blob of secrets.",
+  },
+  {
+    tag: "Rotation",
+    title: "Rotate the key when someone leaves",
+    description:
+      "The new key is generated on your device, every item re-encrypts in one transaction, and the rotation is recorded.",
+  },
+  {
+    tag: "Fingerprints",
+    title: "Verify a key before you share",
+    description:
+      "Compare a short safety number with the person out of band, so a swapped key can't pass unnoticed.",
+  },
 ];
 
 const WhyUsSection = () => {
@@ -152,6 +181,47 @@ const WhyUsSection = () => {
               </div>
             </div>
           </motion.div>
+        </div>
+
+        <div className="border-border mt-16 border-t px-4 pt-14 md:mt-20">
+          <div className="grid gap-10 lg:grid-cols-12 lg:gap-14">
+            <div className="lg:col-span-6">
+              <h3 className="text-foreground text-2xl font-bold text-balance md:text-3xl">
+                What&apos;s under the vault.
+              </h3>
+              <p className="text-muted-foreground mt-3 max-w-md text-sm leading-relaxed text-pretty">
+                The encryption is only as strong as the keys around it. These
+                are the parts you can check yourself.
+              </p>
+
+              <dl className="divide-border border-border mt-8 divide-y border-y">
+                {securityDetails.map((detail) => (
+                  <div
+                    key={detail.tag}
+                    className="grid gap-1.5 py-4 sm:grid-cols-[8.5rem_1fr] sm:gap-6"
+                  >
+                    <dt className="text-muted-foreground pt-0.5 text-[11px] font-medium tracking-[0.1em] uppercase">
+                      {detail.tag}
+                    </dt>
+                    <dd>
+                      <p className="text-foreground text-sm font-semibold">
+                        {detail.title}
+                      </p>
+                      <p className="text-muted-foreground mt-1 text-sm leading-relaxed text-pretty">
+                        {detail.description}
+                      </p>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            <div className="lg:col-span-6">
+              <div className="max-w-md lg:ml-auto">
+                <VerifyKeyVisual />
+              </div>
+            </div>
+          </div>
         </div>
       </MotionConfig>
     </SectionContainer>
