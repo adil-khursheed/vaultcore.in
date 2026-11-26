@@ -35,13 +35,17 @@ export async function POST(request: Request) {
       : {};
 
   const referenceId =
-    typeof body.referenceId === "string"
-      ? body.referenceId
-      : typeof metadata.referenceId === "string"
-        ? metadata.referenceId
-        : typeof metadata.organizationId === "string"
-          ? metadata.organizationId
-          : null;
+    typeof body.reference_id === "string"
+      ? body.reference_id
+      : typeof body.referenceId === "string"
+        ? body.referenceId
+        : typeof body.organization_id === "string"
+          ? body.organization_id
+          : typeof metadata.referenceId === "string"
+            ? metadata.referenceId
+            : typeof metadata.organizationId === "string"
+              ? metadata.organizationId
+              : null;
 
   if (!referenceId) {
     return authPOST(request);
@@ -69,7 +73,7 @@ export async function POST(request: Request) {
     headers,
     body: JSON.stringify({
       ...body,
-      referenceId,
+      reference_id: referenceId,
       metadata: {
         ...metadata,
         referenceId,

@@ -46,10 +46,14 @@ const UpgradePlanButton = ({ organizationId }: { organizationId: string }) => {
 
   const handlePlanCheckout = async (planId: string) => {
     try {
-      await authClient.checkout({
+      const { error } = await authClient.checkout({
         slug: planId,
-        referenceId: organizationId,
+        reference_id: organizationId,
       });
+      if (error) {
+        console.error(error);
+        toast.error(error.message || "Unable to proceed with checkout.");
+      }
     } catch (error) {
       console.error(error);
       toast.error("Unable to proceed with checkout.");

@@ -5,7 +5,7 @@ import {
   portal,
   webhooks,
 } from "@polar-sh/better-auth";
-import { Polar } from "@polar-sh/sdk";
+import { createPolar, createPolarCore } from "@polar-sh/sdk/2026-10";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
@@ -116,10 +116,14 @@ const vaultVerificationPlugin = () => {
   } satisfies BetterAuthPlugin;
 };
 
-const polarClient = new Polar({
+const polarOptions = {
   accessToken: env.POLAR_ACCESS_TOKEN,
-  server: env.NODE_ENV === "production" ? "production" : "sandbox",
-});
+  environment: (env.NODE_ENV === "production"
+    ? "production"
+    : "sandbox") as "production" | "sandbox",
+};
+const polarCore = createPolarCore(polarOptions);
+const polarClient = createPolar(polarOptions);
 
 /**
  * Remember that a member left, so admins are prompted to rotate the vault
@@ -161,22 +165,18 @@ async function cancelPolarSubscription(organizationId: string) {
     }
   } else {
     // Webhook lag: the subscription can exist in Polar without a local row.
-    const pages = await polarClient.subscriptions.list({
+    for await (const item of polarClient.subscriptions.iterList({
       metadata: { referenceId: organizationId },
       active: true,
       limit: 100,
-    });
-
-    for await (const page of pages) {
-      for (const item of page.result.items) {
-        if (item.status !== "canceled") subscriptionIds.push(item.id);
-      }
+    })) {
+      if (item.status !== "canceled") subscriptionIds.push(item.id);
     }
   }
 
   for (const id of subscriptionIds) {
     try {
-      await polarClient.subscriptions.revoke({ id });
+      await polarClient.subscriptions.revoke(id);
     } catch (error) {
       const statusCode =
         typeof error === "object" && error !== null && "statusCode" in error
@@ -568,7 +568,7 @@ export function initAuth<
       // token instead of relying on third-party cookies.
       bearer(),
       polar({
-        client: polarClient,
+        client: polarCore,
         createCustomerOnSignUp: false,
         use: [
           checkout({
@@ -600,7 +600,7 @@ export function initAuth<
                 if (!orgId) return;
 
                 const plan = await db.query.plans.findFirst({
-                  where: eq(plans.polarProductId, subscription.data.productId),
+                  where: eq(plans.polarProductId, subscription.data.product_id),
                 });
 
                 if (plan) {
@@ -610,17 +610,17 @@ export function initAuth<
                       id: subscription.data.id,
                       organizationId: orgId,
                       planId: plan.id,
-                      polarCustomerId: subscription.data.customerId,
-                      polarProductId: subscription.data.productId,
+                      polarCustomerId: subscription.data.customer_id,
+                      polarProductId: subscription.data.product_id,
                       status: subscription.data.status as any,
-                      interval: subscription.data.recurringInterval as any,
+                      interval: subscription.data.recurring_interval as any,
                       currentPeriodStart: new Date(
-                        subscription.data.currentPeriodStart,
+                        subscription.data.current_period_start,
                       ),
-                      currentPeriodEnd: subscription.data.currentPeriodEnd
-                        ? new Date(subscription.data.currentPeriodEnd)
+                      currentPeriodEnd: subscription.data.current_period_end
+                        ? new Date(subscription.data.current_period_end)
                         : null,
-                      cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
+                      cancelAtPeriodEnd: subscription.data.cancel_at_period_end,
                       metadata: subscription.data.metadata as any,
                     })
                     .onConflictDoUpdate({
@@ -628,17 +628,18 @@ export function initAuth<
                       set: {
                         id: subscription.data.id,
                         planId: plan.id,
-                        polarCustomerId: subscription.data.customerId,
-                        polarProductId: subscription.data.productId,
+                        polarCustomerId: subscription.data.customer_id,
+                        polarProductId: subscription.data.product_id,
                         status: subscription.data.status as any,
-                        interval: subscription.data.recurringInterval as any,
+                        interval: subscription.data.recurring_interval as any,
                         currentPeriodStart: new Date(
-                          subscription.data.currentPeriodStart,
+                          subscription.data.current_period_start,
                         ),
-                        currentPeriodEnd: subscription.data.currentPeriodEnd
-                          ? new Date(subscription.data.currentPeriodEnd)
+                        currentPeriodEnd: subscription.data.current_period_end
+                          ? new Date(subscription.data.current_period_end)
                           : null,
-                        cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
+                        cancelAtPeriodEnd:
+                          subscription.data.cancel_at_period_end,
                         metadata: subscription.data.metadata,
                       },
                     });
@@ -649,7 +650,7 @@ export function initAuth<
             },
             async onSubscriptionUpdated(subscription) {
               const plan = await db.query.plans.findFirst({
-                where: eq(plans.polarProductId, subscription.data.productId),
+                where: eq(plans.polarProductId, subscription.data.product_id),
               });
 
               await db
@@ -657,12 +658,12 @@ export function initAuth<
                 .set({
                   status: subscription.data.status as any,
                   planId: plan?.id,
-                  currentPeriodEnd: subscription.data.currentPeriodEnd
-                    ? new Date(subscription.data.currentPeriodEnd)
+                  currentPeriodEnd: subscription.data.current_period_end
+                    ? new Date(subscription.data.current_period_end)
                     : null,
-                  cancelAtPeriodEnd: subscription.data.cancelAtPeriodEnd,
-                  canceledAt: subscription.data.canceledAt
-                    ? new Date(subscription.data.canceledAt)
+                  cancelAtPeriodEnd: subscription.data.cancel_at_period_end,
+                  canceledAt: subscription.data.canceled_at
+                    ? new Date(subscription.data.canceled_at)
                     : null,
                 })
                 .where(eq(organizationSubscriptions.id, subscription.data.id));
@@ -673,8 +674,8 @@ export function initAuth<
                 .set({
                   status: "canceled",
                   cancelAtPeriodEnd: true,
-                  canceledAt: subscription.data.canceledAt
-                    ? new Date(subscription.data.canceledAt)
+                  canceledAt: subscription.data.canceled_at
+                    ? new Date(subscription.data.canceled_at)
                     : null,
                 })
                 .where(eq(organizationSubscriptions.id, subscription.data.id));
@@ -700,15 +701,15 @@ export function initAuth<
                   organizationId: orgId,
                   billingUserId:
                     (order.data.metadata?.userId as string) || null,
-                  subscriptionId: order.data.subscriptionId,
+                  subscriptionId: order.data.subscription_id,
                   polarOrderId: order.data.id,
-                  polarCustomerId: order.data.customerId,
-                  amount: order.data.totalAmount,
+                  polarCustomerId: order.data.customer_id,
+                  amount: order.data.total_amount,
                   currency: order.data.currency,
                   status: "paid",
                   description: `Payment for ${order.data.product?.name}`,
                   metadata: order.data.metadata as any,
-                  paidAt: new Date(order.data.createdAt),
+                  paidAt: new Date(order.data.created_at),
                 })
                 .onConflictDoNothing();
             },
@@ -717,7 +718,7 @@ export function initAuth<
                 .update(payments)
                 .set({
                   status: "refunded",
-                  refundedAmount: order.data.totalAmount,
+                  refundedAmount: order.data.total_amount,
                 })
                 .where(eq(payments.id, order.data.id));
             },
