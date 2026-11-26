@@ -17,9 +17,9 @@ export const plans = [
     features: [
       "1 organization",
       "2 members per org",
-      "End-to-end encryption",
-      "Zero-knowledge architecture",
-      "Unlimited devices & sync",
+      "Unlimited items & devices",
+      "TOTP authenticator codes",
+      "CSV import & export",
     ],
     cta: "Create free vault",
     isPopular: false,
@@ -27,15 +27,15 @@ export const plans = [
   {
     id: "premium",
     name: "Premium",
-    yearlyPriceUsd: 1000,
+    yearlyPriceUsd: 1299,
     description:
       "More organizations and members for work, side projects, and family.",
     features: [
       "2 organizations",
       "3 members per org",
       "Everything in Free",
+      "Password health dashboard",
       "Priority email support",
-      "Advanced vault items",
     ],
     cta: "Choose Premium",
     isPopular: true,
@@ -43,14 +43,14 @@ export const plans = [
   {
     id: "family",
     name: "Family",
-    yearlyPriceUsd: 4999,
+    yearlyPriceUsd: 5999,
     description: "One shared vault for the whole household, with room to grow.",
     features: [
       "Unlimited organizations",
       "10 members per org",
       "Everything in Premium",
-      "Household sharing",
-      "Family security dashboard",
+      "Shared household vault",
+      "Family password health dashboard",
     ],
     cta: "Choose Family",
     isPopular: false,

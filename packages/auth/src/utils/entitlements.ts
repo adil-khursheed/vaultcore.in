@@ -1,15 +1,20 @@
+import { APIError } from "better-auth/api";
+
 import { and, count, eq, gt } from "@repo/db";
 import { db } from "@repo/db/client";
 import {
+  DEFAULT_FREE_ENTITLEMENTS,
   invitation,
   member,
   organizationSubscriptions,
   plans,
+  type PlanEntitlements,
 } from "@repo/db/schema";
 
 import { env } from "../../env.ts";
 
 export type Plan = typeof plans.$inferSelect;
+export type EntitlementKey = keyof PlanEntitlements;
 
 export const FREE_PLAN: Plan = {
   id: "free",
@@ -20,12 +25,13 @@ export const FREE_PLAN: Plan = {
   yearlyPriceUsd: 0,
   maxOrgsPerUser: 1,
   maxMembersPerOrg: 2,
+  entitlements: DEFAULT_FREE_ENTITLEMENTS,
   features: [
     "1 organization",
     "2 members per org",
-    "End-to-end encryption",
-    "Zero-knowledge architecture",
-    "Unlimited devices & sync",
+    "Unlimited items & devices",
+    "TOTP authenticator codes",
+    "CSV import & export",
   ],
   isActive: true,
   createdAt: new Date(),
@@ -107,4 +113,23 @@ export async function canCreateOrg(userId: string): Promise<boolean> {
   }
 
   return ownedOrgs.length < (highestLimit ?? 1);
+}
+
+export async function hasEntitlement(
+  organizationId: string,
+  key: EntitlementKey,
+): Promise<boolean> {
+  const plan = await getOrgPlan(organizationId);
+  return Boolean(plan.entitlements?.[key]);
+}
+
+export async function assertEntitlement(
+  organizationId: string,
+  key: EntitlementKey,
+): Promise<void> {
+  if (!(await hasEntitlement(organizationId, key))) {
+    throw new APIError("FORBIDDEN", {
+      message: `Your current plan does not include "${key}". Please upgrade to continue.`,
+    });
+  }
 }

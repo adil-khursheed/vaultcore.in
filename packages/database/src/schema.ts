@@ -132,6 +132,22 @@ export const credential = pgTable(
   (table) => [index("credential_organizationId_idx").on(table.organizationId)],
 );
 
+export interface PlanEntitlements {
+  totp: boolean;
+  csvExport: boolean;
+  healthReports: boolean;
+  prioritySupport: boolean;
+  auditRetentionDays: number;
+}
+
+export const DEFAULT_FREE_ENTITLEMENTS: PlanEntitlements = {
+  totp: true,
+  csvExport: true,
+  healthReports: false,
+  prioritySupport: false,
+  auditRetentionDays: 30,
+};
+
 export const plans = pgTable(
   "plans",
   {
@@ -142,6 +158,10 @@ export const plans = pgTable(
     yearlyPriceUsd: integer("yearly_price_usd"), // in cents; 0 for free
     maxOrgsPerUser: integer("max_orgs_per_user"), // null = unlimited
     maxMembersPerOrg: integer("max_members_per_org"), // null = unlimited
+    entitlements: jsonb("entitlements")
+      .$type<PlanEntitlements>()
+      .notNull()
+      .default(DEFAULT_FREE_ENTITLEMENTS),
     features: jsonb("features").$type<string[]>().default([]),
     isActive: boolean("is_active").notNull().default(true),
     isPopular: boolean("is_popular").notNull().default(false),

@@ -1,9 +1,21 @@
 import { sql } from "drizzle-orm";
 
 import { db } from "./client";
-import { plans } from "./schema";
+import type { PlanEntitlements } from "./schema";
+import { DEFAULT_FREE_ENTITLEMENTS, plans } from "./schema";
 
-const PLANS = [
+const PLANS: Array<{
+  id: string;
+  name: string;
+  description: string;
+  polarProductId: string | undefined;
+  yearlyPriceUsd: number;
+  maxOrgsPerUser: number | null;
+  maxMembersPerOrg: number | null;
+  isPopular: boolean;
+  entitlements: PlanEntitlements;
+  features: string[];
+}> = [
   {
     id: "free",
     name: "Free",
@@ -13,12 +25,13 @@ const PLANS = [
     maxOrgsPerUser: 1,
     maxMembersPerOrg: 2,
     isPopular: false,
+    entitlements: DEFAULT_FREE_ENTITLEMENTS,
     features: [
       "1 organization",
       "2 members per org",
-      "End-to-end encryption",
-      "Zero-knowledge architecture",
-      "Unlimited devices & sync",
+      "Unlimited items & devices",
+      "TOTP authenticator codes",
+      "CSV import & export",
     ],
   },
   {
@@ -26,16 +39,23 @@ const PLANS = [
     name: "Premium",
     description: "Advanced security and collaboration for professionals.",
     polarProductId: process.env.POLAR_PREMIUM_PRODUCT_ID,
-    yearlyPriceUsd: 1000, // $10.00
+    yearlyPriceUsd: 1299, // $12.99
     maxOrgsPerUser: 2,
     maxMembersPerOrg: 3,
     isPopular: true,
+    entitlements: {
+      totp: true,
+      csvExport: true,
+      healthReports: true,
+      prioritySupport: true,
+      auditRetentionDays: 90,
+    },
     features: [
       "2 organizations",
       "3 members per org",
       "Everything in Free",
+      "Password health dashboard",
       "Priority email support",
-      "Advanced vault items",
     ],
   },
   {
@@ -43,16 +63,23 @@ const PLANS = [
     name: "Family",
     description: "Organization-wide security for your entire household.",
     polarProductId: process.env.POLAR_FAMILY_PRODUCT_ID,
-    yearlyPriceUsd: 4999, // $49.99
+    yearlyPriceUsd: 5999, // $59.99
     maxOrgsPerUser: null, // unlimited
     maxMembersPerOrg: 10,
     isPopular: false,
+    entitlements: {
+      totp: true,
+      csvExport: true,
+      healthReports: true,
+      prioritySupport: true,
+      auditRetentionDays: 90,
+    },
     features: [
       "Unlimited organizations",
       "10 members per org",
       "Everything in Premium",
-      "Household sharing",
-      "Family security dashboard",
+      "Shared household vault",
+      "Family password health dashboard",
     ],
   },
 ];
@@ -73,6 +100,7 @@ async function main() {
           maxOrgsPerUser: plan.maxOrgsPerUser,
           maxMembersPerOrg: plan.maxMembersPerOrg,
           isPopular: sql`excluded."is_popular"`,
+          entitlements: plan.entitlements,
           features: plan.features,
         },
       });

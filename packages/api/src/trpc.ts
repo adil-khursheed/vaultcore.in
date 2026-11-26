@@ -3,6 +3,7 @@ import superjson from "superjson";
 import { z, ZodError } from "zod/v4";
 
 import type { Auth } from "@repo/auth";
+import { hasEntitlement, type EntitlementKey } from "@repo/auth/entitlements";
 import { and, eq } from "@repo/db";
 import { db } from "@repo/db/client";
 import { member, memberVaultKey } from "@repo/db/schema";
@@ -174,6 +175,17 @@ export const orgAdminProcedure = t.procedure
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Only organization admins or owners can perform this action",
+      });
+    }
+    return next({ ctx });
+  });
+
+export const requireEntitlement = (key: EntitlementKey) =>
+  orgMemberProcedure.use(async ({ ctx, next }) => {
+    if (!(await hasEntitlement(ctx.memberRecord.organizationId, key))) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: `Your current plan does not include "${key}". Please upgrade to continue.`,
       });
     }
     return next({ ctx });
