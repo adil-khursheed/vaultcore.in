@@ -53,6 +53,20 @@ export async function getOrgPlan(organizationId: string): Promise<Plan> {
     return FREE_PLAN;
   }
 
+  const now = Date.now();
+  const isExpired =
+    subscription.status === "unpaid" ||
+    (subscription.status === "canceled" &&
+      (!subscription.currentPeriodEnd ||
+        subscription.currentPeriodEnd.getTime() <= now)) ||
+    (subscription.cancelAtPeriodEnd &&
+      subscription.currentPeriodEnd !== null &&
+      subscription.currentPeriodEnd.getTime() <= now);
+
+  if (isExpired) {
+    return FREE_PLAN;
+  }
+
   return subscription.plan;
 }
 

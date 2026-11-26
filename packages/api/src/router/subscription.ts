@@ -1,11 +1,16 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 
+import { cancelOrganizationSubscription } from "@repo/auth";
 import { getOrgPlan } from "@repo/auth/entitlements";
 import { eq } from "@repo/db";
 import { organizationSubscriptions } from "@repo/db/schema";
 
-import { orgMemberProcedure, protectedProcedure } from "../trpc";
+import {
+  orgAdminProcedure,
+  orgMemberProcedure,
+  protectedProcedure,
+} from "../trpc";
 
 export const subscriptionRouter = {
   getAllPlans: protectedProcedure.query(async ({ ctx }) => {
@@ -42,5 +47,11 @@ export const subscriptionRouter = {
         plan,
         subscription,
       };
+    }),
+
+  cancelSubscription: orgAdminProcedure
+    .input(z.object({ organizationId: z.string() }))
+    .mutation(async ({ input }) => {
+      return await cancelOrganizationSubscription(input.organizationId);
     }),
 };

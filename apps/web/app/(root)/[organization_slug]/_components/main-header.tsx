@@ -14,6 +14,7 @@ import ImportCSV from "./import-csv";
 const sectionTitles: Record<string, string> = {
   "all-items": "All Items",
   favorites: "Favorites",
+  health: "Password Health",
   trash: "Trash",
   login: "Logins",
   card: "Cards",

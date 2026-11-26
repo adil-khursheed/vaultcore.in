@@ -125,6 +125,154 @@ const polarOptions = {
 const polarCore = createPolarCore(polarOptions);
 const polarClient = createPolar(polarOptions);
 
+type PolarSubscriptionPayload = {
+  id: string;
+  product_id: string;
+  customer_id: string;
+  status: string;
+  recurring_interval: string | null;
+  current_period_start: Date | string;
+  current_period_end: Date | string | null;
+  cancel_at_period_end: boolean;
+  canceled_at?: Date | string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+async function upsertPolarSubscription(sub: PolarSubscriptionPayload) {
+  const orgId =
+    (sub.metadata?.referenceId as string | undefined) ||
+    (sub.metadata?.organizationId as string | undefined);
+  if (!orgId) {
+    console.warn("[POLAR] Subscription missing organization referenceId", {
+      subscriptionId: sub.id,
+    });
+    return;
+  }
+
+  const plan = await db.query.plans.findFirst({
+    where: eq(plans.polarProductId, sub.product_id),
+  });
+
+  if (!plan) {
+    console.error("[POLAR] No matching plan found for product_id", {
+      productId: sub.product_id,
+      subscriptionId: sub.id,
+    });
+    return;
+  }
+
+  await db
+    .insert(organizationSubscriptions)
+    .values({
+      id: sub.id,
+      organizationId: orgId,
+      planId: plan.id,
+      billingUserId: (sub.metadata?.userId as string | undefined) ?? null,
+      polarCustomerId: sub.customer_id,
+      polarProductId: sub.product_id,
+      status: sub.status as any,
+      interval: sub.recurring_interval as any,
+      currentPeriodStart: new Date(sub.current_period_start),
+      currentPeriodEnd: sub.current_period_end
+        ? new Date(sub.current_period_end)
+        : null,
+      cancelAtPeriodEnd: sub.cancel_at_period_end,
+      canceledAt: sub.canceled_at ? new Date(sub.canceled_at) : null,
+      metadata: (sub.metadata ?? {}) as Record<string, unknown>,
+    })
+    .onConflictDoUpdate({
+      target: organizationSubscriptions.organizationId,
+      set: {
+        id: sub.id,
+        planId: plan.id,
+        billingUserId: (sub.metadata?.userId as string | undefined) ?? null,
+        polarCustomerId: sub.customer_id,
+        polarProductId: sub.product_id,
+        status: sub.status as any,
+        interval: sub.recurring_interval as any,
+        currentPeriodStart: new Date(sub.current_period_start),
+        currentPeriodEnd: sub.current_period_end
+          ? new Date(sub.current_period_end)
+          : null,
+        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        canceledAt: sub.canceled_at ? new Date(sub.canceled_at) : null,
+        metadata: (sub.metadata ?? {}) as Record<string, unknown>,
+      },
+    });
+}
+
+/**
+ * Sync a completed Polar checkout directly into `organization_subscriptions`.
+ * Covers webhook delivery lag or missed webhook events when the user returns to /success.
+ */
+export async function syncPolarCheckout(checkoutId: string, userId: string) {
+  const checkoutSession = await polarClient.checkouts.get(checkoutId);
+  const orgId =
+    (checkoutSession.metadata?.referenceId as string | undefined) ||
+    (checkoutSession.metadata?.organizationId as string | undefined);
+
+  if (!orgId) return null;
+
+  const membership = await db.query.member.findFirst({
+    where: and(eq(member.organizationId, orgId), eq(member.userId, userId)),
+  });
+  if (!membership) return null;
+
+  if (checkoutSession.subscription_id) {
+    const sub = await polarClient.subscriptions.get(
+      checkoutSession.subscription_id,
+    );
+    await upsertPolarSubscription(sub);
+    return { organizationId: orgId };
+  }
+
+  return { organizationId: orgId };
+}
+
+/**
+ * Cancel an organization's paid Polar subscription at the end of the current
+ * billing period so members keep their benefits until `currentPeriodEnd`.
+ */
+export async function cancelOrganizationSubscription(organizationId: string) {
+  const subscription = await db.query.organizationSubscriptions.findFirst({
+    where: eq(organizationSubscriptions.organizationId, organizationId),
+  });
+
+  if (
+    !subscription ||
+    subscription.id.startsWith("free_") ||
+    subscription.status === "free"
+  ) {
+    throw new APIError("BAD_REQUEST", {
+      message: "This organization does not have an active paid subscription.",
+    });
+  }
+
+  if (subscription.cancelAtPeriodEnd) {
+    return subscription;
+  }
+
+  const updated = await polarClient.subscriptions.update(subscription.id, {
+    cancel_at_period_end: true,
+  });
+
+  const [saved] = await db
+    .update(organizationSubscriptions)
+    .set({
+      cancelAtPeriodEnd: true,
+      canceledAt: updated.canceled_at
+        ? new Date(updated.canceled_at)
+        : new Date(),
+      currentPeriodEnd: updated.current_period_end
+        ? new Date(updated.current_period_end)
+        : subscription.currentPeriodEnd,
+    })
+    .where(eq(organizationSubscriptions.id, subscription.id))
+    .returning();
+
+  return saved ?? subscription;
+}
+
 /**
  * Remember that a member left, so admins are prompted to rotate the vault
  * key. Rotation itself must run in an unlocked browser (zero-knowledge).
@@ -593,80 +741,13 @@ export function initAuth<
           webhooks({
             secret: env.POLAR_WEBHOOK_SECRET,
             async onSubscriptionCreated(subscription) {
-              try {
-                const orgId =
-                  (subscription.data.metadata?.referenceId as string) ||
-                  (subscription.data.metadata?.organizationId as string);
-                if (!orgId) return;
-
-                const plan = await db.query.plans.findFirst({
-                  where: eq(plans.polarProductId, subscription.data.product_id),
-                });
-
-                if (plan) {
-                  await db
-                    .insert(organizationSubscriptions)
-                    .values({
-                      id: subscription.data.id,
-                      organizationId: orgId,
-                      planId: plan.id,
-                      polarCustomerId: subscription.data.customer_id,
-                      polarProductId: subscription.data.product_id,
-                      status: subscription.data.status as any,
-                      interval: subscription.data.recurring_interval as any,
-                      currentPeriodStart: new Date(
-                        subscription.data.current_period_start,
-                      ),
-                      currentPeriodEnd: subscription.data.current_period_end
-                        ? new Date(subscription.data.current_period_end)
-                        : null,
-                      cancelAtPeriodEnd: subscription.data.cancel_at_period_end,
-                      metadata: subscription.data.metadata as any,
-                    })
-                    .onConflictDoUpdate({
-                      target: organizationSubscriptions.organizationId,
-                      set: {
-                        id: subscription.data.id,
-                        planId: plan.id,
-                        polarCustomerId: subscription.data.customer_id,
-                        polarProductId: subscription.data.product_id,
-                        status: subscription.data.status as any,
-                        interval: subscription.data.recurring_interval as any,
-                        currentPeriodStart: new Date(
-                          subscription.data.current_period_start,
-                        ),
-                        currentPeriodEnd: subscription.data.current_period_end
-                          ? new Date(subscription.data.current_period_end)
-                          : null,
-                        cancelAtPeriodEnd:
-                          subscription.data.cancel_at_period_end,
-                        metadata: subscription.data.metadata,
-                      },
-                    });
-                }
-              } catch (error) {
-                console.log(error);
-              }
+              await upsertPolarSubscription(subscription.data);
+            },
+            async onSubscriptionActive(subscription) {
+              await upsertPolarSubscription(subscription.data);
             },
             async onSubscriptionUpdated(subscription) {
-              const plan = await db.query.plans.findFirst({
-                where: eq(plans.polarProductId, subscription.data.product_id),
-              });
-
-              await db
-                .update(organizationSubscriptions)
-                .set({
-                  status: subscription.data.status as any,
-                  planId: plan?.id,
-                  currentPeriodEnd: subscription.data.current_period_end
-                    ? new Date(subscription.data.current_period_end)
-                    : null,
-                  cancelAtPeriodEnd: subscription.data.cancel_at_period_end,
-                  canceledAt: subscription.data.canceled_at
-                    ? new Date(subscription.data.canceled_at)
-                    : null,
-                })
-                .where(eq(organizationSubscriptions.id, subscription.data.id));
+              await upsertPolarSubscription(subscription.data);
             },
             async onSubscriptionCanceled(subscription) {
               await db
@@ -685,6 +766,7 @@ export function initAuth<
                 .update(organizationSubscriptions)
                 .set({
                   status: "canceled",
+                  currentPeriodEnd: new Date(),
                 })
                 .where(eq(organizationSubscriptions.id, subscription.data.id));
             },

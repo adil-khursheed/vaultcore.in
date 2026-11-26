@@ -3,6 +3,7 @@ import React from "react";
 import AuditLogs from "./_components/audit-logs";
 import DeleteOrganization from "./_components/delete-organization";
 import SecurityFingerprint from "./_components/security-fingerprint";
+import SubscriptionSettings from "./_components/subscription-settings";
 import VaultKeyRotation from "./_components/vault-key-rotation";
 
 export const metadata = {
@@ -25,6 +26,7 @@ export default function SettingsPage() {
         <SecurityFingerprint />
         <VaultKeyRotation />
         <AuditLogs />
+        <SubscriptionSettings />
         <DeleteOrganization />
       </div>
     </div>

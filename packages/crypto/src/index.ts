@@ -3,6 +3,7 @@ export * from "./config";
 export * from "./encoding";
 export * from "./fingerprint";
 export * from "./password-strength";
+export * from "./password-health";
 export * from "./keys";
 export * from "./strings";
 export * from "./vault";
