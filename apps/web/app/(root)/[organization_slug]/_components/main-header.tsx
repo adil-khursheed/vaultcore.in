@@ -8,6 +8,7 @@ import { Separator } from "@repo/ui/components/separator";
 import { SidebarTrigger } from "@repo/ui/components/sidebar";
 import ThemeToggle from "@repo/ui/components/theme-toggle";
 
+import ExportCSV from "./export-csv";
 import ImportCSV from "./import-csv";
 
 const sectionTitles: Record<string, string> = {
@@ -65,7 +66,12 @@ const MainHeader = () => {
       <div className="flex shrink-0 items-center gap-3">
         <ThemeToggle />
 
-        {!isAdminRoute && <ImportCSV />}
+        {!isAdminRoute && (
+          <>
+            <ExportCSV />
+            <ImportCSV />
+          </>
+        )}
       </div>
     </header>
   );

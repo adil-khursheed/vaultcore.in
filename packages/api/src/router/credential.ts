@@ -243,6 +243,7 @@ export const credentialRouter = {
               .default("login"),
             data: z.record(z.string(), z.any()).optional(),
             otp: z.string().optional(),
+            isFavorite: z.boolean().optional(),
           }),
         ),
       }),
