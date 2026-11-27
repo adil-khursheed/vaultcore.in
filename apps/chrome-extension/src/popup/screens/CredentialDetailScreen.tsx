@@ -76,6 +76,14 @@ export function CredentialDetailScreen({
             return null;
           }
         };
+        let decryptedData: Record<string, unknown> | null = null;
+        if (found.data && typeof found.data === "object" && !Array.isArray(found.data)) {
+          decryptedData = {};
+          for (const [k, v] of Object.entries(found.data as Record<string, unknown>)) {
+            decryptedData[k] = typeof v === "string" ? await dec(v) : v;
+          }
+        }
+
         const decrypted = {
           ...found,
           title: (await dec(found.title)) ?? "",
@@ -84,6 +92,7 @@ export function CredentialDetailScreen({
           url: await dec(found.url),
           note: await dec(found.note),
           otp: await dec(found.otp),
+          data: decryptedData,
         };
         setCredential(decrypted);
       } else {
@@ -348,6 +357,34 @@ export function CredentialDetailScreen({
               <TotpCode secret={credential.otp} />
             </div>
           )}
+
+          {/* Extra data fields (card, identity, ssh_key) */}
+          {Boolean(
+            credential.data &&
+              typeof credential.data === "object" &&
+              !Array.isArray(credential.data),
+          ) &&
+            Object.entries(credential.data as Record<string, unknown>)
+              .filter(([, val]) => typeof val === "string" && val.length > 0)
+              .map(([key, val]) => {
+                const label = key
+                  .replace(/_/g, " ")
+                  .replace(/([a-z])([A-Z])/g, "$1 $2");
+                const text = String(val);
+                return (
+                  <div key={key} className="flex flex-col gap-1 px-4 py-3">
+                    <span className="text-muted-foreground text-xs font-medium capitalize">
+                      {label}
+                    </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-foreground truncate font-mono text-xs">
+                        {text}
+                      </span>
+                      <CopyButton text={text} label={label} />
+                    </div>
+                  </div>
+                );
+              })}
 
           {/* Notes */}
           {credential.note && (

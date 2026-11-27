@@ -16,6 +16,7 @@ import {
   FieldLabel,
 } from "@repo/ui/components/field";
 import { InputGroup, InputGroupInput } from "@repo/ui/components/input-group";
+import { Slider } from "@repo/ui/components/slider";
 import {
   Tabs,
   TabsContent,
@@ -715,22 +716,33 @@ const PasswordGeneratorForm = ({
 
                         return (
                           <Field data-invalid={isInvalid}>
-                            <FieldLabel>Length</FieldLabel>
-                            <InputGroup>
-                              <InputGroupInput
-                                type="number"
-                                value={field.state.value}
-                                onChange={(e) =>
-                                  field.handleChange(Number(e.target.value))
-                                }
-                                min={5}
-                                max={128}
-                                className="h-10 text-lg"
-                              />
-                            </InputGroup>
-                            <FieldDescription className="mt-2 text-xs leading-relaxed">
-                              Value must be between 5 and 128. Use 14 characters
-                              or more to generate a strong password.
+                            <div className="flex items-center justify-between gap-2">
+                              <FieldLabel htmlFor="password-length">
+                                Length
+                              </FieldLabel>
+                              <span className="border-border bg-background text-foreground rounded-md border px-2 py-0.5 font-mono text-xs font-medium tabular-nums">
+                                {field.state.value}
+                              </span>
+                            </div>
+                            <Slider
+                              id="password-length"
+                              min={5}
+                              max={128}
+                              step={1}
+                              value={[field.state.value]}
+                              onValueChange={([val]) => {
+                                if (val !== undefined) field.handleChange(val);
+                              }}
+                              aria-label="Password length"
+                              className="py-2"
+                            />
+                            <div className="text-muted-foreground flex justify-between font-mono text-[11px] tabular-nums">
+                              <span>5</span>
+                              <span>128</span>
+                            </div>
+                            <FieldDescription className="mt-1 text-xs leading-relaxed">
+                              Use 14 characters or more to generate a strong
+                              password.
                             </FieldDescription>
                             {isInvalid && (
                               <FieldError errors={field.state.meta.errors} />
